@@ -1,6 +1,6 @@
 require "test_helper"
 
-class PropertyTest < ActiveSupport::TestCase
+class InvolvedPartyTest < ActiveSupport::TestCase
   # test "the truth" do
   #   assert true
   # end
