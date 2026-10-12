@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_133222) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_133649) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,6 +48,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_133222) do
     t.index ["user_id"], name: "index_properties_on_user_id"
   end
 
+  create_table "transactions", force: :cascade do |t|
+    t.bigint "involved_party_id", null: false
+    t.bigint "chain_id", null: false
+    t.bigint "property_id", null: false
+    t.boolean "completed"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chain_id"], name: "index_transactions_on_chain_id"
+    t.index ["involved_party_id"], name: "index_transactions_on_involved_party_id"
+    t.index ["property_id"], name: "index_transactions_on_property_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -62,4 +74,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_133222) do
 
   add_foreign_key "properties", "involved_parties"
   add_foreign_key "properties", "users"
+  add_foreign_key "transactions", "chains"
+  add_foreign_key "transactions", "involved_parties"
+  add_foreign_key "transactions", "properties"
 end
