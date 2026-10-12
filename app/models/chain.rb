@@ -1,2 +1,2 @@
-class Chain < ApplicationRecord
+class Chain < ApplicationRecord^
 end
