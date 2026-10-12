@@ -5,4 +5,8 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable
 
   has_many :properties
+
+  validates :user_name, presence: true
+  validates :email, presence: true
+  validates :password, presence: true, format: { with: "^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$" }
 end
