@@ -16,4 +16,4 @@ See [CLAUDE.md](file:///home/domfi/code/finigandominic-star/movee/CLAUDE.md) for
   - `Chain`: Transaction chains tracking progress across multiple properties.
   - `Transaction`: Join of property, chain, and client party.
 - **Testing**: `bin/rails test` (Minitest suite covering models, controllers, and Devise registration).
-- **Seeds**: `bin/rails db:seed` (Idempotent seed data with 5 users, 3 chains, 25 involved parties, 20 properties, 20 transactions).
+- **Seeds**: `bin/rails db:seed` (Idempotent seed data with 8 users (3 admins, 5 agents), 3 chains, 25 involved parties, 20 properties, 20 transactions).

@@ -30,13 +30,17 @@
         <span>Back to List</span>
       <% end %>
 
-      <%= link_to edit_transaction_path(@transaction), class: "btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" do %>
-        <i class="fa-solid fa-pen"></i>
-        <span>Edit Transaction</span>
+      <% if policy(@transaction).update? %>
+        <%= link_to edit_transaction_path(@transaction), class: "btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" do %>
+          <i class="fa-solid fa-pen"></i>
+          <span>Edit Transaction</span>
+        <% end %>
       <% end %>
 
-      <%= link_to transaction_path(@transaction), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete Transaction ##{@transaction.id}?" }, class: "btn btn-outline-danger d-inline-flex align-items-center shadow-sm", title: "Delete transaction" do %>
-        <i class="fa-solid fa-trash-can"></i>
+      <% if policy(@transaction).destroy? %>
+        <%= link_to transaction_path(@transaction), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete Transaction ##{@transaction.id}?" }, class: "btn btn-outline-danger d-inline-flex align-items-center shadow-sm", title: "Delete transaction" do %>
+          <i class="fa-solid fa-trash-can"></i>
+        <% end %>
       <% end %>
     </div>
   </div>
@@ -129,6 +133,16 @@
                       <% if other_tx.property %>
                         <span class="text-muted ms-1">— <%= other_tx.property.short_address %></span>
                       <% end %>
+                      <% agent = other_tx.creator_or_listing_user %>
+                      <% if agent %>
+                        <div class="text-muted small mt-1">
+                          <i class="fa-solid fa-user-tie text-secondary me-1"></i>
+                          <span>Agent: <strong><%= agent.user_name %></strong></span>
+                          <% if agent.company.present? %>
+                            <span class="text-muted">(<%= agent.company %>)</span>
+                          <% end %>
+                        </div>
+                      <% end %>
                     </div>
                     <span class="badge <%= other_tx.status_badge_class %>"><%= other_tx.status_label %></span>
                   </li>
@@ -192,51 +206,70 @@
         </div>
         <div class="card-body p-3">
           <% if @transaction.involved_party %>
-            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
-              <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                <i class="fa-solid fa-user fa-lg"></i>
+            <% if policy(@transaction.involved_party).show_personal_data? %>
+              <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                  <i class="fa-solid fa-user fa-lg"></i>
+                </div>
+                <div>
+                  <h6 class="fw-bold text-dark mb-0">
+                    <%= @transaction.involved_party.first_name %> <%= @transaction.involved_party.last_name %>
+                  </h6>
+                  <span class="text-muted small">Party in Deal</span>
+                </div>
               </div>
-              <div>
-                <h6 class="fw-bold text-dark mb-0">
-                  <%= @transaction.involved_party.first_name %> <%= @transaction.involved_party.last_name %>
-                </h6>
-                <span class="text-muted small">Party in Deal</span>
+
+              <ul class="list-group list-group-flush small">
+                <% if @transaction.involved_party.phone.present? %>
+                  <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                    <span class="text-muted"><i class="fa-solid fa-phone me-1"></i> Phone</span>
+                    <a href="tel:<%= @transaction.involved_party.phone %>" class="text-decoration-none fw-medium">
+                      <%= @transaction.involved_party.phone %>
+                    </a>
+                  </li>
+                <% end %>
+
+                <% if @transaction.involved_party.email.present? %>
+                  <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                    <span class="text-muted"><i class="fa-solid fa-envelope me-1"></i> Email</span>
+                    <a href="mailto:<%= @transaction.involved_party.email %>" class="text-decoration-none fw-medium text-truncate" style="max-width: 180px;">
+                      <%= @transaction.involved_party.email %>
+                    </a>
+                  </li>
+                <% end %>
+
+                <% if @transaction.involved_party.contact_info.present? %>
+                  <li class="list-group-item px-0 py-2">
+                    <span class="text-muted d-block mb-1"><i class="fa-solid fa-circle-info me-1"></i> Notes</span>
+                    <p class="text-dark mb-0 small bg-light p-2 rounded"><%= @transaction.involved_party.contact_info %></p>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <div class="alert alert-secondary py-3 px-3 text-center mb-0">
+                <i class="fa-solid fa-user-shield fa-2x mb-2 text-muted"></i>
+                <h6 class="fw-bold text-dark mb-1">Confidential Client</h6>
+                <p class="small text-muted mb-0">Personal contact details are protected under agent privacy policies.</p>
+                <% if @transaction.creator_or_listing_user %>
+                  <div class="small text-muted border-top pt-2 mt-2">
+                    <span class="fw-semibold">Managing Agent:</span><br>
+                    <%= @transaction.creator_or_listing_user.user_name %>
+                    <% if @transaction.creator_or_listing_user.company.present? %>
+                      (<%= @transaction.creator_or_listing_user.company %>)
+                    <% end %>
+                  </div>
+                <% end %>
               </div>
-            </div>
+            <% end %>
 
-            <ul class="list-group list-group-flush small">
-              <% if @transaction.involved_party.phone.present? %>
-                <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                  <span class="text-muted"><i class="fa-solid fa-phone me-1"></i> Phone</span>
-                  <a href="tel:<%= @transaction.involved_party.phone %>" class="text-decoration-none fw-medium">
-                    <%= @transaction.involved_party.phone %>
-                  </a>
-                </li>
-              <% end %>
-
-              <% if @transaction.involved_party.email.present? %>
-                <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                  <span class="text-muted"><i class="fa-solid fa-envelope me-1"></i> Email</span>
-                  <a href="mailto:<%= @transaction.involved_party.email %>" class="text-decoration-none fw-medium text-truncate" style="max-width: 180px;">
-                    <%= @transaction.involved_party.email %>
-                  </a>
-                </li>
-              <% end %>
-
-              <% if @transaction.involved_party.contact_info.present? %>
-                <li class="list-group-item px-0 py-2">
-                  <span class="text-muted d-block mb-1"><i class="fa-solid fa-circle-info me-1"></i> Notes</span>
-                  <p class="text-dark mb-0 small bg-light p-2 rounded"><%= @transaction.involved_party.contact_info %></p>
-                </li>
-              <% end %>
-            </ul>
-
-            <div class="mt-3 pt-2 border-top">
-              <%= button_to remove_involved_party_transaction_path(@transaction), method: :delete, data: { turbo_confirm: "Unassign #{@transaction.involved_party.full_name} from this transaction?" }, class: "btn btn-sm btn-outline-danger w-100 d-inline-flex align-items-center justify-content-center gap-1" do %>
-                <i class="fa-solid fa-user-xmark"></i>
-                <span>Remove Client from Transaction</span>
-              <% end %>
-            </div>
+            <% if policy(@transaction).update? %>
+              <div class="mt-3 pt-2 border-top">
+                <%= button_to remove_involved_party_transaction_path(@transaction), method: :delete, data: { turbo_confirm: "Unassign #{@transaction.involved_party.full_name} from this transaction?" }, class: "btn btn-sm btn-outline-danger w-100 d-inline-flex align-items-center justify-content-center gap-1" do %>
+                  <i class="fa-solid fa-user-xmark"></i>
+                  <span>Remove Client from Transaction</span>
+                <% end %>
+              </div>
+            <% end %>
           <% else %>
             <div class="text-center py-2 text-muted">
               <p class="small mb-2">No client party assigned.</p>

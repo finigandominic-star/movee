@@ -28,15 +28,15 @@ bin/ci                    # full local CI pipeline defined in config/ci.rb
 See `db/schema.rb` for exact schema columns and indexes:
 
 - **`User`** (`devise :database_authenticatable, :registerable, ...`):
-  - Attributes: `email`, `user_name`, `company`, `encrypted_password`.
-  - Associations: `has_many :properties, dependent: :destroy`.
+  - Attributes: `email`, `user_name`, `company`, `encrypted_password`, `admin` (bool).
+  - Associations: `has_many :properties, dependent: :destroy`, `has_many :transactions, dependent: :nullify`, `has_many :chains, dependent: :nullify`, `has_many :involved_parties, dependent: :nullify`.
   - Validations: `user_name` presence, password complexity (at least 8 chars, letters and numbers) on creation/password updates.
   - Strong Parameters configured in `ApplicationController` (`:user_name`, `:company`).
 
 - **`InvolvedParty`**:
-  - Attributes: `first_name`, `last_name`, `email`, `phone`, `contact_info`, `seller` (bool), `buyer` (bool).
-  - Associations: `has_many :properties, dependent: :nullify`, `has_many :transactions, dependent: :nullify`, `has_many :chains, through: :transactions`.
-  - Helper methods: `full_name`, `roles_label` ("Seller", "Buyer", "Seller / Buyer", "Contact").
+  - Attributes: `first_name`, `last_name`, `email`, `phone`, `contact_info`, `seller` (bool), `buyer` (bool), `user_id`.
+  - Associations: `belongs_to :user, optional: true`, `has_many :properties, dependent: :nullify`, `has_many :transactions, dependent: :nullify`, `has_many :chains, through: :transactions`.
+  - Helper methods: `full_name`, `roles_label`, `user_associated?(user)`.
 
 - **`Property`**:
   - Attributes: `house_number`, `street`, `second_line_of_address`, `city`, `post_code`, `photos`, `sold` (bool), `user_id`, `involved_party_id`.
@@ -44,14 +44,23 @@ See `db/schema.rb` for exact schema columns and indexes:
   - Helper methods: `full_address` (proper UK format), `short_address`.
 
 - **`Chain`**:
-  - Attributes: `active` (bool).
-  - Associations: `has_many :transactions, dependent: :destroy`, `has_many :properties, through: :transactions`, `has_many :involved_parties, through: :transactions`.
+  - Attributes: `active` (bool), `user_id`.
+  - Associations: `belongs_to :user, optional: true`, `has_many :transactions, dependent: :destroy`, `has_many :properties, through: :transactions`, `has_many :involved_parties, through: :transactions`.
 
 - **`Transaction`**:
-  - Attributes: `property_id`, `chain_id`, `involved_party_id`, `completed` (bool).
-  - Associations: `belongs_to :property`, `belongs_to :chain`, `belongs_to :involved_party, optional: true`.
+  - Attributes: `property_id`, `chain_id`, `involved_party_id`, `user_id`, `completed` (bool).
+  - Associations: `belongs_to :user, optional: true`, `belongs_to :property`, `belongs_to :chain`, `belongs_to :involved_party, optional: true`.
   - Scopes: `Transaction.completed`, `Transaction.pending`.
-  - Helper methods: `status_label`, `status_badge_class`.
+  - Helper methods: `status_label`, `status_badge_class`, `creator_or_listing_user`.
+
+## Authorization & Privacy Rules (Pundit)
+
+The app uses **Pundit** for policy-based authorization:
+
+1. **Deletion Rights**: Only the user who created a record (`Property`, `Transaction`, `Chain`, or `InvolvedParty`) or an admin (`user.admin?`) can delete it.
+2. **Involved Party Privacy**: Direct personal contact data (email, phone, contact notes) of an `InvolvedParty` is only visible to the associated agent(s) (`user_associated?(user)`) or admins. Unassociated users see a confidential client badge with the managing agent's name.
+3. **Chain Viewing Privacy**: When viewing transactions within a chain, cooperating agents (`creator_or_listing_user`) are clearly visible to all users to facilitate cross-deal communication, but individual client/party details remain confidential to unassociated brokers.
+4. **Public Access**: Home, sign-in, and sign-up pages are accessible to anyone without requiring prior authentication.
 
 ## Routes & Controllers
 
@@ -65,6 +74,9 @@ Standard RESTful resource routing defined in `config/routes.rb`:
   - Standard CRUD (`index`, `show`, `new`, `create`, `edit`, `update`, `destroy`).
   - Supports query parameter pre-population on `new` (`?property_id=...&chain_id=...`).
   - Member route: `DELETE /transactions/:id/remove_involved_party`.
+
+- **`chains`** (`ChainsController`):
+  - Standard CRUD (`index`, `show`, `new`, `create`, `edit`, `update`, `destroy`).
 
 - **`involved_parties`** (`InvolvedPartiesController`):
   - Standard CRUD (`index`, `show`, `new`, `create`, `edit`, `update`, `destroy`).
@@ -81,5 +93,5 @@ Standard RESTful resource routing defined in `config/routes.rb`:
 
 - All views follow **Bootstrap 5.3** conventions with **Font Awesome 6** icons.
 - Forms use `simple_form_for` with `.form-control` and `.btn` classes.
-- Listing pages (e.g. `properties/index`) support grid card view and responsive table views.
+- Listing pages support grid card view and responsive table views.
 - Turbo confirms and method overrides (`data: { turbo_confirm: "..." }`) are used for destructive actions.

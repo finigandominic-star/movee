@@ -22,11 +22,13 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     )
     @chain = Chain.create!(active: true)
     @transaction = Transaction.create!(
+      user: @user,
       property: @property,
       chain: @chain,
       involved_party: @party,
       completed: false
     )
+    sign_in @user
   end
 
   test "should get index" do
@@ -94,5 +96,35 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     delete remove_involved_party_transaction_url(@transaction)
     assert_redirected_to transaction_url(@transaction)
     assert_nil @transaction.reload.involved_party
+  end
+
+  test "unassociated user cannot destroy transaction" do
+    other_user = User.create!(
+      user_name: "other_tx_agent",
+      email: "othertx@example.com",
+      password: "Password123"
+    )
+    sign_in other_user
+
+    assert_no_difference("Transaction.count") do
+      delete transaction_url(@transaction)
+    end
+    assert_redirected_to root_url
+    assert_equal "You are not authorized to perform this action.", flash[:alert]
+  end
+
+  test "admin can destroy any transaction" do
+    admin = User.create!(
+      user_name: "admin_tx",
+      email: "admin_tx@example.com",
+      password: "Password123",
+      admin: true
+    )
+    sign_in admin
+
+    assert_difference("Transaction.count", -1) do
+      delete transaction_url(@transaction)
+    end
+    assert_redirected_to transactions_url
   end
 end

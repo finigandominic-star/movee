@@ -22,19 +22,33 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user.errors[:user_name], "can't be blank"
   end
 
-  test "password requires letters and numbers and at least 8 chars" do
+  test "password requires at least 8 characters with both letters and numbers" do
     user = User.new(
       user_name: "test_user",
       email: "user@example.com",
-      password: "short1"
+      password: "12345"
     )
     assert_not user.valid?
 
-    user.password = "onlyletters"
+    user.password = "123456" # under 8 chars, no letters
     assert_not user.valid?
 
-    user.password = "ValidPass123"
+    user.password = "password" # no digits
+    assert_not user.valid?
+
+    user.password = "12345678" # no letters
+    assert_not user.valid?
+
+    user.password = "Password123" # valid: 8+ chars, letters and digits
     assert user.valid?
+  end
+
+  test "admin attribute defaults to false and can be set to true" do
+    user = User.new(user_name: "standard", email: "std@example.com", password: "Password123")
+    assert_equal false, user.admin?
+
+    user.admin = true
+    assert_equal true, user.admin?
   end
 
   test "destroying user destroys their properties" do

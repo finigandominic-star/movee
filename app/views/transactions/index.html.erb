@@ -134,16 +134,25 @@
                     </td>
                     <td>
                       <% if tx.involved_party %>
-                        <div class="fw-medium">
-                          <%= tx.involved_party.first_name %> <%= tx.involved_party.last_name %>
-                          <% if tx.involved_party.seller? %>
-                            <span class="badge bg-primary-subtle text-primary ms-1">Seller</span>
+                        <% if policy(tx.involved_party).show_personal_data? %>
+                          <div class="fw-medium">
+                            <%= tx.involved_party.first_name %> <%= tx.involved_party.last_name %>
+                            <% if tx.involved_party.seller? %>
+                              <span class="badge bg-primary-subtle text-primary ms-1">Seller</span>
+                            <% end %>
+                            <% if tx.involved_party.buyer? %>
+                              <span class="badge bg-warning-subtle text-warning-emphasis ms-1">Buyer</span>
+                            <% end %>
+                          </div>
+                          <small class="text-muted"><%= tx.involved_party.email %></small>
+                        <% else %>
+                          <span class="badge bg-light text-muted border">
+                            <i class="fa-solid fa-lock me-1"></i>Protected Client
+                          </span>
+                          <% if tx.creator_or_listing_user %>
+                            <small class="text-muted d-block">Agent: <%= tx.creator_or_listing_user.user_name %></small>
                           <% end %>
-                          <% if tx.involved_party.buyer? %>
-                            <span class="badge bg-warning-subtle text-warning-emphasis ms-1">Buyer</span>
-                          <% end %>
-                        </div>
-                        <small class="text-muted"><%= tx.involved_party.email %></small>
+                        <% end %>
                       <% else %>
                         <span class="text-muted fst-italic">None</span>
                       <% end %>
@@ -171,11 +180,15 @@
                         <%= link_to transaction_path(tx), class: "btn btn-outline-primary", title: "View details" do %>
                           <i class="fa-solid fa-eye"></i>
                         <% end %>
-                        <%= link_to edit_transaction_path(tx), class: "btn btn-outline-secondary", title: "Edit" do %>
-                          <i class="fa-solid fa-pen"></i>
+                        <% if policy(tx).update? %>
+                          <%= link_to edit_transaction_path(tx), class: "btn btn-outline-secondary", title: "Edit" do %>
+                            <i class="fa-solid fa-pen"></i>
+                          <% end %>
                         <% end %>
-                        <%= link_to transaction_path(tx), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete Transaction ##{tx.id}?" }, class: "btn btn-outline-danger", title: "Delete" do %>
-                          <i class="fa-solid fa-trash-can"></i>
+                        <% if policy(tx).destroy? %>
+                          <%= link_to transaction_path(tx), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete Transaction ##{tx.id}?" }, class: "btn btn-outline-danger", title: "Delete" do %>
+                            <i class="fa-solid fa-trash-can"></i>
+                          <% end %>
                         <% end %>
                       </div>
                     </td>
@@ -215,9 +228,15 @@
                     <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
                       <span class="text-muted"><i class="fa-solid fa-user-tie me-1"></i> Party</span>
                       <% if tx.involved_party %>
-                        <span class="fw-medium text-dark text-truncate" style="max-width: 180px;">
-                          <%= tx.involved_party.first_name %> <%= tx.involved_party.last_name %>
-                        </span>
+                        <% if policy(tx.involved_party).show_personal_data? %>
+                          <span class="fw-medium text-dark text-truncate" style="max-width: 180px;">
+                            <%= tx.involved_party.first_name %> <%= tx.involved_party.last_name %>
+                          </span>
+                        <% else %>
+                          <span class="badge bg-light text-muted border">
+                            <i class="fa-solid fa-lock me-1"></i>Protected Client
+                          </span>
+                        <% end %>
                       <% else %>
                         <span class="text-muted">—</span>
                       <% end %>
@@ -244,11 +263,15 @@
                     <i class="fa-solid fa-eye me-1"></i> Details
                   <% end %>
                   <div class="btn-group btn-group-sm">
-                    <%= link_to edit_transaction_path(tx), class: "btn btn-outline-secondary", title: "Edit" do %>
-                      <i class="fa-solid fa-pen"></i>
+                    <% if policy(tx).update? %>
+                      <%= link_to edit_transaction_path(tx), class: "btn btn-outline-secondary", title: "Edit" do %>
+                        <i class="fa-solid fa-pen"></i>
+                      <% end %>
                     <% end %>
-                    <%= link_to transaction_path(tx), data: { turbo_method: :delete, turbo_confirm: "Delete this transaction?" }, class: "btn btn-outline-danger", title: "Delete" do %>
-                      <i class="fa-solid fa-trash-can"></i>
+                    <% if policy(tx).destroy? %>
+                      <%= link_to transaction_path(tx), data: { turbo_method: :delete, turbo_confirm: "Delete this transaction?" }, class: "btn btn-outline-danger", title: "Delete" do %>
+                        <i class="fa-solid fa-trash-can"></i>
+                      <% end %>
                     <% end %>
                   </div>
                 </div>

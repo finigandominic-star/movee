@@ -8,6 +8,7 @@ class InvolvedPartiesControllerTest < ActionDispatch::IntegrationTest
       password: "Password123"
     )
     @party = InvolvedParty.create!(
+      user: @user,
       first_name: "Diana",
       last_name: "Prince",
       email: "diana@themyscira.com",
@@ -27,6 +28,7 @@ class InvolvedPartiesControllerTest < ActionDispatch::IntegrationTest
       chain: @chain,
       completed: false
     )
+    sign_in @user
   end
 
   test "should get index" do
@@ -108,5 +110,41 @@ class InvolvedPartiesControllerTest < ActionDispatch::IntegrationTest
     delete unassign_transaction_involved_party_url(@party, @transaction)
     assert_redirected_to involved_party_url(@party)
     assert_nil @transaction.reload.involved_party
+  end
+
+  test "unassociated user cannot edit or destroy involved party" do
+    other_user = User.create!(
+      user_name: "other_agent",
+      email: "other_agent@example.com",
+      password: "Password123"
+    )
+    sign_in other_user
+
+    get edit_involved_party_url(@party)
+    assert_redirected_to root_url
+    assert_equal "You are not authorized to perform this action.", flash[:alert]
+
+    assert_no_difference("InvolvedParty.count") do
+      delete involved_party_url(@party)
+    end
+    assert_redirected_to root_url
+  end
+
+  test "admin can edit and destroy any involved party" do
+    admin = User.create!(
+      user_name: "super_admin",
+      email: "admin_ip@example.com",
+      password: "Password123",
+      admin: true
+    )
+    sign_in admin
+
+    get edit_involved_party_url(@party)
+    assert_response :success
+
+    assert_difference("InvolvedParty.count", -1) do
+      delete involved_party_url(@party)
+    end
+    assert_redirected_to involved_parties_url
   end
 end

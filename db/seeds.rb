@@ -17,6 +17,11 @@ Chain.destroy_all
 User.destroy_all
 
 puts "Creating users..."
+# Admin Users
+dom = User.create!(user_name: "Dom Finigan", email: "dom@movee.com", password: "MoveeAdmin123", company: "Movee", admin: true)
+joao = User.create!(user_name: "Joao", email: "joao@movee.com", password: "MoveeAdmin123", company: "Movee", admin: true)
+sophia = User.create!(user_name: "Sophia", email: "sophia@movee.com", password: "MoveeAdmin123", company: "Movee", admin: true)
+
 # 1
 sarah = User.create!(user_name: "Sarah Rizzoli", email: "sarah.rizzoli@harbourandheath.co.uk", password: "SaRi1234", company: "Harbour & Heath Properties")
 #2
@@ -27,12 +32,12 @@ mark = User.create!(user_name: "Mark McBride", email: "mcbride.mark@thistleandth
 emily = User.create!(user_name: "Emily Song", email: "e.song@crownstoneestates.co.uk", password: "eSong789", company: "Crownstone Estates")
 # 5
 john = User.create!(user_name: "John Akachi", email: "john.akachi@harbourandheath.co.uk", password: "ImGreat1", company: "Harbour & Heath Properties")
-puts "Created 5 users."
+puts "Created 8 users (3 admins, 5 agents)."
 
 puts "Creating Chains..."
-chain1 = Chain.create!(active: true)
-chain2 = Chain.create!(active: true)
-chain3 = Chain.create!(active: true)
+chain1 = Chain.create!(active: true, user: dom)
+chain2 = Chain.create!(active: true, user: sarah)
+chain3 = Chain.create!(active: true, user: toni)
 puts "Created 3 active Chains."
 
 puts "Creating Involved Parties..."
@@ -97,6 +102,11 @@ puts "Created  25 Involved Parties."
 puts "Creating Properties..."
 sellers = [frances, william, amelia, oliver, emma, james, charlotte, george, jack, mia, liam, harper, noah, ava, evelyn, mason, logan, arthur, grace, theo, lily, finn]
 realtors = [sarah, toni, mark, emily, john]
+
+# Link involved parties to agents
+InvolvedParty.all.each_with_index do |party, idx|
+  party.update!(user: realtors[idx % realtors.length])
+end
 
 property_data = [
   { house_number: "10", street: "Maple Drive", second_line: "", city: "London", post_code: "SW1A 1AA", sold: false },
@@ -166,6 +176,7 @@ transactions_to_create = []
     chain_id: chains[i % chains.length].id,
     involved_party_id: buyers[i].id,
     property_id: unsold_properties[i].id,
+    user_id: realtors[i % realtors.length].id,
     completed: false
   }
 end
@@ -176,6 +187,7 @@ end
     chain_id: chains[i % chains.length].id,
     involved_party_id: buyers[15 + i].id, # Continue cycling through buyers
     property_id: sold_properties[i].id,
+    user_id: realtors[(15 + i) % realtors.length].id,
     completed: true
   }
 end
@@ -186,6 +198,7 @@ transactions_to_create.each do |data|
     chain_id: data[:chain_id],
     involved_party_id: data[:involved_party_id],
     property_id: data[:property_id],
+    user_id: data[:user_id],
     completed: data[:completed]
   )
 end
