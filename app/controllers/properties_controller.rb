@@ -26,7 +26,6 @@ class PropertiesController < ApplicationController
   end
 
   def edit
-    @properties = Property.includes(:user, :involved_party).all
   end
 
   def update

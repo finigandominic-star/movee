@@ -10,11 +10,11 @@
 
 
 puts "Cleaning database..."
-User.destroy_all
-Chain.destroy_all
-Involved_Party.destroy_all
-Property.destroy_all
 Transaction.destroy_all
+Property.destroy_all
+InvolvedParty.destroy_all
+Chain.destroy_all
+User.destroy_all
 
 puts "Creating users..."
 # 1
@@ -150,6 +150,7 @@ end
 puts "Created 20 Properties (5 sold)."
 
 puts "Creating Transactions..."
+chains = [chain1, chain2, chain3]
 realtors = [sarah, toni, mark, emily, john]
 buyers = [sophie, harry, isabella, oliver, emma, james, charlotte, george, jack, mia, liam, harper, noah, ava, evelyn, mason, logan, arthur, grace, theo, lily, finn]
 
@@ -162,7 +163,7 @@ transactions_to_create = []
 # 1. Create 15 OPEN transactions for UNSOLD properties
 15.times do |i|
   transactions_to_create << {
-    chain_id: (i % 3) + 1,
+    chain_id: chains[i % chains.length].id,
     involved_party_id: buyers[i].id,
     property_id: unsold_properties[i].id,
     completed: false
@@ -172,7 +173,7 @@ end
 # 2. Create 5 COMPLETED transactions for SOLD properties
 5.times do |i|
   transactions_to_create << {
-    chain_id: (i % 3) + 1,
+    chain_id: chains[i % chains.length].id,
     involved_party_id: buyers[15 + i].id, # Continue cycling through buyers
     property_id: sold_properties[i].id,
     completed: true

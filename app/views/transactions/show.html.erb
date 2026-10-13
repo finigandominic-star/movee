@@ -19,7 +19,7 @@
         </span>
       </div>
       <p class="text-muted mb-0 small">
-        Recorded on <%= @transaction.created_at.strftime("%B %d, %Y at %H:%M") %>
+        Recorded on <%= @transaction.created_at&.strftime("%B %d, %Y at %H:%M") || "Recently" %>
       </p>
     </div>
 
@@ -163,11 +163,11 @@
             </li>
             <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
               <span class="text-muted">Recorded On</span>
-              <span class="text-dark fw-medium"><%= @transaction.created_at.strftime("%d %b %Y, %H:%M") %></span>
+              <span class="text-dark fw-medium"><%= @transaction.created_at&.strftime("%d %b %Y, %H:%M") || "—" %></span>
             </li>
             <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
               <span class="text-muted">Last Updated</span>
-              <span class="text-dark fw-medium"><%= @transaction.updated_at.strftime("%d %b %Y, %H:%M") %></span>
+              <span class="text-dark fw-medium"><%= @transaction.updated_at&.strftime("%d %b %Y, %H:%M") || "—" %></span>
             </li>
           </ul>
         </div>
@@ -228,6 +228,7 @@
                   <span class="text-muted d-block mb-1"><i class="fa-solid fa-circle-info me-1"></i> Notes</span>
                   <p class="text-dark mb-0 small bg-light p-2 rounded"><%= @transaction.involved_party.contact_info %></p>
                 </li>
+              <% end %>
             </ul>
 
             <div class="mt-3 pt-2 border-top">

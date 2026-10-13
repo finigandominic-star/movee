@@ -322,10 +322,13 @@
                 <i class="fa-solid fa-user-gear"></i>
               </div>
               <div class="overflow-hidden">
-                <span class="text-dark fw-semibold d-block text-truncate" title="<%= @property.user.email %>">
-                  <%= @property.user.email %>
+                <span class="text-dark fw-semibold d-block text-truncate" title="<%= @property.user.user_name.presence || @property.user.email %>">
+                  <%= @property.user.user_name.presence || @property.user.email %>
                 </span>
-                <span class="text-muted small">Registered Account</span>
+                <% if @property.user.company.present? %>
+                  <span class="text-muted small d-block"><i class="fa-solid fa-building me-1"></i><%= @property.user.company %></span>
+                <% end %>
+                <span class="text-muted small d-block"><%= @property.user.email %></span>
               </div>
             </div>
           <% else %>

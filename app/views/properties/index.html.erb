@@ -217,8 +217,11 @@
                     <% if property.user %>
                       <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
                         <span class="text-muted"><i class="fa-solid fa-user me-1"></i> Listed By</span>
-                        <span class="text-truncate text-dark fw-medium" style="max-width: 170px;" title="<%= property.user.email %>">
-                          <%= property.user.email %>
+                        <span class="text-truncate text-dark fw-medium text-end" style="max-width: 170px;" title="<%= [property.user.user_name.presence || property.user.email, property.user.company].compact_blank.join(' - ') %>">
+                          <%= property.user.user_name.presence || property.user.email %>
+                          <% if property.user.company.present? %>
+                            <small class="text-muted d-block fw-normal"><%= property.user.company %></small>
+                          <% end %>
                         </span>
                       </li>
                     <% end %>
@@ -315,9 +318,18 @@
                       <% end %>
                     </td>
                     <td>
-                      <small class="text-muted text-truncate d-block" style="max-width: 160px;" title="<%= property.user&.email %>">
-                        <%= property.user&.email || "—" %>
-                      </small>
+                      <% if property.user %>
+                        <span class="text-dark fw-medium d-block text-truncate" style="max-width: 160px;" title="<%= property.user.user_name.presence || property.user.email %>">
+                          <%= property.user.user_name.presence || property.user.email %>
+                        </span>
+                        <% if property.user.company.present? %>
+                          <small class="text-muted text-truncate d-block" style="max-width: 160px;" title="<%= property.user.company %>">
+                            <%= property.user.company %>
+                          </small>
+                        <% end %>
+                      <% else %>
+                        <span class="text-muted">—</span>
+                      <% end %>
                     </td>
                     <td>
                       <small class="text-muted">
