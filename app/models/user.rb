@@ -8,5 +8,5 @@ class User < ApplicationRecord
 
   validates :user_name, presence: true
   validates :email, presence: true
-  validates :password, presence: true, format: { with: "^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$" }
+  validates :password, presence: true, format: { with: /\A(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}\z/ }
 end
