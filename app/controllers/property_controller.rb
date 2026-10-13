@@ -1,0 +1,3 @@
+class PropertyController < ApplicationController
+
+end

@@ -13,4 +13,9 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  property :resources, except (:index)
+
+  # still nee to do: set up the required routes for transactions
+  # transaction :resources, and only or except with specifc actions
 end
