@@ -1,0 +1,180 @@
+<%= form_with model: property, local: true, class: "needs-validation" do |f| %>
+  <!-- Validation Errors Banner -->
+  <% if property.errors.any? %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <div class="d-flex align-items-center mb-2">
+        <i class="fa-solid fa-triangle-exclamation fs-5 me-2"></i>
+        <h6 class="alert-heading fw-bold mb-0">
+          <%= pluralize(property.errors.count, "error") %> prohibited this property from being saved:
+        </h6>
+      </div>
+      <ul class="mb-0 small ps-3">
+        <% property.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+
+  <!-- Section 1: Address Details -->
+  <div class="mb-4">
+    <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+      <span class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 me-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+        <i class="fa-solid fa-location-dot"></i>
+      </span>
+      <h5 class="fw-bold text-dark mb-0">Address Information</h5>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12 col-md-4">
+        <%= f.label :house_number, class: "form-label fw-semibold small text-secondary" do %>
+          House / Building # <span class="text-danger">*</span>
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-hashtag"></i></span>
+          <%= f.text_field :house_number, class: "form-control #{'is-invalid' if property.errors[:house_number].any?}", placeholder: "e.g. 10B", required: true %>
+          <% if property.errors[:house_number].any? %>
+            <div class="invalid-feedback"><%= property.errors[:house_number].first %></div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-8">
+        <%= f.label :street, class: "form-label fw-semibold small text-secondary" do %>
+          Street Name <span class="text-danger">*</span>
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-road"></i></span>
+          <%= f.text_field :street, class: "form-control #{'is-invalid' if property.errors[:street].any?}", placeholder: "e.g. Downing Street", required: true %>
+          <% if property.errors[:street].any? %>
+            <div class="invalid-feedback"><%= property.errors[:street].first %></div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <%= f.label :second_line_of_address, class: "form-label fw-semibold small text-secondary" do %>
+          Address Line 2 <span class="text-muted fw-normal">(Optional)</span>
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-building"></i></span>
+          <%= f.text_field :second_line_of_address, class: "form-control", placeholder: "e.g. Flat 4, West Wing" %>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-3">
+        <%= f.label :city, class: "form-label fw-semibold small text-secondary" do %>
+          City / Town
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-city"></i></span>
+          <%= f.text_field :city, class: "form-control", placeholder: "e.g. London" %>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-3">
+        <%= f.label :post_code, class: "form-label fw-semibold small text-secondary" do %>
+          Postcode <span class="text-danger">*</span>
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-envelope-open"></i></span>
+          <%= f.text_field :post_code, class: "form-control text-uppercase #{'is-invalid' if property.errors[:post_code].any?}", placeholder: "e.g. SW1A 2AA", required: true %>
+          <% if property.errors[:post_code].any? %>
+            <div class="invalid-feedback"><%= property.errors[:post_code].first %></div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Media & Listing Details -->
+  <div class="mb-4">
+    <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+      <span class="rounded-circle bg-success bg-opacity-10 text-success p-2 me-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+        <i class="fa-solid fa-camera"></i>
+      </span>
+      <h5 class="fw-bold text-dark mb-0">Photos & Status</h5>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12">
+        <%= f.label :photos, class: "form-label fw-semibold small text-secondary" do %>
+          Photo URL <span class="text-muted fw-normal">(Image Link)</span>
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-image"></i></span>
+          <%= f.url_field :photos, class: "form-control", placeholder: "https://images.unsplash.com/photo-..." %>
+        </div>
+        <div class="form-text small">Enter a publicly accessible image URL to display as the listing's preview photo.</div>
+      </div>
+
+      <div class="col-12">
+        <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+          <div>
+            <label class="form-check-label fw-bold text-dark d-block" for="propertySoldSwitch">
+              Property Status
+            </label>
+            <span class="text-muted small">Toggle whether this property has already been sold or is actively available.</span>
+          </div>
+          <div class="form-check form-switch fs-5 m-0">
+            <%= f.check_box :sold, class: "form-check-input", role: "switch", id: "propertySoldSwitch" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Involved Party -->
+  <div class="mb-4">
+    <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+      <span class="rounded-circle bg-info bg-opacity-10 text-info p-2 me-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+        <i class="fa-solid fa-user-tie"></i>
+      </span>
+      <h5 class="fw-bold text-dark mb-0">Involved Party</h5>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12">
+        <%= f.label :involved_party_id, class: "form-label fw-semibold small text-secondary" do %>
+          Associated Client / Party <span class="text-muted fw-normal">(Optional)</span>
+        <% end %>
+
+        <% if InvolvedParty.any? %>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-users"></i></span>
+            <%= f.collection_select :involved_party_id,
+                InvolvedParty.all,
+                :id,
+                ->(ip) { "#{ip.first_name} #{ip.last_name} (#{ip.seller? ? 'Seller' : (ip.buyer? ? 'Buyer' : 'Party')}) — #{ip.email}" },
+                { include_blank: "-- None / Unassigned --", selected: (property.involved_party_id || params[:involved_party_id]) },
+                { class: "form-select #{'is-invalid' if property.errors[:involved_party].any?}" } %>
+            <% if property.errors[:involved_party].any? %>
+              <div class="invalid-feedback"><%= property.errors[:involved_party].first %></div>
+            <% end %>
+          </div>
+          <div class="form-text small">Select the seller, buyer, or client associated with this property, or leave unassigned.</div>
+        <% else %>
+          <div class="alert alert-light border mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2" role="alert">
+            <div class="text-muted small">
+              <i class="fa-solid fa-circle-info me-1 text-primary"></i> No clients registered yet. You can save this property now and assign a client later.
+            </div>
+            <%= link_to "Register Client", new_involved_party_path, class: "btn btn-sm btn-outline-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 pt-3 border-top">
+    <%= link_to (property.persisted? ? property_path(property) : properties_path), class: "btn btn-outline-secondary px-4 py-2" do %>
+      Cancel
+    <% end %>
+
+    <%= f.button class: "btn btn-primary px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2" do %>
+      <i class="fa-solid fa-floppy-disk"></i>
+      <span><%= local_assigns[:submit_label] || (property.persisted? ? "Update Property" : "Save Property") %></span>
+    <% end %>
+  </div>
+<% end %>

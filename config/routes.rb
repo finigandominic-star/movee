@@ -1,23 +1,28 @@
 Rails.application.routes.draw do
   devise_for :users
   root to: "pages#home"
-  resources :properties
 
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  resources :properties do
+    member do
+      delete :remove_involved_party
+    end
+  end
+
+  resources :transactions do
+    member do
+      delete :remove_involved_party
+    end
+  end
+
+  resources :involved_parties do
+    member do
+      post :assign_property
+      delete "unassign_property/:property_id", action: :unassign_property, as: :unassign_property
+      post :assign_transaction
+      delete "unassign_transaction/:transaction_id", action: :unassign_transaction, as: :unassign_transaction
+    end
+  end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
-
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-
-  # Defines the root path route ("/")
-  # root "posts#index"
-
-  property :resources, except (:index)
-
-  # still nee to do: set up the required routes for transactions
-  # transaction :resources, and only or except with specifc actions
 end

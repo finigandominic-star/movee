@@ -1,0 +1,35 @@
+<div class="container py-4">
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><%= link_to "Home", root_path, class: "text-decoration-none" %></li>
+      <li class="breadcrumb-item"><%= link_to "Transactions", transactions_path, class: "text-decoration-none" %></li>
+      <li class="breadcrumb-item active" aria-current="page">New Transaction</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-7">
+      <!-- Card Container -->
+      <div class="card border-0 shadow-sm overflow-hidden">
+        <!-- Header -->
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="h3 fw-bold text-dark mb-1">
+              <i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>New Transaction
+            </h1>
+            <p class="text-muted mb-0 small">Link a property, client party, and chain to record a transaction.</p>
+          </div>
+          <%= link_to transactions_path, class: "btn btn-sm btn-outline-secondary d-none d-sm-inline-flex align-items-center gap-1" do %>
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back</span>
+          <% end %>
+        </div>
+
+        <div class="card-body p-4">
+          <%= render "transactions/form", transaction: @transaction, submit_label: "Create Transaction" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

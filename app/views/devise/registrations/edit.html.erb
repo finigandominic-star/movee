@@ -1,0 +1,97 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <!-- Edit Profile Card -->
+      <div class="card border-0 shadow-sm overflow-hidden mb-4">
+        <div class="card-body p-4 p-sm-5">
+          <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                <i class="fa-solid fa-user-gear fa-lg"></i>
+              </div>
+              <div>
+                <h3 class="fw-bold text-dark mb-0">Account Settings</h3>
+                <span class="text-muted small">Update your credentials and account details</span>
+              </div>
+            </div>
+            <%= link_to root_path, class: "btn btn-sm btn-outline-secondary" do %>
+              <i class="fa-solid fa-arrow-left me-1"></i> Back
+            <% end %>
+          </div>
+
+          <%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
+            <%= f.error_notification %>
+
+            <div class="mb-3">
+              <%= f.input :user_name,
+                          required: true,
+                          autofocus: true,
+                          label: "Username",
+                          input_html: { class: "form-control" } %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.input :email,
+                          required: true,
+                          label: "Email Address",
+                          input_html: { autocomplete: "email", class: "form-control" } %>
+            </div>
+
+            <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+              <div class="alert alert-info py-2 small mb-3">
+                <i class="fa-solid fa-envelope me-1"></i> Currently waiting confirmation for: <strong><%= resource.unconfirmed_email %></strong>
+              </div>
+            <% end %>
+
+            <div class="mb-3">
+              <%= f.input :password,
+                          label: "New Password",
+                          hint: "Leave blank if you don't want to change it",
+                          required: false,
+                          placeholder: "••••••••",
+                          input_html: { autocomplete: "new-password", class: "form-control" } %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.input :password_confirmation,
+                          label: "Confirm New Password",
+                          required: false,
+                          placeholder: "••••••••",
+                          input_html: { autocomplete: "new-password", class: "form-control" } %>
+            </div>
+
+            <div class="mb-4 pt-2 border-top">
+              <%= f.input :current_password,
+                          label: "Current Password",
+                          hint: "We need your current password to confirm your changes",
+                          required: true,
+                          placeholder: "••••••••",
+                          input_html: { autocomplete: "current-password", class: "form-control" } %>
+            </div>
+
+            <div class="d-grid">
+              <%= f.button :submit, "Save Changes", class: "btn btn-primary py-2 fw-semibold shadow-sm" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Delete / Cancel Account Card -->
+      <div class="card border-danger-subtle bg-danger-subtle bg-opacity-10 shadow-sm">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+              <h5 class="fw-bold text-danger mb-1">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> Delete Account
+              </h5>
+              <p class="text-muted small mb-0">Permanently delete your user account and all personal settings.</p>
+            </div>
+            <%= button_to registration_path(resource_name), method: :delete, data: { turbo_confirm: "Are you sure you want to permanently delete your account? This action cannot be undone." }, class: "btn btn-outline-danger btn-sm" do %>
+              <i class="fa-solid fa-trash-can me-1"></i> Delete My Account
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
