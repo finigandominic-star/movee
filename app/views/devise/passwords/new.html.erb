@@ -1,0 +1,38 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+      <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="card-body p-4 p-sm-5">
+          <div class="text-center mb-4">
+            <div class="rounded-circle bg-warning bg-opacity-10 text-warning p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+              <i class="fa-solid fa-key fa-2x"></i>
+            </div>
+            <h2 class="fw-bold text-dark mb-1">Forgot Password?</h2>
+            <p class="text-muted small mb-0">Enter your email and we'll send you reset instructions.</p>
+          </div>
+
+          <%= simple_form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
+            <%= f.error_notification %>
+
+            <div class="mb-4">
+              <%= f.input :email,
+                          required: true,
+                          autofocus: true,
+                          label: "Email Address",
+                          placeholder: "you@example.com",
+                          input_html: { autocomplete: "email", class: "form-control" } %>
+            </div>
+
+            <div class="d-grid mb-3">
+              <%= f.button :submit, "Send Reset Instructions", class: "btn btn-primary py-2 fw-semibold shadow-sm" %>
+            </div>
+          <% end %>
+
+          <div class="text-center pt-3 border-top">
+            <%= link_to "Back to Log In", new_session_path(resource_name), class: "text-decoration-none small text-muted" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

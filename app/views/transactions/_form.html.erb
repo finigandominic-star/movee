@@ -1,0 +1,122 @@
+<%= form_with model: transaction, local: true, class: "needs-validation" do |f| %>
+  <!-- Validation Errors Alert -->
+  <% if transaction.errors.any? %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <div class="d-flex align-items-center mb-2">
+        <i class="fa-solid fa-triangle-exclamation fs-5 me-2"></i>
+        <h6 class="alert-heading fw-bold mb-0">
+          <%= pluralize(transaction.errors.count, "error") %> prohibited this transaction from being saved:
+        </h6>
+      </div>
+      <ul class="mb-0 small ps-3">
+        <% transaction.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+
+  <!-- Property Selection -->
+  <div class="mb-4">
+    <%= f.label :property_id, class: "form-label fw-semibold small text-secondary" do %>
+      Associated Property <span class="text-danger">*</span>
+    <% end %>
+
+    <% if Property.any? %>
+      <div class="input-group">
+        <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-house"></i></span>
+        <%= f.collection_select :property_id,
+            Property.all,
+            :id,
+            ->(p) { "#{p.short_address}, #{p.city} (#{p.post_code})" },
+            { prompt: "-- Select Property --" },
+            { class: "form-select #{'is-invalid' if transaction.errors[:property].any?}", required: true } %>
+        <% if transaction.errors[:property].any? %>
+          <div class="invalid-feedback"><%= transaction.errors[:property].first %></div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="alert alert-warning mb-0 d-flex align-items-center gap-2" role="alert">
+        <i class="fa-solid fa-circle-exclamation fs-5"></i>
+        <div>
+          <strong>No properties available.</strong> You must <%= link_to "create a property", new_property_path, class: "alert-link" %> before recording a transaction.
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Involved Party Selection -->
+  <div class="mb-4">
+    <%= f.label :involved_party_id, class: "form-label fw-semibold small text-secondary" do %>
+      Client / Involved Party <span class="text-muted fw-normal">(Optional)</span>
+    <% end %>
+
+    <% if InvolvedParty.any? %>
+      <div class="input-group">
+        <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-user-tie"></i></span>
+        <%= f.collection_select :involved_party_id,
+            InvolvedParty.all,
+            :id,
+            ->(ip) { "#{ip.first_name} #{ip.last_name} (#{ip.seller? ? 'Seller' : (ip.buyer? ? 'Buyer' : 'Party')}) — #{ip.email}" },
+            { include_blank: "-- None / Unassigned --", selected: (transaction.involved_party_id || params[:involved_party_id]) },
+            { class: "form-select #{'is-invalid' if transaction.errors[:involved_party].any?}" } %>
+        <% if transaction.errors[:involved_party].any? %>
+          <div class="invalid-feedback"><%= transaction.errors[:involved_party].first %></div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="alert alert-light border mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2" role="alert">
+        <div class="text-muted small">
+          <i class="fa-solid fa-circle-info me-1 text-primary"></i> No client parties registered. You can record this transaction now and assign a client later.
+        </div>
+        <%= link_to "Register Client", new_involved_party_path, class: "btn btn-sm btn-outline-primary" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Chain Selection -->
+  <div class="mb-4">
+    <%= f.label :chain_id, class: "form-label fw-semibold small text-secondary" do %>
+      Property Chain <span class="text-muted fw-normal">(Optional / Auto-assigned)</span>
+    <% end %>
+
+    <div class="input-group">
+      <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-link"></i></span>
+      <%= f.collection_select :chain_id,
+          Chain.all,
+          :id,
+          ->(c) { "Chain ##{c.id} (#{c.active? ? 'Active' : 'Inactive'}) — #{pluralize(c.transactions.count, 'transaction')}" },
+          { prompt: (Chain.any? ? "-- Select Chain (or leave blank to create a new one) --" : "Auto-create a new active chain upon save") },
+          { class: "form-select" } %>
+    </div>
+    <div class="form-text small">Connect this transaction to an existing deal chain, or leave blank to automatically create a new chain.</div>
+  </div>
+
+  <!-- Completion Status Toggle -->
+  <div class="mb-4">
+    <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+      <div>
+        <label class="form-check-label fw-bold text-dark d-block" for="transactionCompletedSwitch">
+          Transaction Completed
+        </label>
+        <span class="text-muted small">Toggle on if this transaction step has successfully completed.</span>
+      </div>
+      <div class="form-check form-switch fs-5 m-0">
+        <%= f.check_box :completed, class: "form-check-input", role: "switch", id: "transactionCompletedSwitch" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 pt-3 border-top">
+    <%= link_to (transaction.persisted? ? transaction_path(transaction) : transactions_path), class: "btn btn-outline-secondary px-4 py-2" do %>
+      Cancel
+    <% end %>
+
+    <%= f.button class: "btn btn-primary px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2" do %>
+      <i class="fa-solid fa-floppy-disk"></i>
+      <span><%= local_assigns[:submit_label] || (transaction.persisted? ? "Update Transaction" : "Save Transaction") %></span>
+    <% end %>
+  </div>
+<% end %>

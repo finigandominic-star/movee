@@ -1,0 +1,346 @@
+<div class="container py-4">
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><%= link_to "Home", root_path, class: "text-decoration-none" %></li>
+      <li class="breadcrumb-item active" aria-current="page">Properties</li>
+    </ol>
+  </nav>
+
+  <!-- Page Header & Actions -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
+    <div>
+      <h1 class="h2 fw-bold text-dark mb-1">
+        Properties
+        <span class="badge bg-secondary fs-6 align-middle"><%= @properties.size %></span>
+      </h1>
+      <p class="text-muted mb-0 small">Manage, browse, and view full details for all property listings.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <%= link_to new_property_path, class: "btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" do %>
+        <i class="fa-solid fa-plus"></i>
+        <span>Add Property</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Summary Metric Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+            <i class="fa-solid fa-building fa-lg"></i>
+          </div>
+          <div>
+            <div class="text-muted small text-uppercase fw-semibold">Total Properties</div>
+            <div class="h4 fw-bold mb-0"><%= @properties.size %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-circle bg-success bg-opacity-10 text-success p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+            <i class="fa-solid fa-house-circle-check fa-lg"></i>
+          </div>
+          <div>
+            <div class="text-muted small text-uppercase fw-semibold">Available / For Sale</div>
+            <div class="h4 fw-bold mb-0"><%= @properties.count { |p| !p.sold? } %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+            <i class="fa-solid fa-handshake fa-lg"></i>
+          </div>
+          <div>
+            <div class="text-muted small text-uppercase fw-semibold">Sold</div>
+            <div class="h4 fw-bold mb-0"><%= @properties.count { |p| p.sold? } %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if @properties.empty? %>
+    <!-- Empty State -->
+    <div class="card border-0 shadow-sm text-center py-5 my-4">
+      <div class="card-body py-5">
+        <div class="text-secondary opacity-50 mb-3">
+          <i class="fa-solid fa-house-chimney-crack fa-3x"></i>
+        </div>
+        <h3 class="h4 fw-bold text-dark">No Properties Found</h3>
+        <p class="text-muted mb-4 mx-auto" style="max-width: 420px;">
+          There are currently no property listings in the database. Add your first property to start tracking its details.
+        </p>
+        <%= link_to new_property_path, class: "btn btn-primary" do %>
+          <i class="fa-solid fa-plus me-1"></i> Add Property
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <!-- View Switcher Tabs -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <ul class="nav nav-pills" id="propertyViewTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active btn-sm" id="cards-tab" data-bs-toggle="pill" data-bs-target="#cards-view" type="button" role="tab" aria-controls="cards-view" aria-selected="true">
+            <i class="fa-solid fa-grip me-1"></i> Cards View
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link btn-sm" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-view" type="button" role="tab" aria-controls="table-view" aria-selected="false">
+            <i class="fa-solid fa-table-list me-1"></i> Table View
+          </button>
+        </li>
+      </ul>
+      <span class="text-muted small">Showing <%= pluralize(@properties.size, "property") %></span>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="propertyViewTabsContent">
+      <!-- 1. Cards View -->
+      <div class="tab-pane fade show active" id="cards-view" role="tabpanel" aria-labelledby="cards-tab" tabindex="0">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+          <% @properties.each do |property| %>
+            <div class="col">
+              <div class="card h-100 shadow-sm border-0 position-relative overflow-hidden">
+                <!-- Status Badge Overlay -->
+                <div class="position-absolute top-0 end-0 m-3" style="z-index: 2;">
+                  <% if property.sold? %>
+                    <span class="badge bg-secondary shadow-sm">
+                      <i class="fa-solid fa-check me-1"></i> Sold
+                    </span>
+                  <% else %>
+                    <span class="badge bg-success shadow-sm">
+                      <i class="fa-solid fa-house-chimney me-1"></i> For Sale
+                    </span>
+                  <% end %>
+                </div>
+
+                <!-- Property Image / Placeholder Header -->
+                <% if property.photos.present? %>
+                  <img src="<%= property.photos %>" class="card-img-top object-fit-cover" alt="<%= [property.house_number, property.street].compact_blank.join(' ') %>" style="height: 200px;">
+                <% else %>
+                  <div class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center text-muted" style="height: 200px;">
+                    <i class="fa-solid fa-house fa-3x text-secondary opacity-50 mb-2"></i>
+                    <span class="small text-secondary">No photo available</span>
+                  </div>
+                <% end %>
+
+                <div class="card-body">
+                  <!-- Address Title -->
+                  <h5 class="card-title fw-bold text-dark mb-1">
+                    <%= [property.house_number, property.street].compact_blank.join(" ") %>
+                  </h5>
+
+                  <% if property.second_line_of_address.present? %>
+                    <div class="text-muted small mb-1">
+                      <%= property.second_line_of_address %>
+                    </div>
+                  <% end %>
+
+                  <div class="text-secondary small mb-3">
+                    <i class="fa-solid fa-location-dot text-danger me-1"></i>
+                    <%= [property.city, property.post_code].compact_blank.join(", ") %>
+                  </div>
+
+                  <!-- Detailed Property Specs (List Group) -->
+                  <ul class="list-group list-group-flush small border-top pt-2">
+                    <li class="list-group-item px-0 py-2 d-flex justify-content-between">
+                      <span class="text-muted"><i class="fa-regular fa-hashtag me-1"></i> House Number</span>
+                      <span class="fw-semibold text-dark"><%= property.house_number %></span>
+                    </li>
+                    <li class="list-group-item px-0 py-2 d-flex justify-content-between">
+                      <span class="text-muted"><i class="fa-solid fa-road me-1"></i> Street</span>
+                      <span class="fw-semibold text-dark"><%= property.street %></span>
+                    </li>
+                    <% if property.second_line_of_address.present? %>
+                      <li class="list-group-item px-0 py-2 d-flex justify-content-between">
+                        <span class="text-muted"><i class="fa-solid fa-map-pin me-1"></i> Line 2</span>
+                        <span class="fw-semibold text-dark"><%= property.second_line_of_address %></span>
+                      </li>
+                    <% end %>
+                    <li class="list-group-item px-0 py-2 d-flex justify-content-between">
+                      <span class="text-muted"><i class="fa-solid fa-city me-1"></i> City</span>
+                      <span class="fw-semibold text-dark"><%= property.city.presence || "—" %></span>
+                    </li>
+                    <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                      <span class="text-muted"><i class="fa-solid fa-envelope-open me-1"></i> Postcode</span>
+                      <span class="badge bg-light text-dark border"><%= property.post_code %></span>
+                    </li>
+
+                    <!-- Involved Party -->
+                    <li class="list-group-item px-0 py-2">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted"><i class="fa-solid fa-user-tie me-1"></i> Involved Party</span>
+                        <% if property.involved_party %>
+                          <div>
+                            <% if property.involved_party.seller? %>
+                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Seller</span>
+                            <% end %>
+                            <% if property.involved_party.buyer? %>
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Buyer</span>
+                            <% end %>
+                          </div>
+                        <% end %>
+                      </div>
+                      <% if property.involved_party %>
+                        <div class="fw-semibold text-dark">
+                          <%= property.involved_party.first_name %> <%= property.involved_party.last_name %>
+                        </div>
+                        <% if property.involved_party.phone.present? %>
+                          <div class="text-muted text-truncate">
+                            <i class="fa-solid fa-phone me-1"></i><%= property.involved_party.phone %>
+                          </div>
+                        <% end %>
+                        <% if property.involved_party.email.present? %>
+                          <div class="text-muted text-truncate">
+                            <i class="fa-solid fa-envelope me-1"></i><%= property.involved_party.email %>
+                          </div>
+                        <% end %>
+                        <% if property.involved_party.contact_info.present? %>
+                          <div class="text-muted text-truncate">
+                            <i class="fa-solid fa-circle-info me-1"></i><%= property.involved_party.contact_info %>
+                          </div>
+                        <% end %>
+                      <% else %>
+                        <span class="text-muted fst-italic">None assigned</span>
+                      <% end %>
+                    </li>
+
+                    <!-- Listed By / Owner User -->
+                    <% if property.user %>
+                      <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fa-solid fa-user me-1"></i> Listed By</span>
+                        <span class="text-truncate text-dark fw-medium" style="max-width: 170px;" title="<%= property.user.email %>">
+                          <%= property.user.email %>
+                        </span>
+                      </li>
+                    <% end %>
+
+                    <!-- Listed Date -->
+                    <li class="list-group-item px-0 py-2 d-flex justify-content-between text-muted">
+                      <span><i class="fa-regular fa-calendar me-1"></i> Listed</span>
+                      <span><%= property.created_at&.strftime("%d %b %Y") || "—" %></span>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Card Footer with Actions -->
+                <div class="card-footer bg-transparent border-top d-flex justify-content-between align-items-center py-2 px-3">
+                  <%= link_to property_path(property), class: "btn btn-sm btn-outline-primary" do %>
+                    <i class="fa-solid fa-eye me-1"></i> Details
+                  <% end %>
+                  <%= link_to edit_property_path(property), class: "btn btn-sm btn-outline-secondary" do %>
+                    <i class="fa-solid fa-pen me-1"></i> Edit
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- 2. Table View -->
+      <div class="tab-pane fade" id="table-view" role="tabpanel" aria-labelledby="table-tab" tabindex="0">
+        <div class="card border-0 shadow-sm overflow-hidden">
+          <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0">
+              <thead class="table-light text-uppercase small text-muted">
+                <tr>
+                  <th scope="col" style="width: 70px;">Photo</th>
+                  <th scope="col">Address</th>
+                  <th scope="col">City & Postcode</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Involved Party</th>
+                  <th scope="col">Listed By</th>
+                  <th scope="col">Listed On</th>
+                  <th scope="col" class="text-end" style="width: 130px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @properties.each do |property| %>
+                  <tr>
+                    <td>
+                      <% if property.photos.present? %>
+                        <img src="<%= property.photos %>" class="rounded object-fit-cover" alt="Property thumbnail" width="48" height="48">
+                      <% else %>
+                        <div class="rounded bg-light text-muted d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                          <i class="fa-solid fa-house text-secondary"></i>
+                        </div>
+                      <% end %>
+                    </td>
+                    <td>
+                      <div class="fw-bold text-dark">
+                        <%= [property.house_number, property.street].compact_blank.join(" ") %>
+                      </div>
+                      <% if property.second_line_of_address.present? %>
+                        <small class="text-muted d-block"><%= property.second_line_of_address %></small>
+                      <% end %>
+                    </td>
+                    <td>
+                      <span class="d-block"><%= property.city.presence || "—" %></span>
+                      <span class="badge bg-light text-dark border"><%= property.post_code %></span>
+                    </td>
+                    <td>
+                      <% if property.sold? %>
+                        <span class="badge bg-secondary">Sold</span>
+                      <% else %>
+                        <span class="badge bg-success">Available</span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <% if property.involved_party %>
+                        <div class="fw-medium">
+                          <%= property.involved_party.first_name %> <%= property.involved_party.last_name %>
+                          <% if property.involved_party.seller? %>
+                            <span class="badge bg-primary-subtle text-primary ms-1">Seller</span>
+                          <% end %>
+                          <% if property.involved_party.buyer? %>
+                            <span class="badge bg-warning-subtle text-warning-emphasis ms-1">Buyer</span>
+                          <% end %>
+                        </div>
+                        <% if property.involved_party.phone.present? || property.involved_party.email.present? %>
+                          <small class="text-muted d-block text-truncate" style="max-width: 200px;">
+                            <%= [property.involved_party.phone, property.involved_party.email].compact_blank.join(" • ") %>
+                          </small>
+                        <% end %>
+                      <% else %>
+                        <span class="text-muted fst-italic">None</span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <small class="text-muted text-truncate d-block" style="max-width: 160px;" title="<%= property.user&.email %>">
+                        <%= property.user&.email || "—" %>
+                      </small>
+                    </td>
+                    <td>
+                      <small class="text-muted">
+                        <%= property.created_at&.strftime("%d %b %Y") || "—" %>
+                      </small>
+                    </td>
+                    <td class="text-end">
+                      <div class="btn-group btn-group-sm">
+                        <%= link_to property_path(property), class: "btn btn-outline-primary", title: "View details" do %>
+                          <i class="fa-solid fa-eye"></i>
+                        <% end %>
+                        <%= link_to edit_property_path(property), class: "btn btn-outline-secondary", title: "Edit" do %>
+                          <i class="fa-solid fa-pen"></i>
+                        <% end %>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

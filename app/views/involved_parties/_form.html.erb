@@ -1,0 +1,145 @@
+<%= form_with model: involved_party, local: true, class: "needs-validation" do |f| %>
+  <!-- Validation Errors Banner -->
+  <% if involved_party.errors.any? %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <div class="d-flex align-items-center mb-2">
+        <i class="fa-solid fa-triangle-exclamation fs-5 me-2"></i>
+        <h6 class="alert-heading fw-bold mb-0">
+          <%= pluralize(involved_party.errors.count, "error") %> prohibited this involved party from being saved:
+        </h6>
+      </div>
+      <ul class="mb-0 small ps-3">
+        <% involved_party.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+
+  <!-- Personal Information -->
+  <div class="mb-4">
+    <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+      <span class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 me-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+        <i class="fa-solid fa-user"></i>
+      </span>
+      <h5 class="fw-bold text-dark mb-0">Personal Information</h5>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <%= f.label :first_name, class: "form-label fw-semibold small text-secondary" do %>
+          First Name <span class="text-danger">*</span>
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-user"></i></span>
+          <%= f.text_field :first_name, class: "form-control #{'is-invalid' if involved_party.errors[:first_name].any?}", placeholder: "e.g. John", required: true %>
+          <% if involved_party.errors[:first_name].any? %>
+            <div class="invalid-feedback"><%= involved_party.errors[:first_name].first %></div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <%= f.label :last_name, class: "form-label fw-semibold small text-secondary" do %>
+          Last Name <span class="text-danger">*</span>
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-user"></i></span>
+          <%= f.text_field :last_name, class: "form-control #{'is-invalid' if involved_party.errors[:last_name].any?}", placeholder: "e.g. Doe", required: true %>
+          <% if involved_party.errors[:last_name].any? %>
+            <div class="invalid-feedback"><%= involved_party.errors[:last_name].first %></div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <%= f.label :email, class: "form-label fw-semibold small text-secondary" do %>
+          Email Address <span class="text-danger">*</span>
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-envelope"></i></span>
+          <%= f.email_field :email, class: "form-control #{'is-invalid' if involved_party.errors[:email].any?}", placeholder: "john.doe@example.com", required: true %>
+          <% if involved_party.errors[:email].any? %>
+            <div class="invalid-feedback"><%= involved_party.errors[:email].first %></div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <%= f.label :phone, class: "form-label fw-semibold small text-secondary" do %>
+          Phone Number <span class="text-danger">*</span>
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-phone"></i></span>
+          <%= f.telephone_field :phone, class: "form-control #{'is-invalid' if involved_party.errors[:phone].any?}", placeholder: "+44 7123 456789", required: true %>
+          <% if involved_party.errors[:phone].any? %>
+            <div class="invalid-feedback"><%= involved_party.errors[:phone].first %></div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <%= f.label :contact_info, class: "form-label fw-semibold small text-secondary" do %>
+          Additional Contact Info / Notes <span class="text-muted fw-normal">(Optional)</span>
+        <% end %>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-notes-medical"></i></span>
+          <%= f.text_area :contact_info, rows: 3, class: "form-control", placeholder: "e.g. Preferred contact method WhatsApp, best reached weekday afternoons..." %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role in Deals -->
+  <div class="mb-4">
+    <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+      <span class="rounded-circle bg-success bg-opacity-10 text-success p-2 me-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+        <i class="fa-solid fa-user-tag"></i>
+      </span>
+      <h5 class="fw-bold text-dark mb-0">Role & Deal Capacity</h5>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between h-100">
+          <div>
+            <label class="form-check-label fw-bold text-dark d-block" for="involvedPartySellerSwitch">
+              <i class="fa-solid fa-house-chimney-user text-primary me-1"></i> Seller
+            </label>
+            <span class="text-muted small">Can sell properties in transaction chains.</span>
+          </div>
+          <div class="form-check form-switch fs-5 m-0">
+            <%= f.check_box :seller, class: "form-check-input", role: "switch", id: "involvedPartySellerSwitch" %>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between h-100">
+          <div>
+            <label class="form-check-label fw-bold text-dark d-block" for="involvedPartyBuyerSwitch">
+              <i class="fa-solid fa-cart-shopping text-warning me-1"></i> Buyer
+            </label>
+            <span class="text-muted small">Can purchase properties in transaction chains.</span>
+          </div>
+          <div class="form-check form-switch fs-5 m-0">
+            <%= f.check_box :buyer, class: "form-check-input", role: "switch", id: "involvedPartyBuyerSwitch" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 pt-3 border-top">
+    <%= link_to (involved_party.persisted? ? involved_party_path(involved_party) : involved_parties_path), class: "btn btn-outline-secondary px-4 py-2" do %>
+      Cancel
+    <% end %>
+
+    <%= f.button class: "btn btn-primary px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2" do %>
+      <i class="fa-solid fa-floppy-disk"></i>
+      <span><%= local_assigns[:submit_label] || (involved_party.persisted? ? "Update Involved Party" : "Save Involved Party") %></span>
+    <% end %>
+  </div>
+<% end %>

@@ -4,9 +4,8 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-  has_many :properties
+  has_many :properties, dependent: :nullify
 
   validates :user_name, presence: true
-  validates :email, presence: true
-  validates :password, presence: true, format: { with: "^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$" }
+  validates :password, format: { with: /\A(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}\z/, message: "must be at least 8 characters and include at least one letter and one number" }, if: :password_required?
 end
