@@ -11,7 +11,7 @@ class Property < ApplicationRecord
   validates :street, presence: true
 
   def full_address
-    [house_number, street, second_line_of_address, city, post_code].compact_blank.join(", ")
+    [short_address, second_line_of_address, city, post_code].compact_blank.join(", ")
   end
 
   def short_address

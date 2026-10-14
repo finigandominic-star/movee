@@ -2,20 +2,24 @@ class InvolvedPartiesController < ApplicationController
   before_action :set_involved_party, only: %i[show edit update destroy assign_property unassign_property assign_transaction unassign_transaction]
 
   def index
-    @involved_parties = InvolvedParty.includes(:properties, :transactions).order(created_at: :desc)
+    @involved_parties = policy_scope(InvolvedParty).includes(:properties, :transactions, :user).order(created_at: :desc)
   end
 
   def show
+    authorize @involved_party
     @available_properties = Property.where(involved_party_id: nil)
     @available_transactions = Transaction.where(involved_party_id: nil)
   end
 
   def new
     @involved_party = InvolvedParty.new
+    authorize @involved_party
   end
 
   def create
     @involved_party = InvolvedParty.new(involved_party_params)
+    @involved_party.user = current_user if current_user.present?
+    authorize @involved_party
 
     if @involved_party.save
       redirect_to @involved_party, notice: "Involved party was successfully created."
@@ -25,9 +29,11 @@ class InvolvedPartiesController < ApplicationController
   end
 
   def edit
+    authorize @involved_party
   end
 
   def update
+    authorize @involved_party
     if @involved_party.update(involved_party_params)
       redirect_to @involved_party, notice: "Involved party was successfully updated."
     else
@@ -36,12 +42,14 @@ class InvolvedPartiesController < ApplicationController
   end
 
   def destroy
+    authorize @involved_party
     @involved_party.destroy
     redirect_to involved_parties_path, notice: "Involved party was successfully deleted."
   end
 
   # Assign an existing property to this involved party
   def assign_property
+    authorize @involved_party
     property = Property.find_by(id: params[:property_id])
     if property
       property.update(involved_party: @involved_party)
@@ -53,6 +61,7 @@ class InvolvedPartiesController < ApplicationController
 
   # Remove/unassign a property from this involved party
   def unassign_property
+    authorize @involved_party
     property = @involved_party.properties.find_by(id: params[:property_id]) || Property.find_by(id: params[:property_id])
     if property
       property.update(involved_party: nil)
@@ -64,6 +73,7 @@ class InvolvedPartiesController < ApplicationController
 
   # Assign an existing transaction to this involved party
   def assign_transaction
+    authorize @involved_party
     transaction = Transaction.find_by(id: params[:transaction_id])
     if transaction
       transaction.update(involved_party: @involved_party)
@@ -75,6 +85,7 @@ class InvolvedPartiesController < ApplicationController
 
   # Remove/unassign a transaction from this involved party
   def unassign_transaction
+    authorize @involved_party
     transaction = @involved_party.transactions.find_by(id: params[:transaction_id]) || Transaction.find_by(id: params[:transaction_id])
     if transaction
       transaction.update(involved_party: nil)

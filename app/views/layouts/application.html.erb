@@ -42,6 +42,9 @@
               <%= link_to "Transactions", transactions_path, class: "nav-link #{'active fw-semibold' if controller_name == 'transactions'}" %>
             </li>
             <li class="nav-item">
+              <%= link_to "Chains", chains_path, class: "nav-link #{'active fw-semibold' if controller_name == 'chains'}" %>
+            </li>
+            <li class="nav-item">
               <%= link_to "Involved Parties", involved_parties_path, class: "nav-link #{'active fw-semibold' if controller_name == 'involved_parties'}" %>
             </li>
           </ul>
@@ -52,6 +55,12 @@
                 <span class="navbar-text small text-dark fw-medium">
                   <i class="fa-solid fa-circle-user text-primary me-1"></i>
                   <%= current_user.user_name.presence || current_user.email %>
+                  <% if current_user.company.present? %>
+                    <span class="text-muted fw-normal">(<%= current_user.company %>)</span>
+                  <% end %>
+                  <% if current_user.admin? %>
+                    <span class="badge bg-danger ms-1">Admin</span>
+                  <% end %>
                 </span>
               </li>
               <li class="nav-item">
