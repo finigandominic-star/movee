@@ -93,6 +93,30 @@
     <div class="form-text small">Connect this transaction to an existing deal chain, or leave blank to automatically create a new chain.</div>
   </div>
 
+  <!-- UK Conveyancing Legal Stage -->
+  <div class="mb-4">
+    <%= f.label :legal_stage, class: "form-label fw-semibold small text-secondary" do %>
+      Conveyancing Legal Stage <span class="text-danger">*</span>
+    <% end %>
+
+    <div class="input-group">
+      <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-scale-balanced"></i></span>
+      <%= f.select :legal_stage,
+          Transaction::LEGAL_STAGES.map { |stg|
+            d = Transaction::LEGAL_STAGE_DEFINITIONS[stg]
+            ["Step #{d[:index]}: #{d[:name]} (#{d[:timeline]})", stg]
+          },
+          {},
+          { class: "form-select #{'is-invalid' if transaction.errors[:legal_stage].any?}" } %>
+      <% if transaction.errors[:legal_stage].any? %>
+        <div class="invalid-feedback"><%= transaction.errors[:legal_stage].first %></div>
+      <% end %>
+    </div>
+    <div class="form-text small">
+      Select the current legal stage under UK conveyancing procedure (England &amp; Wales). Selecting "Completion &amp; Keys Released" will mark the transaction completed.
+    </div>
+  </div>
+
   <!-- Completion Status Toggle -->
   <div class="mb-4">
     <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">

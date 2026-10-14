@@ -1,0 +1,106 @@
+<!-- Collapsible UK Conveyancing Legal Stages Process Guide & Tooltips -->
+<div class="collapse mb-4" id="conveyancingGuideAccordion">
+  <div class="card border-0 shadow-sm legal-guide-card">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fa-solid fa-book-bookmark text-primary fs-5"></i>
+        <div>
+          <h5 class="card-title fw-bold text-dark mb-0">UK Conveyancing Legal Stages: Complete Agent Guide</h5>
+          <span class="text-muted small">Understanding the England &amp; Wales residential property conveyancing process post-offer acceptance</span>
+        </div>
+      </div>
+      <button class="btn-close" type="button" data-bs-toggle="collapse" data-bs-target="#conveyancingGuideAccordion" aria-label="Close guide"></button>
+    </div>
+
+    <div class="card-body p-4">
+      <p class="text-muted small mb-4">
+        Unlike Scottish property law where offers can become binding early, in England &amp; Wales property transactions are <em>Subject to Contract (SSTC)</em> and completely non-binding until <strong>Exchange of Contracts</strong>. Estate agents play a crucial sales-progression role in coordinating solicitors, buyers, vendors, lenders, and surveyors through the 8 stages below:
+      </p>
+
+      <div class="accordion" id="stagesDetailedAccordion">
+        <% Transaction::LEGAL_STAGES.each do |stage_key| %>
+          <% stage_def = Transaction::LEGAL_STAGE_DEFINITIONS[stage_key] %>
+          <% is_current = @transaction.legal_stage == stage_key %>
+
+          <div class="accordion-item border rounded-3 mb-2 overflow-hidden shadow-none">
+            <h2 class="accordion-header" id="heading_<%= stage_key %>">
+              <button class="accordion-button <%= 'collapsed' unless is_current %> py-3"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#collapse_<%= stage_key %>"
+                      aria-expanded="<%= is_current %>"
+                      aria-controls="collapse_<%= stage_key %>">
+                <div class="d-flex align-items-center justify-content-between w-100 me-3 flex-wrap gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge <%= is_current ? 'bg-primary' : 'bg-light text-dark border' %> rounded-pill px-2 py-1">
+                      Step <%= stage_def[:index] %>
+                    </span>
+                    <i class="fa-solid <%= stage_def[:icon] %> text-primary"></i>
+                    <strong class="text-dark"><%= stage_def[:name] %></strong>
+                    <% if is_current %>
+                      <span class="badge bg-success ms-2">Current Active Stage</span>
+                    <% end %>
+                  </div>
+                  <div class="d-flex align-items-center gap-2 text-muted small">
+                    <span><i class="fa-regular fa-clock me-1"></i> <%= stage_def[:timeline] %></span>
+                    <span class="d-none d-sm-inline">•</span>
+                    <span><i class="fa-solid fa-user-tie me-1"></i> <%= stage_def[:lead_actor] %></span>
+                  </div>
+                </div>
+              </button>
+            </h2>
+
+            <div id="collapse_<%= stage_key %>"
+                 class="accordion-collapse collapse <%= 'show' if is_current %>"
+                 aria-labelledby="heading_<%= stage_key %>"
+                 data-bs-parent="#stagesDetailedAccordion">
+              <div class="accordion-body bg-light p-3 p-md-4">
+                <div class="row g-3">
+                  <div class="col-12 col-md-7">
+                    <h6 class="fw-bold text-dark small text-uppercase mb-2">
+                      <i class="fa-solid fa-gavel text-primary me-1"></i> Legal Definition &amp; Procedure
+                    </h6>
+                    <p class="small text-secondary mb-3">
+                      <%= stage_def[:legal_context] %>
+                    </p>
+                    <div class="bg-white border rounded p-3 mb-2">
+                      <span class="fw-semibold small text-dark d-block mb-1">
+                        <i class="fa-solid fa-lightbulb text-warning me-1"></i> Quick Process Tooltip:
+                      </span>
+                      <p class="small text-muted mb-0 fst-italic">
+                        "<%= stage_def[:tooltip] %>"
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-5">
+                    <div class="bg-white border rounded p-3 h-100">
+                      <h6 class="fw-bold text-primary small text-uppercase mb-2">
+                        <i class="fa-solid fa-list-check text-primary me-1"></i> Agent Action &amp; Chasing Tip
+                      </h6>
+                      <p class="small text-dark mb-0">
+                        <%= stage_def[:agent_action] %>
+                      </p>
+                      <% if policy(@transaction).update? && !is_current %>
+                        <div class="mt-3 pt-2 border-top">
+                          <%= button_to update_stage_transaction_path(@transaction),
+                                        method: :patch,
+                                        params: { legal_stage: stage_key },
+                                        class: "btn btn-sm btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center gap-1",
+                                        data: { turbo_confirm: "Switch transaction stage to #{stage_def[:name]}?" } do %>
+                            <i class="fa-solid fa-arrow-turn-down"></i>
+                            <span>Set as Current Stage</span>
+                          <% end %>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

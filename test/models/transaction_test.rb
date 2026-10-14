@@ -33,6 +33,7 @@ class TransactionTest < ActiveSupport::TestCase
     assert tx.valid?, tx.errors.full_messages.to_sentence
     assert_equal "In Progress", tx.status_label
     assert_equal "bg-warning text-dark", tx.status_badge_class
+    assert_equal "offer_accepted", tx.legal_stage
   end
 
   test "completed status formatting" do
@@ -60,5 +61,74 @@ class TransactionTest < ActiveSupport::TestCase
     tx = Transaction.create!(chain: @chain, property: @property, involved_party: nil)
     assert tx.valid?
     assert_nil tx.involved_party
+  end
+
+  test "default legal stage is offer_accepted" do
+    tx = Transaction.create!(chain: @chain, property: @property)
+    assert_equal "offer_accepted", tx.legal_stage
+    assert_equal 1, tx.legal_stage_index
+    assert_equal "Offer Accepted & Sales Memo", tx.legal_stage_title
+    assert_equal "Offer Accepted", tx.legal_stage_short_title
+    assert_equal 13, tx.legal_stage_percentage
+    assert_not_nil tx.legal_stage_definition[:tooltip]
+    assert_not_nil tx.legal_stage_definition[:agent_action]
+  end
+
+  test "validates inclusion of legal_stage" do
+    tx = Transaction.new(chain: @chain, property: @property, legal_stage: "invalid_stage")
+    assert_not tx.valid?
+    assert_includes tx.errors[:legal_stage], "is not included in the list"
+  end
+
+  test "advancing and rolling back legal stages" do
+    tx = Transaction.create!(chain: @chain, property: @property, legal_stage: "offer_accepted")
+    assert_equal "solicitors_instructed", tx.next_legal_stage
+    assert_nil tx.previous_legal_stage
+
+    tx.advance_stage!
+    assert_equal "solicitors_instructed", tx.legal_stage
+    assert_equal "draft_contract_pack", tx.next_legal_stage
+    assert_equal "offer_accepted", tx.previous_legal_stage
+
+    tx.rollback_stage!
+    assert_equal "offer_accepted", tx.legal_stage
+  end
+
+  test "marking completion automatically sets completed boolean to true" do
+    tx = Transaction.create!(chain: @chain, property: @property, legal_stage: "exchange_of_contracts")
+    assert_not tx.completed?
+
+    tx.update!(legal_stage: "completion")
+    assert tx.completed?
+    assert_equal 100, tx.legal_stage_percentage
+  end
+
+  test "marking completed true synchronizes legal stage to completion" do
+    tx = Transaction.create!(chain: @chain, property: @property, completed: false)
+    assert_equal "offer_accepted", tx.legal_stage
+
+    tx.update!(completed: true)
+    assert_equal "completion", tx.legal_stage
+  end
+
+  test "rolling back from completion sets completed to false" do
+    tx = Transaction.create!(chain: @chain, property: @property, completed: true)
+    assert_equal "completion", tx.legal_stage
+
+    tx.update!(legal_stage: "exchange_of_contracts")
+    assert_not tx.completed?
+  end
+
+  test "legal stage helper predicates" do
+    tx = Transaction.create!(chain: @chain, property: @property, legal_stage: "searches_and_enquiries")
+    assert tx.legal_stage_completed?("offer_accepted")
+    assert tx.legal_stage_completed?("solicitors_instructed")
+    assert tx.legal_stage_completed?("draft_contract_pack")
+    assert tx.legal_stage_completed?("searches_and_enquiries")
+    assert_not tx.legal_stage_completed?("exchange_of_contracts")
+    assert_not tx.legal_stage_completed?("completion")
+
+    assert tx.legal_stage_current?("searches_and_enquiries")
+    assert_not tx.legal_stage_current?("offer_accepted")
   end
 end

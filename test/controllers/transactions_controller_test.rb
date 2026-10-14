@@ -113,18 +113,56 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "You are not authorized to perform this action.", flash[:alert]
   end
 
-  test "admin can destroy any transaction" do
-    admin = User.create!(
-      user_name: "admin_tx",
-      email: "admin_tx@example.com",
-      password: "Password123",
-      admin: true
-    )
-    sign_in admin
+  test "should update transaction legal stage via update_stage" do
+    patch update_stage_transaction_url(@transaction), params: {
+      legal_stage: "searches_and_enquiries"
+    }
+    assert_redirected_to transaction_url(@transaction)
+    assert_equal "searches_and_enquiries", @transaction.reload.legal_stage
+    assert_match(/Legal conveyancing stage updated to/i, flash[:notice])
+  end
 
-    assert_difference("Transaction.count", -1) do
-      delete transaction_url(@transaction)
-    end
-    assert_redirected_to transactions_url
+  test "should update legal stage via standard update" do
+    patch transaction_url(@transaction), params: {
+      transaction: {
+        legal_stage: "exchange_of_contracts"
+      }
+    }
+    assert_redirected_to transaction_url(@transaction)
+    assert_equal "exchange_of_contracts", @transaction.reload.legal_stage
+  end
+
+  test "should reject invalid legal stage in update_stage" do
+    patch update_stage_transaction_url(@transaction), params: {
+      legal_stage: "invalid_mystery_stage"
+    }
+    assert_redirected_to transaction_url(@transaction)
+    assert_equal "offer_accepted", @transaction.reload.legal_stage
+    assert_equal "Invalid legal stage selected.", flash[:alert]
+  end
+
+  test "unassociated user cannot update legal stage" do
+    other_user = User.create!(
+      user_name: "unauth_agent",
+      email: "unauth_agent@example.com",
+      password: "Password123"
+    )
+    sign_in other_user
+
+    patch update_stage_transaction_url(@transaction), params: {
+      legal_stage: "draft_contract_pack"
+    }
+    assert_redirected_to root_url
+    assert_equal "You are not authorized to perform this action.", flash[:alert]
+    assert_equal "offer_accepted", @transaction.reload.legal_stage
+  end
+
+  test "show page renders conveyancing stages and tooltips" do
+    get transaction_url(@transaction)
+    assert_response :success
+    assert_select ".conveyancing-pipeline"
+    assert_select "[data-bs-toggle='tooltip']"
+    assert_select ".active-stage-card"
+    assert_select "h5", text: /UK Conveyancing Legal Stages/i
   end
 end

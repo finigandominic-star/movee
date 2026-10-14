@@ -78,7 +78,16 @@
                     <%= transaction.created_at.strftime("%d %b %Y") %>
                   </span>
                 </div>
-                <span class="property-transactions__status"><%= transaction.status_label %></span>
+                <div class="d-flex align-items-center gap-1">
+                  <span class="property-transactions__status"><%= transaction.status_label %></span>
+                  <span class="badge <%= transaction.legal_stage_badge_class %>"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        data-bs-title="<%= transaction.legal_stage_definition[:tooltip] %>">
+                    <i class="fa-solid <%= transaction.legal_stage_definition[:icon] %> me-1"></i>
+                    <%= transaction.legal_stage_short_title %>
+                  </span>
+                </div>
               </li>
             <% end %>
           </ul>

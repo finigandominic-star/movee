@@ -1,0 +1,228 @@
+<% current_idx = @transaction.legal_stage_index %>
+<% total_stages = Transaction::LEGAL_STAGES.size %>
+<% percent = @transaction.legal_stage_percentage %>
+<% current_def = @transaction.legal_stage_definition %>
+<% can_update = policy(@transaction).update? %>
+
+<div class="card border-0 shadow-sm mb-4" data-controller="tooltip">
+  <div class="card-header bg-white py-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+    <div>
+      <h5 class="card-title fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+        <i class="fa-solid fa-scale-balanced text-primary"></i>
+        <span>UK Conveyancing Legal Stages</span>
+      </h5>
+      <p class="text-muted small mb-0 mt-1">
+        Post-offer acceptance legal workflow under England &amp; Wales conveyancing law.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge <%= @transaction.completed? ? 'bg-success' : 'bg-primary' %>-subtle text-<%= @transaction.completed? ? 'success' : 'primary' %> border border-<%= @transaction.completed? ? 'success' : 'primary' %>-subtle px-2 py-1">
+        Stage <%= current_idx %> of <%= total_stages %> (<%= percent %>%)
+      </span>
+      <a href="#conveyancingGuideAccordion" class="btn btn-sm btn-outline-primary text-decoration-none" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="conveyancingGuideAccordion" title="Toggle UK Legal Guide">
+        <i class="fa-solid fa-circle-question me-1"></i> Process Guide
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body p-4">
+    <!-- Overall Progress Bar -->
+    <div class="mb-4">
+      <div class="d-flex justify-content-between text-muted small mb-1 fw-semibold">
+        <span><i class="fa-solid fa-handshake me-1 text-secondary"></i> Offer Agreed (SSTC)</span>
+        <span>Stage: <strong><%= current_def[:short_name] %></strong> (<%= percent %>%)</span>
+        <span><i class="fa-solid fa-key me-1 text-success"></i> Completion &amp; Handover</span>
+      </div>
+      <div class="progress" style="height: 8px;">
+        <div class="progress-bar <%= @transaction.completed? ? 'bg-success' : 'bg-primary' %> progress-bar-striped <%= 'progress-bar-animated' unless @transaction.completed? %>"
+             role="progressbar"
+             style="width: <%= percent %>%;"
+             aria-valuenow="<%= percent %>"
+             aria-valuemin="0"
+             aria-valuemax="100">
+        </div>
+      </div>
+    </div>
+
+    <!-- Stepper Pipeline -->
+    <div class="conveyancing-pipeline">
+      <div class="conveyancing-pipeline__track">
+        <% Transaction::LEGAL_STAGES.each do |stage_key| %>
+          <% stage_def = Transaction::LEGAL_STAGE_DEFINITIONS[stage_key] %>
+          <% s_idx = stage_def[:index] %>
+          <% is_done = s_idx < current_idx %>
+          <% is_current = s_idx == current_idx %>
+          <% is_pending = s_idx > current_idx %>
+
+          <% step_state = is_done ? "completed" : (is_current ? "current" : "pending") %>
+          <% tooltip_title = "#{s_idx}. #{stage_def[:name]}: #{stage_def[:tooltip]} (Lead: #{stage_def[:lead_actor]})" %>
+
+          <div class="conveyancing-pipeline__step conveyancing-pipeline__step--<%= step_state %> <%= 'conveyancing-pipeline__step--clickable' if can_update %>"
+               data-bs-toggle="tooltip"
+               data-bs-placement="top"
+               data-bs-title="<%= tooltip_title %>">
+
+            <% if can_update %>
+              <%= button_to update_stage_transaction_path(@transaction),
+                            method: :patch,
+                            params: { legal_stage: stage_key },
+                            class: "btn p-0 border-0 bg-transparent text-center d-flex flex-column align-items-center w-100",
+                            data: { turbo_confirm: is_current ? nil : "Update this transaction's legal stage to: #{stage_def[:name]}?" } do %>
+                <div class="conveyancing-pipeline__circle">
+                  <% if is_done %>
+                    <i class="fa-solid fa-check"></i>
+                  <% elsif is_current %>
+                    <i class="fa-solid <%= stage_def[:icon] %>"></i>
+                  <% else %>
+                    <span><%= s_idx %></span>
+                  <% end %>
+                </div>
+                <span class="conveyancing-pipeline__label">
+                  <%= stage_def[:short_name] %>
+                </span>
+                <span class="conveyancing-pipeline__time d-none d-md-block">
+                  <%= stage_def[:timeline] %>
+                </span>
+              <% end %>
+            <% else %>
+              <div class="conveyancing-pipeline__circle">
+                <% if is_done %>
+                  <i class="fa-solid fa-check"></i>
+                <% elsif is_current %>
+                  <i class="fa-solid <%= stage_def[:icon] %>"></i>
+                <% else %>
+                  <span><%= s_idx %></span>
+                <% end %>
+              </div>
+              <span class="conveyancing-pipeline__label">
+                <%= stage_def[:short_name] %>
+              </span>
+              <span class="conveyancing-pipeline__time d-none d-md-block">
+                <%= stage_def[:timeline] %>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      <% if can_update %>
+        <p class="text-center text-muted small mt-2 mb-0 fst-italic">
+          <i class="fa-solid fa-circle-info me-1 text-primary"></i>
+          Hover over any step for conveyancing tooltips, or click any step above to update the stage directly.
+        </p>
+      <% end %>
+    </div>
+
+    <!-- Active Stage Command Card -->
+    <div class="card active-stage-card <%= 'active-stage-card--completed' if @transaction.completed? %> bg-light border shadow-sm">
+      <div class="card-body p-3 p-md-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-3">
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+              <span class="badge <%= @transaction.completed? ? 'bg-success' : 'bg-primary' %> px-2 py-1">
+                <i class="fa-solid <%= current_def[:icon] %> me-1"></i> Stage <%= current_idx %>: <%= current_def[:name] %>
+              </span>
+              <span class="badge bg-secondary-subtle text-secondary-emphasis border">
+                <i class="fa-solid fa-user-gear me-1"></i> Lead: <%= current_def[:lead_actor] %>
+              </span>
+              <span class="badge bg-info-subtle text-info-emphasis border">
+                <i class="fa-regular fa-clock me-1"></i> Typical: <%= current_def[:timeline] %>
+              </span>
+            </div>
+            <h5 class="fw-bold text-dark mt-2 mb-1"><%= current_def[:summary] %></h5>
+          </div>
+
+          <!-- Quick Stage Actions -->
+          <% if can_update %>
+            <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center">
+              <% if @transaction.next_legal_stage %>
+                <% nxt_def = Transaction::LEGAL_STAGE_DEFINITIONS[@transaction.next_legal_stage] %>
+                <%= button_to update_stage_transaction_path(@transaction),
+                              method: :patch,
+                              params: { legal_stage: @transaction.next_legal_stage },
+                              class: "btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 shadow-sm text-nowrap",
+                              data: { bs_toggle: "tooltip", bs_title: "Advance to Stage #{nxt_def[:index]}: #{nxt_def[:name]}" } do %>
+                  <span>Advance to Stage <%= nxt_def[:index] %></span>
+                  <i class="fa-solid fa-arrow-right"></i>
+                <% end %>
+              <% end %>
+
+              <!-- Dropdown to select any stage -->
+              <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-1 w-100"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                  <i class="fa-solid fa-list-check"></i>
+                  <span>Change Stage</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                  <li><h6 class="dropdown-header text-uppercase small">Update Legal Stage</h6></li>
+                  <% Transaction::LEGAL_STAGES.each do |stg| %>
+                    <% s_def = Transaction::LEGAL_STAGE_DEFINITIONS[stg] %>
+                    <li>
+                      <%= button_to update_stage_transaction_path(@transaction),
+                                    method: :patch,
+                                    params: { legal_stage: stg },
+                                    class: "dropdown-item d-flex align-items-center justify-content-between py-2 #{'active fw-bold' if @transaction.legal_stage == stg}" do %>
+                        <span>
+                          <i class="fa-solid <%= s_def[:icon] %> me-2 <%= 'text-primary' unless @transaction.legal_stage == stg %>"></i>
+                          <%= s_def[:index] %>. <%= s_def[:short_name] %>
+                        </span>
+                        <% if @transaction.legal_stage == stg %>
+                          <i class="fa-solid fa-check text-white ms-2"></i>
+                        <% end %>
+                      <% end %>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Detailed Legal Context & Agent Action Guidance -->
+        <div class="row g-3 mt-1">
+          <div class="col-12 col-md-6">
+            <div class="active-stage-card__context-box h-100 bg-white border rounded p-3">
+              <h6 class="fw-bold text-dark small text-uppercase mb-2">
+                <i class="fa-solid fa-gavel text-secondary me-1"></i> UK Legal Conveyancing Context
+              </h6>
+              <p class="small text-secondary mb-0">
+                <%= current_def[:legal_context] %>
+              </p>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="active-stage-card__action-box h-100 rounded p-3">
+              <h6 class="fw-bold text-primary small text-uppercase mb-2">
+                <i class="fa-solid fa-clipboard-check text-primary me-1"></i> Estate Agent Action Checklist
+              </h6>
+              <p class="small text-dark mb-0">
+                <%= current_def[:agent_action] %>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <% if @transaction.completed? %>
+          <div class="alert alert-success d-flex align-items-center gap-2 mt-3 mb-0" role="alert">
+            <i class="fa-solid fa-circle-check fs-4 text-success"></i>
+            <div>
+              <strong>Transaction Completed!</strong> Keys have been formally released to the buyer and legal completion is finalized.
+              <% if @transaction.property && !@transaction.property.sold? && policy(@transaction.property).update? %>
+                <div class="mt-1">
+                  <%= button_to property_path(@transaction.property),
+                                method: :patch,
+                                params: { property: { sold: true } },
+                                class: "btn btn-sm btn-success mt-1 shadow-sm" do %>
+                    <i class="fa-solid fa-house-circle-check me-1"></i> Mark Property as Sold
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

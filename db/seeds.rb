@@ -168,25 +168,37 @@ sold_properties = all_properties.select { |p| p.sold }
 
 transactions_to_create = []
 
-# 1. Create 15 OPEN transactions for UNSOLD properties
+open_stages = %w[
+  offer_accepted
+  solicitors_instructed
+  draft_contract_pack
+  searches_and_enquiries
+  survey_and_mortgage
+  enquiries_resolved
+  exchange_of_contracts
+]
+
+# 1. Create 15 OPEN transactions across different legal stages for UNSOLD properties
 15.times do |i|
   transactions_to_create << {
     chain_id: chains[i % chains.length].id,
     involved_party_id: buyers[i].id,
     property_id: unsold_properties[i].id,
     user_id: realtors[i % realtors.length].id,
-    completed: false
+    completed: false,
+    legal_stage: open_stages[i % open_stages.length]
   }
 end
 
-# 2. Create 5 COMPLETED transactions for SOLD properties
+# 2. Create 5 COMPLETED transactions for SOLD properties (at completion stage)
 5.times do |i|
   transactions_to_create << {
     chain_id: chains[i % chains.length].id,
     involved_party_id: buyers[15 + i].id, # Continue cycling through buyers
     property_id: sold_properties[i].id,
     user_id: realtors[(15 + i) % realtors.length].id,
-    completed: true
+    completed: true,
+    legal_stage: "completion"
   }
 end
 
@@ -197,7 +209,8 @@ transactions_to_create.each do |data|
     involved_party_id: data[:involved_party_id],
     property_id: data[:property_id],
     user_id: data[:user_id],
-    completed: data[:completed]
+    completed: data[:completed],
+    legal_stage: data[:legal_stage]
   )
 end
 puts "Created 20 transactions (15 open, 5 completed)."

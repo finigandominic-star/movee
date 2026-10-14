@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   resources :transactions do
     member do
       delete :remove_involved_party
+      patch :update_stage
     end
   end
 
