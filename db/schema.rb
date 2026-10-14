@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_130520) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_153718) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -18,6 +18,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_130520) do
     t.boolean "active"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["user_id"], name: "index_chains_on_user_id"
   end
 
   create_table "involved_parties", force: :cascade do |t|
@@ -30,6 +32,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_130520) do
     t.boolean "buyer"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["user_id"], name: "index_involved_parties_on_user_id"
   end
 
   create_table "properties", force: :cascade do |t|
@@ -55,9 +59,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_130520) do
     t.boolean "completed"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
     t.index ["chain_id"], name: "index_transactions_on_chain_id"
     t.index ["involved_party_id"], name: "index_transactions_on_involved_party_id"
     t.index ["property_id"], name: "index_transactions_on_property_id"
+    t.index ["user_id"], name: "index_transactions_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -69,13 +75,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_130520) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "user_name"
+    t.string "company"
+    t.boolean "admin", default: false, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "chains", "users"
+  add_foreign_key "involved_parties", "users"
   add_foreign_key "properties", "involved_parties"
   add_foreign_key "properties", "users"
   add_foreign_key "transactions", "chains"
   add_foreign_key "transactions", "involved_parties"
   add_foreign_key "transactions", "properties"
+  add_foreign_key "transactions", "users"
 end

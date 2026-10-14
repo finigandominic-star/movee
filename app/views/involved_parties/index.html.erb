@@ -138,16 +138,22 @@
                       <% end %>
                     </td>
                     <td>
-                      <div>
-                        <a href="mailto:<%= party.email %>" class="text-decoration-none small text-dark d-block">
-                          <i class="fa-solid fa-envelope me-1 text-muted"></i><%= party.email %>
-                        </a>
-                      </div>
-                      <div>
-                        <a href="tel:<%= party.phone %>" class="text-decoration-none small text-muted d-block">
-                          <i class="fa-solid fa-phone me-1"></i><%= party.phone %>
-                        </a>
-                      </div>
+                      <% if policy(party).show_personal_data? %>
+                        <div>
+                          <a href="mailto:<%= party.email %>" class="text-decoration-none small text-dark d-block">
+                            <i class="fa-solid fa-envelope me-1 text-muted"></i><%= party.email %>
+                          </a>
+                        </div>
+                        <div>
+                          <a href="tel:<%= party.phone %>" class="text-decoration-none small text-muted d-block">
+                            <i class="fa-solid fa-phone me-1"></i><%= party.phone %>
+                          </a>
+                        </div>
+                      <% else %>
+                        <span class="badge bg-light text-muted border">
+                          <i class="fa-solid fa-lock me-1"></i>Protected
+                        </span>
+                      <% end %>
                     </td>
                     <td class="text-center">
                       <span class="badge bg-light text-dark border">
@@ -164,11 +170,15 @@
                         <%= link_to involved_party_path(party), class: "btn btn-outline-primary", title: "View details" do %>
                           <i class="fa-solid fa-eye"></i>
                         <% end %>
-                        <%= link_to edit_involved_party_path(party), class: "btn btn-outline-secondary", title: "Edit" do %>
-                          <i class="fa-solid fa-pen"></i>
+                        <% if policy(party).update? %>
+                          <%= link_to edit_involved_party_path(party), class: "btn btn-outline-secondary", title: "Edit" do %>
+                            <i class="fa-solid fa-pen"></i>
+                          <% end %>
                         <% end %>
-                        <%= link_to involved_party_path(party), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete #{party.full_name}?" }, class: "btn btn-outline-danger", title: "Delete" do %>
-                          <i class="fa-solid fa-trash-can"></i>
+                        <% if policy(party).destroy? %>
+                          <%= link_to involved_party_path(party), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete #{party.full_name}?" }, class: "btn btn-outline-danger", title: "Delete" do %>
+                            <i class="fa-solid fa-trash-can"></i>
+                          <% end %>
                         <% end %>
                       </div>
                     </td>
@@ -201,18 +211,25 @@
 
                 <div class="card-body">
                   <ul class="list-group list-group-flush small">
-                    <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                      <span class="text-muted"><i class="fa-solid fa-envelope me-1"></i> Email</span>
-                      <a href="mailto:<%= party.email %>" class="text-decoration-none text-truncate" style="max-width: 170px;">
-                        <%= party.email %>
-                      </a>
-                    </li>
-                    <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                      <span class="text-muted"><i class="fa-solid fa-phone me-1"></i> Phone</span>
-                      <a href="tel:<%= party.phone %>" class="text-decoration-none">
-                        <%= party.phone %>
-                      </a>
-                    </li>
+                    <% if policy(party).show_personal_data? %>
+                      <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fa-solid fa-envelope me-1"></i> Email</span>
+                        <a href="mailto:<%= party.email %>" class="text-decoration-none text-truncate" style="max-width: 170px;">
+                          <%= party.email %>
+                        </a>
+                      </li>
+                      <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fa-solid fa-phone me-1"></i> Phone</span>
+                        <a href="tel:<%= party.phone %>" class="text-decoration-none">
+                          <%= party.phone %>
+                        </a>
+                      </li>
+                    <% else %>
+                      <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fa-solid fa-lock me-1"></i> Contact Info</span>
+                        <span class="badge bg-light text-muted border">Protected</span>
+                      </li>
+                    <% end %>
                     <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
                       <span class="text-muted"><i class="fa-solid fa-house me-1"></i> Properties</span>
                       <span class="badge bg-light text-dark border"><%= party.properties.size %></span>
@@ -229,11 +246,15 @@
                     <i class="fa-solid fa-eye me-1"></i> Details & Assignments
                   <% end %>
                   <div class="btn-group btn-group-sm">
-                    <%= link_to edit_involved_party_path(party), class: "btn btn-outline-secondary", title: "Edit" do %>
-                      <i class="fa-solid fa-pen"></i>
+                    <% if policy(party).update? %>
+                      <%= link_to edit_involved_party_path(party), class: "btn btn-outline-secondary", title: "Edit" do %>
+                        <i class="fa-solid fa-pen"></i>
+                      <% end %>
                     <% end %>
-                    <%= link_to involved_party_path(party), data: { turbo_method: :delete, turbo_confirm: "Delete this party?" }, class: "btn btn-outline-danger", title: "Delete" do %>
-                      <i class="fa-solid fa-trash-can"></i>
+                    <% if policy(party).destroy? %>
+                      <%= link_to involved_party_path(party), data: { turbo_method: :delete, turbo_confirm: "Delete this party?" }, class: "btn btn-outline-danger", title: "Delete" do %>
+                        <i class="fa-solid fa-trash-can"></i>
+                      <% end %>
                     <% end %>
                   </div>
                 </div>

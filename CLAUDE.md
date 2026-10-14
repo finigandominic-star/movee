@@ -1,43 +1,97 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) and AI assistants when working with code in this repository.
 
 ## Overview
 
-Rails 8.1 app (PostgreSQL, Hotwire/Turbo + Stimulus via importmap) generated from the Le Wagon rails-templates. It models UK-style property sales chains: users list properties, and properties move through transactions that belong to a chain. Early-stage project — controllers and routes are still being built out.
+Rails 8.1 app (PostgreSQL, Hotwire/Turbo + Stimulus via importmap) generated from the Le Wagon rails-templates. It models UK-style property sales chains: real estate agents/users list properties, and properties move through transactions that belong to a chain alongside buyer/seller involved parties.
 
-Front-end stack follows the Le Wagon template: Sprockets + SassC with Bootstrap 5.3, Font Awesome, and Simple Form (not Propshaft/Tailwind). Authentication is Devise (`devise_for :users`). Env vars are loaded from `.env` via dotenv-rails in dev/test.
+Front-end stack follows the Le Wagon template: Sprockets + SassC with Bootstrap 5.3, Font Awesome 6, and Simple Form (not Propshaft/Tailwind). Authentication is handled via Devise (`devise_for :users`) with custom profile fields (`user_name` and `company`). Env vars are loaded from `.env` via dotenv-rails in dev/test.
 
 ## Commands
 
 ```bash
 bin/setup                 # install gems, prepare DB, start server (add --skip-server to skip)
-bin/dev                   # run the server (plain `rails server`, no Procfile)
-bin/rails db:migrate      # regenerates db/schema.rb
-bin/rails test            # all tests (Minitest)
-bin/rails test test/models/property_test.rb       # single file
+bin/dev                   # run the server (plain `rails server`, port 3000)
+bin/rails db:migrate      # run database migrations and regenerate db/schema.rb
+bin/rails db:seed         # seed sample users, chains, involved parties, properties, and transactions
+bin/rails test            # run entire Minitest test suite (models, controllers, integration)
+bin/rails test test/models/property_test.rb       # single test file
 bin/rails test test/models/property_test.rb:12    # single test by line
-bin/rubocop               # lint (config in .rubocop.yml; test/, db/, config/, bin/ are excluded; max line length 120)
+bin/rubocop               # lint (config in .rubocop.yml; test/, db/, config/, bin/ are excluded)
 bin/brakeman              # security scan
-bin/ci                    # full local CI pipeline defined in config/ci.rb (setup, rubocop, audits, brakeman, tests, seed replant)
+bin/ci                    # full local CI pipeline defined in config/ci.rb
 ```
 
-## Domain model
+## Domain Model
 
-See `db/schema.rb` for columns; the relationships are:
+See `db/schema.rb` for exact schema columns and indexes:
 
-- `User` (Devise) `has_many :properties`.
-- `InvolvedParty` — a buyer/seller contact (`buyer`/`seller` booleans). Has many properties and transactions, and chains through transactions.
-- `Property` — address fields + `sold`; belongs to a `User` and an `InvolvedParty`.
-- `Chain` — a property chain (`active` flag); has many transactions.
-- `Transaction` — join of `InvolvedParty`, `Chain`, and `Property`, with a `completed` flag.
+- **`User`** (`devise :database_authenticatable, :registerable, ...`):
+  - Attributes: `email`, `user_name`, `company`, `encrypted_password`, `admin` (bool).
+  - Associations: `has_many :properties, dependent: :destroy`, `has_many :transactions, dependent: :nullify`, `has_many :chains, dependent: :nullify`, `has_many :involved_parties, dependent: :nullify`.
+  - Validations: `user_name` presence, password complexity (at least 8 chars, letters and numbers) on creation/password updates.
+  - Strong Parameters configured in `ApplicationController` (`:user_name`, `:company`).
 
-## Known inconsistencies (work in progress)
+- **`InvolvedParty`**:
+  - Attributes: `first_name`, `last_name`, `email`, `phone`, `contact_info`, `seller` (bool), `buyer` (bool), `user_id`.
+  - Associations: `belongs_to :user, optional: true`, `has_many :properties, dependent: :nullify`, `has_many :transactions, dependent: :nullify`, `has_many :chains, through: :transactions`.
+  - Helper methods: `full_name`, `roles_label`, `user_associated?(user)`.
 
-Check these before assuming code works — the models, schema and routes are out of sync:
+- **`Property`**:
+  - Attributes: `house_number`, `street`, `second_line_of_address`, `city`, `post_code`, `photos`, `sold` (bool), `user_id`, `involved_party_id`.
+  - Associations: `belongs_to :user`, `belongs_to :involved_party, optional: true`, `has_many :transactions, dependent: :destroy`, `has_many :chains, through: :transactions`.
+  - Helper methods: `full_address` (proper UK format), `short_address`.
 
-- `Property` declares `belongs_to :chain`, but the `properties` table has no `chain_id` column (properties link to chains only via `transactions`).
-- `User` validates `user_name`, but there is no `user_name` column. Its `password` presence/format validation will also run on every save (e.g. Devise updates that don't change the password).
-- `config/routes.rb` contains `resources :properties` plus an invalid line `property :resources, except (:index)` and a TODO for transaction routes — the file currently won't load.
-- Controllers are singular (`PropertyController`, `TransactionController`) and empty, whereas `resources :properties` routes to `PropertiesController`. Rails convention expects plural controller names.
-- `app/views` only has `pages/` and `layouts/`; no property/transaction views exist yet.
+- **`Chain`**:
+  - Attributes: `active` (bool), `user_id`.
+  - Associations: `belongs_to :user, optional: true`, `has_many :transactions, dependent: :destroy`, `has_many :properties, through: :transactions`, `has_many :involved_parties, through: :transactions`.
+
+- **`Transaction`**:
+  - Attributes: `property_id`, `chain_id`, `involved_party_id`, `user_id`, `completed` (bool).
+  - Associations: `belongs_to :user, optional: true`, `belongs_to :property`, `belongs_to :chain`, `belongs_to :involved_party, optional: true`.
+  - Scopes: `Transaction.completed`, `Transaction.pending`.
+  - Helper methods: `status_label`, `status_badge_class`, `creator_or_listing_user`.
+
+## Authorization & Privacy Rules (Pundit)
+
+The app uses **Pundit** for policy-based authorization:
+
+1. **Deletion Rights**: Only the user who created a record (`Property`, `Transaction`, `Chain`, or `InvolvedParty`) or an admin (`user.admin?`) can delete it.
+2. **Involved Party Privacy**: Direct personal contact data (email, phone, contact notes) of an `InvolvedParty` is only visible to the associated agent(s) (`user_associated?(user)`) or admins. Unassociated users see a confidential client badge with the managing agent's name.
+3. **Chain Viewing Privacy**: When viewing transactions within a chain, cooperating agents (`creator_or_listing_user`) are clearly visible to all users to facilitate cross-deal communication, but individual client/party details remain confidential to unassociated brokers.
+4. **Public Access**: Home, sign-in, and sign-up pages are accessible to anyone without requiring prior authentication.
+
+## Routes & Controllers
+
+Standard RESTful resource routing defined in `config/routes.rb`:
+
+- **`properties`** (`PropertiesController`):
+  - Standard CRUD (`index`, `show`, `new`, `create`, `edit`, `update`, `destroy`).
+  - Member route: `DELETE /properties/:id/remove_involved_party`.
+
+- **`transactions`** (`TransactionsController`):
+  - Standard CRUD (`index`, `show`, `new`, `create`, `edit`, `update`, `destroy`).
+  - Supports query parameter pre-population on `new` (`?property_id=...&chain_id=...`).
+  - Member route: `DELETE /transactions/:id/remove_involved_party`.
+
+- **`chains`** (`ChainsController`):
+  - Standard CRUD (`index`, `show`, `new`, `create`, `edit`, `update`, `destroy`).
+
+- **`involved_parties`** (`InvolvedPartiesController`):
+  - Standard CRUD (`index`, `show`, `new`, `create`, `edit`, `update`, `destroy`).
+  - Member routes for assignment workflows:
+    - `POST /involved_parties/:id/assign_property`
+    - `DELETE /involved_parties/:id/unassign_property/:property_id`
+    - `POST /involved_parties/:id/assign_transaction`
+    - `DELETE /involved_parties/:id/unassign_transaction/:transaction_id`
+
+- **`users`** (Devise):
+  - Standard Devise routes (`new_user_session`, `new_user_registration`, `edit_user_registration`, etc.).
+
+## UI & Styling Conventions
+
+- All views follow **Bootstrap 5.3** conventions with **Font Awesome 6** icons.
+- Forms use `simple_form_for` with `.form-control` and `.btn` classes.
+- Listing pages support grid card view and responsive table views.
+- Turbo confirms and method overrides (`data: { turbo_confirm: "..." }`) are used for destructive actions.

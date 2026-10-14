@@ -1,0 +1,13 @@
+module PropertiesHelper
+  # Sale progress derived from existing data, in order. Each stage is
+  # { name:, info:, done: }; the first stage that isn't done is the current one.
+  def property_progress_stages(property)
+    [
+      { name: "Listed", info: "Property has been listed", done: true },
+      { name: "Client Assigned", info: "Assign a seller to this property", done: property.involved_party.present? },
+      { name: "In a Chain", info: "Add this property to a chain via a transaction", done: property.transactions.any? },
+      { name: "Transaction Complete", info: "Waiting for a transaction to complete", done: property.transactions.any?(&:completed?) },
+      { name: "Sold", info: "Mark the property as sold once the sale goes through", done: property.sold? }
+    ]
+  end
+end
