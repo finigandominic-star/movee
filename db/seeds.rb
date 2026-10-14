@@ -10,17 +10,17 @@
 
 
 puts "Cleaning database..."
+User.destroy_all
+Chain.destroy_all
+InvolvedParty.destroy_all
 Transaction.destroy_all
 Property.destroy_all
-InvolvedParty.destroy_all
-Chain.destroy_all
-User.destroy_all
 
 puts "Creating users..."
 # Admin Users
-dom = User.create!(user_name: "Dom Finigan", email: "dom@movee.com", password: "MoveeAdmin123", company: "Movee", admin: true)
-joao = User.create!(user_name: "Joao", email: "joao@movee.com", password: "MoveeAdmin123", company: "Movee", admin: true)
-sophia = User.create!(user_name: "Sophia", email: "sophia@movee.com", password: "MoveeAdmin123", company: "Movee", admin: true)
+dom = User.create!(user_name: "Dom Finigan", email: "dom@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
+joao = User.create!(user_name: "Joao", email: "joao@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
+sophia = User.create!(user_name: "Sophia", email: "sophia@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
 
 # 1
 sarah = User.create!(user_name: "Sarah Rizzoli", email: "sarah.rizzoli@harbourandheath.co.uk", password: "SaRi1234", company: "Harbour & Heath Properties")
@@ -57,7 +57,7 @@ harry = InvolvedParty.create!(first_name: "Harry", last_name: "Roberts", email: 
 # 6
 isabella = InvolvedParty.create!(first_name: "Isabella", last_name: "Jones", email: "isabella.jones@aol.co.uk", phone: "+44 7700 900901", contact_info: "55 Victoria Road, Glasgow, G1 1ST", seller: false, buyer: true)
 
-#both
+# both
 # 7
 oliver = InvolvedParty.create!(first_name: "Oliver", last_name: "Thompson", email: "oliver.thompson@gmail.co.uk", phone: "+44 7700 900123", contact_info: "42 High Street, Manchester, M1 1AB", seller: true, buyer: true)
 # 8
