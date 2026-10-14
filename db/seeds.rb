@@ -137,9 +137,7 @@ property_data.each_with_index do |data, index|
   # Cycle through realtors (0-4) and sellers (0-21)
   realtor = realtors[index % 5]
   seller = sellers[index % sellers.length]
-  # Generate photo path (ensure these files exist in public/images/properties/)
-  # Verify that you have 20 image files named property_1.jpg through property_20.jpg inside the assets'
-  # /images/properties/ folder. If not, the links will be broken in the app.
+  # Photos live in public/images/properties/ (CC0 images, see CREDITS.txt there)
   photo_path = "/images/properties/property_#{index + 1}.jpg"
 
   # Create the property and push it to the array

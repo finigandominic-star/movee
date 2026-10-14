@@ -1,0 +1,22 @@
+Property seed photos — all from Wikimedia Commons, licensed CC0 (public domain).
+
+property_1.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Semi-detached_house,_Collinsey_Road,_Penzance,_Cornwall_-_April_2024.jpg
+property_2.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Semi-detached_house,_Coombe_Road,_Penzance,_Cornwall_-_April_2024.jpg
+property_3.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Semi-detached_houses,_Lansdowne_Road,_Penzance,_Cornwall_-_August_2022.jpg
+property_4.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Semi-detached_houses,_Place_Road,_Fowey,_Cornwall_-_February_2024.jpg
+property_5.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Semi-detached_houses,_Southgate_Street,_Redruth,_Cornwall_-_May_2024.jpg
+property_6.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Semi-detached_houses,_The_Ropewalk,_Penzance,_Cornwall_-_August_2022_(1).jpg
+property_7.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Semi-detached_houses_on_Southgate_Street,_Redruth,_Cornwall_-_May_2024.jpg
+property_8.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Terraced_houses,_Clarence_Street,_Penzance,_Cornwall_-_March_2024.jpg
+property_9.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Terraced_houses,_Fore_Street,_Bugle,_Cornwall_-_June_2024.jpg
+property_10.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Terraced_houses,_Fore_Street,_St_Blazey,_Cornwall_-_February_2024.jpg
+property_11.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Detached_house,_Bridge_Street,_St_Blazey,_Cornwall_-_February_2024.jpg
+property_12.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Detached_house,_Callington_Road,_Saltash,_Cornwall_-_January_2024.jpg
+property_13.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Detached_house,_Clinton_Road,_Cornwall_-_May_2024_(1).jpg
+property_14.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Detached_house,_Clinton_Road,_Redruth,_Cornwall_-_May_2024_(3).jpg
+property_15.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Detached_house,_Clinton_Road,_Redruth,_Cornwall_-_May_2024_(4).jpg
+property_16.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Detached_house,_Fore_Street,_Bugle,_Cornwall_-_June_2024.jpg
+property_17.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Detached_house,_Fore_Street,_Goldsithney,_Cornwall_-_May_2024_(3).jpg
+property_18.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Detached_house,_Lanner_Hill,_Lanner,_Cornwall_-_May_2024.jpg
+property_19.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Detached_house,_Southgate_Street,_Redruth,_Cornwall_-_May_2024_(1).jpg
+property_20.jpg — CC0 — https://commons.wikimedia.org/wiki/File:Detached_house,_Southgate_Street,_Redruth,_Cornwall_-_May_2024_(2).jpg
