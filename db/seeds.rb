@@ -12,7 +12,7 @@
 puts "Cleaning database..."
 User.destroy_all
 Chain.destroy_all
-Involved_Party.destroy_all
+InvolvedParty.destroy_all
 Property.destroy_all
 Transaction.destroy_all
 
