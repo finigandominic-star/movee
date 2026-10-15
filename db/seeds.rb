@@ -19,7 +19,7 @@ Property.destroy_all
 puts "Creating users..."
 # Admin Users
 dom = User.create!(user_name: "Dom Finigan", email: "dom@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
-joao = User.create!(user_name: "Joao", email: "joao@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
+joao = User.create!(user_name: "Joao", email: "joao@moveee.me", password: "app/views/chains/new.html.erb", company: "Moveee", admin: true)
 sophia = User.create!(user_name: "Sophia", email: "sophia@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
 
 # 1
