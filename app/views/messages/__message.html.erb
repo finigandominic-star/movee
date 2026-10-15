@@ -1,0 +1,27 @@
+<!-- this helper is for the chats Show page -->
+<%# Note: for now this View helper uses the render_markdown helper we have in app/helpers/application_helper.rb %>
+<%# ToDo: adjust the UI elements to fit our overall UI %>
+
+<% if message.role == "user" %>
+  <div class="d-flex justify-content-end mb-2">
+    <div class="bg-white px-3 pb-0 pt-3 rounded-pill">
+      <p class="created_at fst-italic small mb-1 opacity-75">
+        <%= message.created_at.strftime('%m/%d/%Y %H:%M %p') %>
+      </p>
+      <strong><%= message.role.capitalize %>:</strong> <%= simple_format(message.content) %>
+      <%= raw(render_markdown(message.content)) %>
+    </div>
+  </div>
+
+<% elsif message.role == "assistant" %>
+  <div class="d-flex justify-content-start mb-5">
+    <div class="px-3 pb-0 pt-3">
+      <p class="created_at fst-italic small mb-1 opacity-75">
+      <%= message.created_at.strftime('%m/%d/%Y %H:%M %p') %>
+      </p>
+      <strong><%= message.role.capitalize %>:</strong> <%= simple_format(message.content) %>
+      <%= raw(render_markdown(message.content)) %>
+    </div>
+  </div>
+
+<% end %>

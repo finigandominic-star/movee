@@ -1,0 +1,16 @@
+<!-- ToDo: modify the code so that it doesn't connect to challenge, but instead to our app in the correct segment -->
+<%= link_to "← #{@chat.challenge.name}", challenge_path(@chat.challenge) %>
+
+<h1 id="chat_title"><%= @chat.title %></h1>
+
+<div id="messages">
+  <% @chat.messages.each do |message| %>
+    <!-- this renders the UI as configured in the app/views/messages/_message.html.erb -->
+    <%= render "messages/message", message: message %>
+  <% end %> 
+</div>
+
+<div id="new_message_container">
+  <!-- this renders the UI as configured in the app/views/messages/_form.html.erb -->
+  <%= render "messages/form", chat: @chat, message: @message %>
+</div>
