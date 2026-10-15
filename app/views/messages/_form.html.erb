@@ -1,0 +1,6 @@
+<!-- this helper is for the chats Show page -->
+<%# ToDo: adjust the placeholder text to fit with out use cases; adjust the UI to fit our overall UI %>
+<%= simple_form_for [chat, message] do |f| %>
+  <%= f.input :content, label: "Ask a question", required: true, placeholder: "How should I get started with the challenge?" %>
+  <%= f.button :submit, 'Ask LLM', class: 'btn btn-primary' %>
+<% end %>

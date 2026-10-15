@@ -5,7 +5,7 @@ class Chat < ApplicationRecord
   PROMPT
 
   belongs_to :user
-  
+
   has_many :messages, dependent: :destroy
 
   def generate_title_from_first_message

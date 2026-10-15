@@ -1,4 +1,9 @@
 class ChatsController < ApplicationController
+
+  def new
+    @chat = Chat.new
+  end
+
   def create
     # we need something like this @challenge = Challenge.find(params[:challenge_id])
 
@@ -15,7 +20,10 @@ class ChatsController < ApplicationController
   end
 
   def show
-    @chat    = current_user.chats.find(params[:id])
+    @chat = current_user.chats.find(params[:id])
     @message = Message.new
   end
+
+
+
 end
