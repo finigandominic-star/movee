@@ -264,7 +264,9 @@ class Transaction < ApplicationRecord
           text_class: "text-success",
           estimated_date: est,
           actual_date: act,
-          days_diff: diff
+          days_diff: diff,
+          days: diff.abs,
+          days_over: 0
         }
       elsif diff == 0
         {
@@ -275,7 +277,9 @@ class Transaction < ApplicationRecord
           text_class: "text-success",
           estimated_date: est,
           actual_date: act,
-          days_diff: 0
+          days_diff: 0,
+          days: 0,
+          days_over: 0
         }
       else
         {
@@ -286,7 +290,9 @@ class Transaction < ApplicationRecord
           text_class: "text-danger",
           estimated_date: est,
           actual_date: act,
-          days_diff: diff
+          days_diff: diff,
+          days: diff,
+          days_over: diff
         }
       end
     elsif is_curr
@@ -300,7 +306,9 @@ class Transaction < ApplicationRecord
           text_class: "text-danger",
           estimated_date: est,
           actual_date: nil,
-          days_diff: diff
+          days_diff: diff,
+          days: diff,
+          days_over: diff
         }
       elsif diff == 0
         {
@@ -311,7 +319,9 @@ class Transaction < ApplicationRecord
           text_class: "text-warning",
           estimated_date: est,
           actual_date: nil,
-          days_diff: 0
+          days_diff: 0,
+          days: 0,
+          days_over: 0
         }
       else
         days_left = diff.abs
@@ -323,7 +333,9 @@ class Transaction < ApplicationRecord
           text_class: "text-primary",
           estimated_date: est,
           actual_date: nil,
-          days_diff: diff
+          days_diff: diff,
+          days: days_left,
+          days_over: 0
         }
       end
     else
@@ -335,7 +347,9 @@ class Transaction < ApplicationRecord
         text_class: "text-secondary",
         estimated_date: est,
         actual_date: nil,
-        days_diff: nil
+        days_diff: nil,
+        days: 0,
+        days_over: 0
       }
     end
   end
@@ -346,19 +360,76 @@ class Transaction < ApplicationRecord
       act = actual_completion_date || stage_actual_date("completion") || updated_at.to_date
       diff = (act - est).to_i
       if diff < 0
-        { status: :ahead, label: "Completed #{diff.abs}d ahead of target", badge_class: "bg-success text-white", days_diff: diff }
+        {
+          status: :completed_ahead,
+          label: "Completed #{diff.abs}d ahead of target",
+          full_label: "Completed #{diff.abs} days ahead of target",
+          badge_class: "bg-success text-white",
+          days_diff: diff,
+          days: diff.abs,
+          days_over: 0
+        }
       elsif diff == 0
-        { status: :on_target, label: "Completed on target", badge_class: "bg-success text-white", days_diff: 0 }
+        {
+          status: :completed,
+          label: "Completed on target",
+          full_label: "Completed on target date",
+          badge_class: "bg-success text-white",
+          days_diff: 0,
+          days: 0,
+          days_over: 0
+        }
       else
-        { status: :behind, label: "Completed #{diff}d behind target", badge_class: "bg-warning text-dark", days_diff: diff }
+        {
+          status: :completed_behind,
+          label: "Completed #{diff}d behind target",
+          full_label: "Completed #{diff} days behind target",
+          badge_class: "bg-secondary text-white",
+          days_diff: diff,
+          days: diff,
+          days_over: diff
+        }
       end
     else
       curr_timing = stage_timing(legal_stage)
-      if curr_timing[:status] == :overdue || (Date.current > est)
-        days = [Date.current - est, curr_timing[:days_diff] || 0].max.to_i
-        { status: :behind, label: "Behind Target (+#{days}d)", badge_class: "bg-danger text-white", days_diff: days }
+      est_stage = stage_estimated_date(legal_stage)
+      stage_days_over = (curr_timing[:days_over] || (Date.current > est_stage ? (Date.current - est_stage).to_i : 0)).to_i
+      overall_days_over = (est.present? && Date.current > est) ? (Date.current - est).to_i : 0
+      days = [stage_days_over, overall_days_over].max.to_i
+
+      if curr_timing[:status] == :overdue || days > 0 || (est.present? && Date.current > est)
+        days = 1 if days < 1
+        {
+          status: :behind,
+          label: "Behind Target (+#{days}d)",
+          full_label: "Behind target (overdue by #{days} #{'day'.pluralize(days)})",
+          badge_class: "bg-danger text-white",
+          days_diff: days,
+          days: days,
+          days_over: days
+        }
+      elsif curr_timing[:status] == :ahead
+        ahead_days = curr_timing[:days].to_i
+        ahead_days = 1 if ahead_days < 1
+        {
+          status: :ahead,
+          label: "Ahead of Target (#{ahead_days}d)",
+          full_label: "Ahead of target by #{ahead_days} #{'day'.pluralize(ahead_days)}",
+          badge_class: "bg-success text-white",
+          days_diff: -ahead_days,
+          days: ahead_days,
+          days_over: 0
+        }
       else
-        { status: :on_track, label: "On Track", badge_class: "bg-success-subtle text-success border border-success-subtle", days_diff: 0 }
+        {
+          status: :on_track,
+          label: "On Course",
+          full_label: "On course towards target completion",
+          badge_class: "bg-success-subtle text-success border border-success-subtle",
+          days_diff: 0,
+          days: 0,
+          days_over: 0
+        }
       end
     end
   end

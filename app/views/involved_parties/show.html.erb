@@ -323,12 +323,27 @@
                 <i class="fa-solid fa-lock text-warning"></i>
                 <span class="fw-semibold text-dark">Personal Contact Details Protected</span>
               </div>
-              <p class="mb-0 text-muted">
+              <p class="mb-2 text-muted">
                 Direct contact information is restricted to the associated agent
                 <% if @involved_party.user %>
                   (<strong><%= @involved_party.user.user_name %></strong><% if @involved_party.user.company.present? %> — <%= @involved_party.user.company %><% end %>)
                 <% end %>.
               </p>
+              <% if @involved_party.user %>
+                <div class="mt-2 pt-2 border-top border-warning-subtle">
+                  <div class="fw-medium text-dark mb-1"><i class="fa-solid fa-user-tie me-1"></i>Contact Managing Agent:</div>
+                  <div class="d-flex flex-column gap-1">
+                    <a href="mailto:<%= @involved_party.user.email %>" class="text-decoration-none text-dark">
+                      <i class="fa-solid fa-envelope me-1 text-muted"></i><%= @involved_party.user.email %>
+                    </a>
+                    <% if @involved_party.user.phone.present? %>
+                      <a href="tel:<%= @involved_party.user.phone %>" class="text-decoration-none text-dark">
+                        <i class="fa-solid fa-phone me-1 text-muted"></i><%= @involved_party.user.phone %>
+                      </a>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
             </div>
           <% end %>
         </div>

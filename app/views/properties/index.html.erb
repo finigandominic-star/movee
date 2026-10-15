@@ -39,32 +39,6 @@
         </div>
       </div>
     </div>
-    <div class="col-12 col-md-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center">
-          <div class="rounded-circle bg-success bg-opacity-10 text-success p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-            <i class="fa-solid fa-house-circle-check fa-lg"></i>
-          </div>
-          <div>
-            <div class="text-muted small text-uppercase fw-semibold">Available / For Sale</div>
-            <div class="h4 fw-bold mb-0"><%= @properties.count { |p| !p.sold? } %></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center">
-          <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-            <i class="fa-solid fa-handshake fa-lg"></i>
-          </div>
-          <div>
-            <div class="text-muted small text-uppercase fw-semibold">Sold</div>
-            <div class="h4 fw-bold mb-0"><%= @properties.count { |p| p.sold? } %></div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <% if @properties.empty? %>
@@ -178,35 +152,46 @@
                     <li class="list-group-item px-0 py-2">
                       <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="text-muted"><i class="fa-solid fa-user-tie me-1"></i> Involved Party</span>
-                        <% if property.involved_party %>
-                          <div>
-                            <% if property.involved_party.seller? %>
-                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Seller</span>
-                            <% end %>
-                            <% if property.involved_party.buyer? %>
-                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Buyer</span>
-                            <% end %>
-                          </div>
-                        <% end %>
                       </div>
                       <% if property.involved_party %>
-                        <div class="fw-semibold text-dark">
-                          <%= property.involved_party.first_name %> <%= property.involved_party.last_name %>
-                        </div>
-                        <% if property.involved_party.phone.present? %>
-                          <div class="text-muted text-truncate">
-                            <i class="fa-solid fa-phone me-1"></i><%= property.involved_party.phone %>
+                        <% if policy(property.involved_party).show_personal_data? %>
+                          <div class="fw-semibold text-dark">
+                            <%= property.involved_party.first_name %> <%= property.involved_party.last_name %>
                           </div>
-                        <% end %>
-                        <% if property.involved_party.email.present? %>
-                          <div class="text-muted text-truncate">
-                            <i class="fa-solid fa-envelope me-1"></i><%= property.involved_party.email %>
-                          </div>
-                        <% end %>
-                        <% if property.involved_party.contact_info.present? %>
-                          <div class="text-muted text-truncate">
-                            <i class="fa-solid fa-circle-info me-1"></i><%= property.involved_party.contact_info %>
-                          </div>
+                          <% if property.involved_party.phone.present? %>
+                            <div class="text-muted text-truncate">
+                              <i class="fa-solid fa-phone me-1"></i><%= property.involved_party.phone %>
+                            </div>
+                          <% end %>
+                          <% if property.involved_party.email.present? %>
+                            <div class="text-muted text-truncate">
+                              <i class="fa-solid fa-envelope me-1"></i><%= property.involved_party.email %>
+                            </div>
+                          <% end %>
+                          <% if property.involved_party.contact_info.present? %>
+                            <div class="text-muted text-truncate">
+                              <i class="fa-solid fa-circle-info me-1"></i><%= property.involved_party.contact_info %>
+                            </div>
+                          <% end %>
+                        <% else %>
+                          <span class="badge bg-light text-muted border">
+                            <i class="fa-solid fa-lock me-1"></i>Protected Client
+                          </span>
+                          <% if property.user %>
+                            <div class="small text-muted mt-1">
+                              <span>Agent: <strong><%= property.user.user_name %></strong></span>
+                              <div class="d-flex flex-wrap gap-2 mt-1">
+                                <a href="mailto:<%= property.user.email %>" class="text-decoration-none text-truncate" style="max-width: 160px;">
+                                  <i class="fa-solid fa-envelope me-1"></i><%= property.user.email %>
+                                </a>
+                                <% if property.user.phone.present? %>
+                                  <a href="tel:<%= property.user.phone %>" class="text-decoration-none">
+                                    <i class="fa-solid fa-phone me-1"></i><%= property.user.phone %>
+                                  </a>
+                                <% end %>
+                              </div>
+                            </div>
+                          <% end %>
                         <% end %>
                       <% else %>
                         <span class="text-muted fst-italic">None assigned</span>
@@ -215,14 +200,28 @@
 
                     <!-- Listed By / Owner User -->
                     <% if property.user %>
-                      <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                        <span class="text-muted"><i class="fa-solid fa-user me-1"></i> Listed By</span>
-                        <span class="text-truncate text-dark fw-medium text-end" style="max-width: 170px;" title="<%= [property.user.user_name.presence || property.user.email, property.user.company].compact_blank.join(' - ') %>">
-                          <%= property.user.user_name.presence || property.user.email %>
-                          <% if property.user.company.present? %>
-                            <small class="text-muted d-block fw-normal"><%= property.user.company %></small>
+                      <li class="list-group-item px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                          <span class="text-muted"><i class="fa-solid fa-user-tie me-1"></i> Listed By</span>
+                          <span class="fw-semibold text-dark text-truncate" style="max-width: 170px;" title="<%= property.user.user_name %>">
+                            <%= property.user.user_name.presence || property.user.email %>
+                          </span>
+                        </div>
+                        <% if property.user.company.present? %>
+                          <div class="small text-muted text-truncate mb-1">
+                            <i class="fa-solid fa-building me-1"></i><%= property.user.company %>
+                          </div>
+                        <% end %>
+                        <div class="small text-muted d-flex flex-wrap gap-2">
+                          <a href="mailto:<%= property.user.email %>" class="text-decoration-none text-truncate" style="max-width: 170px;" title="<%= property.user.email %>">
+                            <i class="fa-solid fa-envelope me-1"></i><%= property.user.email %>
+                          </a>
+                          <% if property.user.phone.present? %>
+                            <a href="tel:<%= property.user.phone %>" class="text-decoration-none">
+                              <i class="fa-solid fa-phone me-1"></i><%= property.user.phone %>
+                            </a>
                           <% end %>
-                        </span>
+                        </div>
                       </li>
                     <% end %>
 
@@ -301,19 +300,30 @@
                     </td>
                     <td>
                       <% if property.involved_party %>
-                        <div class="fw-medium">
-                          <%= property.involved_party.first_name %> <%= property.involved_party.last_name %>
-                          <% if property.involved_party.seller? %>
-                            <span class="badge bg-primary-subtle text-primary ms-1">Seller</span>
+                        <% if policy(property.involved_party).show_personal_data? %>
+                          <div class="fw-medium">
+                            <%= property.involved_party.first_name %> <%= property.involved_party.last_name %>
+                          </div>
+                          <% if property.involved_party.phone.present? || property.involved_party.email.present? %>
+                            <small class="text-muted d-block text-truncate" style="max-width: 200px;">
+                              <%= [property.involved_party.phone, property.involved_party.email].compact_blank.join(" • ") %>
+                            </small>
                           <% end %>
-                          <% if property.involved_party.buyer? %>
-                            <span class="badge bg-warning-subtle text-warning-emphasis ms-1">Buyer</span>
+                        <% else %>
+                          <span class="badge bg-light text-muted border">
+                            <i class="fa-solid fa-lock me-1"></i>Protected Client
+                          </span>
+                          <% if property.user %>
+                            <small class="text-muted d-block mt-1">
+                              Agent: <%= property.user.user_name %>
+                            </small>
+                            <small class="text-muted d-block">
+                              <a href="mailto:<%= property.user.email %>" class="text-decoration-none"><i class="fa-solid fa-envelope me-1"></i><%= property.user.email %></a>
+                              <% if property.user.phone.present? %>
+                                • <a href="tel:<%= property.user.phone %>" class="text-decoration-none"><i class="fa-solid fa-phone me-1"></i><%= property.user.phone %></a>
+                              <% end %>
+                            </small>
                           <% end %>
-                        </div>
-                        <% if property.involved_party.phone.present? || property.involved_party.email.present? %>
-                          <small class="text-muted d-block text-truncate" style="max-width: 200px;">
-                            <%= [property.involved_party.phone, property.involved_party.email].compact_blank.join(" • ") %>
-                          </small>
                         <% end %>
                       <% else %>
                         <span class="text-muted fst-italic">None</span>
@@ -321,14 +331,24 @@
                     </td>
                     <td>
                       <% if property.user %>
-                        <span class="text-dark fw-medium d-block text-truncate" style="max-width: 160px;" title="<%= property.user.user_name.presence || property.user.email %>">
+                        <div class="fw-medium text-dark text-truncate" style="max-width: 170px;" title="<%= property.user.user_name.presence || property.user.email %>">
                           <%= property.user.user_name.presence || property.user.email %>
-                        </span>
+                        </div>
                         <% if property.user.company.present? %>
-                          <small class="text-muted text-truncate d-block" style="max-width: 160px;" title="<%= property.user.company %>">
+                          <small class="text-muted text-truncate d-block" style="max-width: 170px;">
                             <%= property.user.company %>
                           </small>
                         <% end %>
+                        <div class="small text-muted">
+                          <a href="mailto:<%= property.user.email %>" class="text-decoration-none d-block text-truncate" style="max-width: 170px;">
+                            <i class="fa-solid fa-envelope me-1"></i><%= property.user.email %>
+                          </a>
+                          <% if property.user.phone.present? %>
+                            <a href="tel:<%= property.user.phone %>" class="text-decoration-none d-block">
+                              <i class="fa-solid fa-phone me-1"></i><%= property.user.phone %>
+                            </a>
+                          <% end %>
+                        </div>
                       <% else %>
                         <span class="text-muted">—</span>
                       <% end %>

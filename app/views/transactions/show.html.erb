@@ -1,4 +1,4 @@
-<div class="container py-4">
+<div class="container py-4" data-controller="tooltip">
   <!-- Breadcrumb Navigation -->
   <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
@@ -13,10 +13,7 @@
     <div>
       <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
         <h1 class="h2 fw-bold text-dark mb-0">Transaction #<%= @transaction.id %></h1>
-        <span class="badge <%= @transaction.status_badge_class %> fs-6">
-          <i class="fa-solid <%= @transaction.completed? ? 'fa-check' : 'fa-hourglass-half' %> me-1"></i>
-          <%= @transaction.status_label %>
-        </span>
+        <% tx_timing = @transaction.overall_timing_status %>
         <span class="badge <%= @transaction.legal_stage_badge_class %> fs-6"
               data-bs-toggle="tooltip"
               data-bs-placement="bottom"
@@ -24,6 +21,43 @@
           <i class="fa-solid <%= @transaction.legal_stage_definition[:icon] %> me-1"></i>
           <%= @transaction.legal_stage_title %>
         </span>
+        <% if @transaction.completed? %>
+          <span class="badge rounded-pill bg-success text-white fs-6 d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                data-bs-toggle="tooltip"
+                data-bs-placement="bottom"
+                data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
+            <i class="fa-solid fa-flag-checkered"></i>
+            <span>Completed</span>
+          </span>
+        <% elsif tx_timing[:status] == :behind || tx_timing[:status] == :overdue %>
+          <% days_over = (tx_timing[:days_over] || tx_timing[:days] || tx_timing[:days_diff]&.abs).to_i %>
+          <% days_over = 1 if days_over < 1 %>
+          <span class="badge rounded-pill bg-danger text-white fs-6 d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                data-bs-toggle="tooltip"
+                data-bs-placement="bottom"
+                data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>+<%= days_over %>d Over</span>
+          </span>
+        <% elsif tx_timing[:status] == :ahead || tx_timing[:status] == :completed_ahead %>
+          <% days_ahead = (tx_timing[:days] || tx_timing[:days_diff]&.abs).to_i %>
+          <% days_ahead = 1 if days_ahead < 1 %>
+          <span class="badge rounded-pill bg-success text-white fs-6 d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                data-bs-toggle="tooltip"
+                data-bs-placement="bottom"
+                data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
+            <i class="fa-solid fa-bolt"></i>
+            <span><%= days_ahead %>d Ahead</span>
+          </span>
+        <% else %>
+          <span class="badge rounded-pill bg-success text-white fs-6 d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                data-bs-toggle="tooltip"
+                data-bs-placement="bottom"
+                data-bs-title="<%= tx_timing[:full_label] || 'On course towards target' %>">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>On Course</span>
+          </span>
+        <% end %>
       </div>
       <p class="text-muted mb-0 small">
         Recorded on <%= @transaction.created_at&.strftime("%B %d, %Y at %H:%M") || "Recently" %>
@@ -154,6 +188,12 @@
                           <% if agent.company.present? %>
                             <span class="text-muted">(<%= agent.company %>)</span>
                           <% end %>
+                          <div class="mt-1">
+                            <a href="mailto:<%= agent.email %>" class="text-decoration-none me-2"><i class="fa-solid fa-envelope me-1"></i><%= agent.email %></a>
+                            <% if agent.phone.present? %>
+                              <a href="tel:<%= agent.phone %>" class="text-decoration-none"><i class="fa-solid fa-phone me-1"></i><%= agent.phone %></a>
+                            <% end %>
+                          </div>
                         </div>
                       <% end %>
                     </div>
@@ -169,77 +209,51 @@
       </div>
     </div>
 
-    <!-- Right Column: Status & Involved Party -->
+    <!-- Right Column: Managing Agent & Involved Party -->
     <div class="col-12 col-lg-4">
-      <!-- Status Card -->
+      <!-- Managing Agent Card -->
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white py-3 border-bottom">
           <h6 class="card-title fw-bold text-dark mb-0">
-            <i class="fa-solid fa-circle-info text-primary me-2"></i> Transaction Summary
+            <i class="fa-solid fa-user-tie text-primary me-2"></i> Managing Agent
           </h6>
         </div>
         <div class="card-body p-3">
-          <ul class="list-group list-group-flush small">
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Status</span>
-              <span class="badge <%= @transaction.status_badge_class %>"><%= @transaction.status_label %></span>
-            </li>
-            <li class="list-group-item px-0 py-2">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-muted">Legal Stage</span>
-                <span class="badge <%= @transaction.legal_stage_badge_class %>"
-                      data-bs-toggle="tooltip"
-                      data-bs-placement="left"
-                      data-bs-title="<%= @transaction.legal_stage_definition[:tooltip] %>">
-                  <i class="fa-solid <%= @transaction.legal_stage_definition[:icon] %> me-1"></i>
-                  <%= @transaction.legal_stage_short_title %>
-                </span>
+          <% agent = @transaction.creator_or_listing_user %>
+          <% if agent %>
+            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+              <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                <i class="fa-solid fa-user-tie fa-lg"></i>
               </div>
-              <div class="progress" style="height: 5px;">
-                <div class="progress-bar <%= @transaction.completed? ? 'bg-success' : 'bg-primary' %>" style="width: <%= @transaction.legal_stage_percentage %>%;"></div>
+              <div>
+                <h6 class="fw-bold text-dark mb-0"><%= agent.user_name %></h6>
+                <% if agent.company.present? %>
+                  <span class="text-muted small"><i class="fa-solid fa-building me-1"></i><%= agent.company %></span>
+                <% else %>
+                  <span class="text-muted small">Estate Agent</span>
+                <% end %>
               </div>
-              <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.7rem;">
-                <span>Step <%= @transaction.legal_stage_index %> of <%= Transaction::LEGAL_STAGES.size %></span>
-                <span><%= @transaction.legal_stage_percentage %>%</span>
-              </div>
-            </li>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Lead Actor</span>
-              <span class="fw-semibold text-dark"><%= @transaction.legal_stage_definition[:lead_actor] %></span>
-            </li>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Target Completion</span>
-              <span class="fw-semibold text-dark">
-                <%= @transaction.estimated_completion_date&.strftime("%d %b %Y") || "—" %>
-              </span>
-            </li>
-            <% if @transaction.actual_completion_date.present? %>
+            </div>
+
+            <ul class="list-group list-group-flush small">
               <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                <span class="text-muted">Actual Completion</span>
-                <span class="fw-semibold text-dark">
-                  <%= @transaction.actual_completion_date.strftime("%d %b %Y") %>
-                </span>
+                <span class="text-muted"><i class="fa-solid fa-envelope me-1"></i> Email</span>
+                <a href="mailto:<%= agent.email %>" class="text-decoration-none fw-medium text-truncate" style="max-width: 180px;">
+                  <%= agent.email %>
+                </a>
               </li>
-            <% end %>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Timing Performance</span>
-              <span class="badge <%= @transaction.overall_timing_status[:badge_class] %>">
-                <%= @transaction.overall_timing_status[:label] %>
-              </span>
-            </li>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Transaction ID</span>
-              <span class="fw-semibold text-dark">#<%= @transaction.id %></span>
-            </li>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Recorded On</span>
-              <span class="text-dark fw-medium"><%= @transaction.created_at&.strftime("%d %b %Y, %H:%M") || "—" %></span>
-            </li>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Last Updated</span>
-              <span class="text-dark fw-medium"><%= @transaction.updated_at&.strftime("%d %b %Y, %H:%M") || "—" %></span>
-            </li>
-          </ul>
+              <% if agent.phone.present? %>
+                <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                  <span class="text-muted"><i class="fa-solid fa-phone me-1"></i> Phone</span>
+                  <a href="tel:<%= agent.phone %>" class="text-decoration-none fw-medium">
+                    <%= agent.phone %>
+                  </a>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-muted mb-0 small fst-italic">No agent assigned to this transaction.</p>
+          <% end %>
         </div>
       </div>
 
@@ -247,18 +261,8 @@
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
           <h6 class="card-title fw-bold text-dark mb-0">
-            <i class="fa-solid fa-user-tie text-primary me-2"></i> Client / Party
+            <i class="fa-solid fa-user-group text-primary me-2"></i> Client / Party
           </h6>
-          <% if @transaction.involved_party %>
-            <div>
-              <% if @transaction.involved_party.seller? %>
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Seller</span>
-              <% end %>
-              <% if @transaction.involved_party.buyer? %>
-                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Buyer</span>
-              <% end %>
-            </div>
-          <% end %>
         </div>
         <div class="card-body p-3">
           <% if @transaction.involved_party %>
@@ -307,12 +311,24 @@
                 <h6 class="fw-bold text-dark mb-1">Confidential Client</h6>
                 <p class="small text-muted mb-0">Personal contact details are protected under agent privacy policies.</p>
                 <% if @transaction.creator_or_listing_user %>
-                  <div class="small text-muted border-top pt-2 mt-2">
-                    <span class="fw-semibold">Managing Agent:</span><br>
-                    <%= @transaction.creator_or_listing_user.user_name %>
+                  <div class="small text-muted border-top pt-2 mt-2 text-start">
+                    <span class="fw-semibold text-dark">Managing Agent:</span><br>
+                    <strong><%= @transaction.creator_or_listing_user.user_name %></strong>
                     <% if @transaction.creator_or_listing_user.company.present? %>
-                      (<%= @transaction.creator_or_listing_user.company %>)
+                      <span class="text-muted">(<%= @transaction.creator_or_listing_user.company %>)</span>
                     <% end %>
+                    <div class="mt-2 d-flex flex-column gap-1">
+                      <a href="mailto:<%= @transaction.creator_or_listing_user.email %>" class="btn btn-sm btn-outline-primary py-1 px-2 d-inline-flex align-items-center justify-content-center gap-1">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span><%= @transaction.creator_or_listing_user.email %></span>
+                      </a>
+                      <% if @transaction.creator_or_listing_user.phone.present? %>
+                        <a href="tel:<%= @transaction.creator_or_listing_user.phone %>" class="btn btn-sm btn-outline-secondary py-1 px-2 d-inline-flex align-items-center justify-content-center gap-1">
+                          <i class="fa-solid fa-phone"></i>
+                          <span><%= @transaction.creator_or_listing_user.phone %></span>
+                        </a>
+                      <% end %>
+                    </div>
                   </div>
                 <% end %>
               </div>

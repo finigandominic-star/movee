@@ -5,7 +5,8 @@ class InvolvedPartiesControllerTest < ActionDispatch::IntegrationTest
     @user = User.create!(
       user_name: "party_agent",
       email: "party_agent@example.com",
-      password: "Password123"
+      password: "Password123",
+      phone: "+44 20 7946 0003"
     )
     @party = InvolvedParty.create!(
       user: @user,
@@ -146,5 +147,64 @@ class InvolvedPartiesControllerTest < ActionDispatch::IntegrationTest
       delete involved_party_url(@party)
     end
     assert_redirected_to involved_parties_url
+  end
+
+  test "involved parties index does not show party row for unassociated users at all" do
+    other_user = User.create!(
+      user_name: "unrelated_agent",
+      email: "unrelated@example.com",
+      password: "Password123"
+    )
+    sign_in other_user
+    get involved_parties_url
+    assert_response :success
+
+    # The party row that doesn't belong to other_user is NOT shown at all
+    assert_select "body", text: /Diana Prince/, count: 0
+    assert_select "body", text: /Protected Client/, count: 0
+    assert_select "tr", text: /##{@party.id}/, count: 0
+    assert_select ".card", text: /##{@party.id}/, count: 0
+
+    # Role column and Seller/Buyer tags not present on index
+    assert_select "th", text: "Role", count: 0
+    assert_select ".badge", text: "Seller", count: 0
+    assert_select ".badge", text: "Buyer", count: 0
+
+    # If unrelated_agent has their own party, only their own party is shown
+    own_party = InvolvedParty.create!(
+      user: other_user,
+      first_name: "Bruce",
+      last_name: "Wayne",
+      email: "bruce@wayne-enterprises.com",
+      phone: "+44 7700 900111",
+      buyer: true
+    )
+    get involved_parties_url
+    assert_response :success
+    assert_select "td", text: /Bruce Wayne/
+    assert_select "td", text: /Diana Prince/, count: 0
+  end
+
+  test "involved parties show page retains seller and buyer tags and shows agent contact details when protected" do
+    other_user = User.create!(
+      user_name: "other_agent_show",
+      email: "othershow@example.com",
+      password: "Password123"
+    )
+    sign_in other_user
+
+    get involved_party_url(@party)
+    assert_response :success
+
+    # Seller/buyer tag is visible on the show page
+    assert_select ".badge", text: "Buyer"
+
+    # Client personal contact details protected
+    assert_no_match @party.email, response.body
+    assert_no_match @party.phone, response.body
+
+    # Managing agent contact details visible
+    assert_select "a[href='mailto:#{@user.email}']"
+    assert_select "a[href='tel:#{@user.phone}']"
   end
 end

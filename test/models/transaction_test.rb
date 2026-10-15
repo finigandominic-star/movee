@@ -174,6 +174,7 @@ class TransactionTest < ActiveSupport::TestCase
     timing_s1 = tx.stage_timing("offer_accepted")
     assert_equal :ahead, timing_s1[:status]
     assert_match(/2d ahead/i, timing_s1[:label])
+    assert_equal 2, timing_s1[:days]
 
     timing_s2 = tx.stage_timing("solicitors_instructed")
     assert_equal :on_target, timing_s2[:status]
@@ -182,6 +183,13 @@ class TransactionTest < ActiveSupport::TestCase
     timing_s3 = tx.stage_timing("draft_contract_pack")
     assert_equal :overdue, timing_s3[:status]
     assert_match(/behind target/i, timing_s3[:full_label])
+    assert timing_s3[:days] > 0
+    assert_equal timing_s3[:days], timing_s3[:days_over]
+
+    overall = tx.overall_timing_status
+    assert_equal :behind, overall[:status]
+    assert overall[:days] > 0
+    assert_equal overall[:days], overall[:days_over]
   end
 
   test "set_legal_stage_with_timing! records actual approval date" do

@@ -160,9 +160,14 @@
                         <% if agent.company.present? %>
                           <span class="d-block"><i class="fa-solid fa-building me-1 text-secondary"></i><%= agent.company %></span>
                         <% end %>
-                        <a href="mailto:<%= agent.email %>" class="text-decoration-none">
+                        <a href="mailto:<%= agent.email %>" class="text-decoration-none d-block">
                           <i class="fa-solid fa-envelope me-1 text-secondary"></i><%= agent.email %>
                         </a>
+                        <% if agent.phone.present? %>
+                          <a href="tel:<%= agent.phone %>" class="text-decoration-none d-block">
+                            <i class="fa-solid fa-phone me-1 text-secondary"></i><%= agent.phone %>
+                          </a>
+                        <% end %>
                       </div>
                     <% else %>
                       <span class="text-muted fst-italic small">Unassigned Agent</span>
@@ -178,12 +183,6 @@
                       <% if policy(tx.involved_party).show_personal_data? %>
                         <h6 class="fw-bold text-dark mb-1">
                           <%= link_to tx.involved_party.full_name, involved_party_path(tx.involved_party), class: "text-decoration-none text-dark" %>
-                          <% if tx.involved_party.seller? %>
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.65rem;">Seller</span>
-                          <% end %>
-                          <% if tx.involved_party.buyer? %>
-                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="font-size: 0.65rem;">Buyer</span>
-                          <% end %>
                         </h6>
                         <div class="small text-muted">
                           <a href="mailto:<%= tx.involved_party.email %>" class="text-decoration-none d-block">

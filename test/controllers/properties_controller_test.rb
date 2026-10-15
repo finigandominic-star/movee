@@ -7,6 +7,7 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
       email: "broker@example.com",
       password: "Password123",
       company: "Movee Premier",
+      phone: "+44 20 7946 0001",
       admin: false
     )
     @other_user = User.create!(
@@ -57,11 +58,13 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: /Properties/i
   end
 
-  test "signed in user should get show" do
+  test "signed in user should get show with agent contact details" do
     sign_in @user
     get property_url(@property)
     assert_response :success
     assert_select "h1", text: /221B Baker Street/
+    assert_select "a[href='mailto:#{@user.email}']"
+    assert_select "a[href='tel:#{@user.phone}']"
   end
 
   test "signed in user can create property" do
@@ -154,5 +157,42 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     delete remove_involved_party_property_url(@property)
     assert_redirected_to property_url(@property)
     assert_nil @property.reload.involved_party
+  end
+
+  test "properties index hides sold/for sale info panels and unauthorized party details" do
+    sign_in @other_user
+    get properties_url
+    assert_response :success
+
+    # Info panel only shows Total Properties (no sold or available cards)
+    assert_select ".card", text: /Total Properties/
+    assert_select ".card", text: /Available \/ For Sale/, count: 0
+    assert_select ".card", text: /Sold/, count: 0
+
+    # Unauthorized party info masked
+    assert_select "body", text: /Sarah Connor/, count: 0
+    assert_select "body", text: /Protected Client/
+
+    # Managing agent contact info is visible for coordination
+    assert_select "a[href='mailto:#{@user.email}']"
+    assert_select "a[href='tel:#{@user.phone}']"
+
+    # No seller/buyer tags on properties index
+    assert_select ".badge", text: "Seller", count: 0
+    assert_select ".badge", text: "Buyer", count: 0
+  end
+
+  test "property show renders conveyancing progress bar and pipeline without seller/buyer tags" do
+    sign_in @user
+    get property_url(@property)
+    assert_response :success
+
+    # Conveyancing Progress Bar & Stepper
+    assert_select ".conveyancing-pipeline"
+    assert_select ".progress-bar"
+
+    # No seller/buyer tags in client panel
+    assert_select ".badge", text: "Seller", count: 0
+    assert_select ".badge", text: "Buyer", count: 0
   end
 end

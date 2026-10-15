@@ -5,7 +5,8 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     @user = User.create!(
       user_name: "tx_tester",
       email: "txtester@example.com",
-      password: "Password123"
+      password: "Password123",
+      phone: "+44 20 7946 0002"
     )
     @party = InvolvedParty.create!(
       first_name: "Bruce",
@@ -35,12 +36,16 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     get transactions_url
     assert_response :success
     assert_select "h1", text: /Transactions/i
+    assert_select "a[href='mailto:#{@user.email}']"
+    assert_select "a[href='tel:#{@user.phone}']"
   end
 
   test "should get show" do
     get transaction_url(@transaction)
     assert_response :success
     assert_select "h1", text: /Transaction ##{@transaction.id}/
+    assert_select "a[href='mailto:#{@user.email}']"
+    assert_select "a[href='tel:#{@user.phone}']"
   end
 
   test "should get new with prefilled query parameters" do
@@ -164,5 +169,71 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-bs-toggle='tooltip']"
     assert_select ".active-stage-card"
     assert_select "h5", text: /UK Conveyancing Legal Stages/i
+  end
+
+  test "transaction index does not include completed or in progress status tags and shows visual stage schedule" do
+    get transactions_url
+    assert_response :success
+
+    # Column header is Stage & Schedule
+    assert_select "th", text: /Stage & Schedule/
+
+    # No seller/buyer tags
+    assert_select ".badge", text: "Seller", count: 0
+    assert_select ".badge", text: "Buyer", count: 0
+
+    # Stage short title and timing indicators present
+    assert_select ".badge", text: /Offer Agreed|Offer Accepted/
+  end
+
+  test "transaction show removes duplicate transaction summary and in-progress status badge and houses legal details in modal" do
+    get transaction_url(@transaction)
+    assert_response :success
+
+    # Duplicate summary card removed
+    assert_select ".card-title", text: /Transaction Summary/, count: 0
+
+    # No redundant status badge in header
+    assert_select ".h2 + .badge", text: /In Progress/, count: 0
+
+    # Modal popup exists for legal details
+    assert_select "#legalExplainerModal"
+    assert_select "#legalExplainerModal .modal-title", text: /UK Conveyancing Guide/
+
+    # No seller/buyer tags
+    assert_select ".badge", text: "Seller", count: 0
+    assert_select ".badge", text: "Buyer", count: 0
+  end
+
+  test "overdue transaction displays red pill with exact number of days over in index and show" do
+    start_date = Date.current - 10.days
+    overdue_tx = Transaction.create!(
+      user: @user,
+      property: @property,
+      chain: @chain,
+      legal_stage: "offer_accepted",
+      created_at: start_date.beginning_of_day,
+      estimated_completion_date: start_date + 84.days,
+      stage_dates: {
+        "offer_accepted" => {
+          "estimated_date" => (start_date + 3.days).to_s,
+          "actual_date" => nil
+        }
+      }
+    )
+    # Target was 7 days ago. Overdue by 7 days.
+    timing = overdue_tx.overall_timing_status
+    assert_equal :behind, timing[:status]
+    assert_equal 7, timing[:days_over]
+
+    # Check transactions index
+    get transactions_url
+    assert_response :success
+    assert_select ".badge.bg-danger", text: /\+7d Over/
+
+    # Check transaction show
+    get transaction_url(overdue_tx)
+    assert_response :success
+    assert_select ".badge.bg-danger", text: /\+7d Over/
   end
 end

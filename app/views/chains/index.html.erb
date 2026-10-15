@@ -171,10 +171,16 @@
                     </td>
                     <td>
                       <% if chain.user %>
-                        <span class="fw-medium text-dark"><%= chain.user.user_name %></span>
+                        <div class="fw-medium text-dark"><%= chain.user.user_name %></div>
                         <% if chain.user.company.present? %>
                           <small class="text-muted d-block"><%= chain.user.company %></small>
                         <% end %>
+                        <div class="small text-muted">
+                          <a href="mailto:<%= chain.user.email %>" class="text-decoration-none d-block"><i class="fa-solid fa-envelope me-1"></i><%= chain.user.email %></a>
+                          <% if chain.user.phone.present? %>
+                            <a href="tel:<%= chain.user.phone %>" class="text-decoration-none d-block"><i class="fa-solid fa-phone me-1"></i><%= chain.user.phone %></a>
+                          <% end %>
+                        </div>
                       <% else %>
                         <span class="text-muted">—</span>
                       <% end %>

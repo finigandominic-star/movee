@@ -18,21 +18,21 @@ Property.destroy_all
 
 puts "Creating users..."
 # Admin Users
-dom = User.create!(user_name: "Dom Finigan", email: "dom@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
-joao = User.create!(user_name: "Joao", email: "joao@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
-sophia = User.create!(user_name: "Sophia", email: "sophia@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
+dom = User.create!(user_name: "Dom", email: "dom@moveee.me", phone: "+44 20 7946 0001", password: "MoveeeAdmin123", company: "Moveee", admin: true)
+joao = User.create!(user_name: "Joao", email: "joao@moveee.me", phone: "+44 20 7946 0002", password: "MoveeeAdmin123", company: "Moveee", admin: true)
+sophia = User.create!(user_name: "Sophia", email: "sophia@moveee.me", phone: "+44 20 7946 0003", password: "MoveeeAdmin123", company: "Moveee", admin: true)
 
 # 1
-sarah = User.create!(user_name: "Sarah Rizzoli", email: "sarah.rizzoli@harbourandheath.co.uk", password: "SaRi1234", company: "Harbour & Heath Properties")
+sarah = User.create!(user_name: "Sarah Rizzoli", email: "sarah.rizzoli@harbourandheath.co.uk", phone: "+44 20 7946 0101", password: "SaRi1234", company: "Harbour & Heath Properties")
 #2
-toni = User.create!(user_name: "Toni Martine", email: "t.martine@crownstoneestates.co.uk", password: "Ton1Crown", company: "Crownstone Estates")
+toni = User.create!(user_name: "Toni Martine", email: "t.martine@crownstoneestates.co.uk", phone: "+44 20 7946 0102", password: "Ton1Crown", company: "Crownstone Estates")
 # 3
-mark = User.create!(user_name: "Mark McBride", email: "mcbride.mark@thistleandthatch.co.uk", password: "123Bride", company: "Thistle & Thatch Residential")
+mark = User.create!(user_name: "Mark McBride", email: "mcbride.mark@thistleandthatch.co.uk", phone: "+44 20 7946 0103", password: "123Bride", company: "Thistle & Thatch Residential")
 # 4
-emily = User.create!(user_name: "Emily Song", email: "e.song@crownstoneestates.co.uk", password: "eSong789", company: "Crownstone Estates")
+emily = User.create!(user_name: "Emily Song", email: "e.song@belgravesterling.co.uk", phone: "+44 20 7946 0104", password: "eSong789", company: "Belgrave & Sterling Estates")
 # 5
-john = User.create!(user_name: "John Akachi", email: "john.akachi@harbourandheath.co.uk", password: "ImGreat1", company: "Harbour & Heath Properties")
-puts "Created 8 users (3 admins, 5 agents)."
+john = User.create!(user_name: "John Akachi", email: "john.akachi@oakhavenfinch.co.uk", phone: "+44 20 7946 0105", password: "ImGreat1", company: "Oakhaven & Finch Estates")
+puts "Created 8 users (3 admins, 5 agents from 5 different estate agencies)."
 
 puts "Creating Chains..."
 chain1 = Chain.create!(active: true, user: dom)

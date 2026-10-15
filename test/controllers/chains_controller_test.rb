@@ -5,7 +5,8 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
     @user = User.create!(
       user_name: "chain_agent",
       email: "chain_agent@example.com",
-      password: "Password123"
+      password: "Password123",
+      phone: "+44 20 7946 0004"
     )
     @chain = Chain.create!(
       user: @user,
@@ -139,6 +140,8 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # The managing agent is visible:
     assert_select "h6", text: @user.user_name
+    assert_select "a[href='mailto:#{@user.email}']"
+    assert_select "a[href='tel:#{@user.phone}']"
     # The client personal data is protected:
     assert_select "span", text: /Client Confidential/
     assert_no_match @party.email, response.body

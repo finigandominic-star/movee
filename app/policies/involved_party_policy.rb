@@ -41,7 +41,11 @@ class InvolvedPartyPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      scope.all
+      return scope.none if user.nil?
+      return scope.all if user.admin?
+
+      scope.where(user_id: user.id)
+           .or(scope.where(id: Property.where(user_id: user.id).where.not(involved_party_id: nil).select(:involved_party_id)))
     end
   end
 end
