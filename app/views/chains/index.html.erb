@@ -147,7 +147,6 @@
                                   <span>Agent: <%= agent.user_name %></span>
                                 </div>
                               <% end %>
-                              <%# Only show client if user is authorized to see personal data %>
                               <% if tx.involved_party %>
                                 <% if policy(tx.involved_party).show_personal_data? %>
                                   <div class="text-success small text-truncate" style="max-width: 170px;">
