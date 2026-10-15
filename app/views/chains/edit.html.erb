@@ -1,3 +1,30 @@
+<div class="container my-4" style="max-width: 600px;">
+  <div class="card shadow-sm border">
+    <div class="card-header bg-white py-3">
+      <h1 class="h4 fw-bold mb-0">Edit Chain #<%= @chain.id %></h1>
+    </div>
+    <div class="card-body">
+      <%= form_with(model: @chain, local: true) do |form| %>
+        <% if @chain.errors.any? %>
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              <% @chain.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="mb-3 form-check">
+          <%= form.checkbox :active, class: "form-check-input" %>
+          <%= form.label :active, "Active Chain", class: "form-check-label fw-medium" %>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+          <%= link_to "Cancel", chain_path(@chain), class: "btn btn-outline-secondary btn-sm" %>
+          <%= form.submit "Update Chain", class: "btn btn-primary btn-sm" %>
+        </div>
+      <% end %>
 <div class="container py-4">
   <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">

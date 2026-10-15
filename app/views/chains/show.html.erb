@@ -1,3 +1,88 @@
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+          <li class="breadcrumb-item"><%= link_to "Chains", chains_path %></li>
+          <li class="breadcrumb-item active" aria-current="page">Chain #<%= @chain.id %></li>
+        </ol>
+      </nav>
+      <h1 class="h3 fw-bold mb-0">Chain Details #<%= @chain.id %></h1>
+    </div>
+    <div class="d-flex gap-2">
+      <%= link_to "Edit Chain", edit_chain_path(@chain), class: "btn btn-outline-secondary btn-sm" %>
+      <%= link_to "Back to Chains", chains_path, class: "btn btn-outline-primary btn-sm" %>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Chain Status Card -->
+    <div class="col-md-4">
+      <div class="card shadow-sm border h-100">
+        <div class="card-header bg-white py-3">
+          <h5 class="card-title mb-0 fw-semibold">Status</h5>
+        </div>
+        <div class="card-body">
+          <p class="mb-3">
+            <span class="text-muted small d-block mb-1">Current State:</span>
+            <% if @chain.active? %>
+              <span class="badge bg-success fs-6 px-3 py-2">Active</span>
+            <% else %>
+              <span class="badge bg-secondary fs-6 px-3 py-2">Inactive</span>
+            <% end %>
+          </p>
+          <p class="text-muted small mb-0">
+            Created on: <%= @chain.created_at.strftime("%d %b %Y, %H:%M") %>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions List Card -->
+    <div class="col-md-8">
+      <div class="card shadow-sm border h-100">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+          <h5 class="card-title mb-0 fw-semibold">Transactions in this Chain (<%= @chain.transactions.count %>)</h5>
+          <%= link_to "Add Transaction", new_transaction_path(chain_id: @chain.id), class: "btn btn-primary btn-sm" %>
+        </div>
+        <div class="card-body">
+          <% if @chain.transactions.any? %>
+            <div class="list-group list-group-flush">
+              <% @chain.transactions.each do |transaction| %>
+                <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-1 fw-medium">
+                      <% if transaction.property.present? %>
+                        <%= [transaction.property.house_number, transaction.property.street, transaction.property.city].compact.join(", ") %>
+                      <% else %>
+                        <span class="text-muted fst-italic">Property not assigned</span>
+                      <% end %>
+                    </h6>
+                    <p class="small text-muted mb-1">
+                      Party:
+                      <% if transaction.involved_party.present? %>
+                        <%= "#{transaction.involved_party.first_name} #{transaction.involved_party.last_name}" %>
+                      <% else %>
+                        <span class="fst-italic">None</span>
+                      <% end %>
+                    </p>
+                    <span class="badge <%= transaction.status_badge_class %>"><%= transaction.status_label %></span>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <%= link_to "View", transaction_path(transaction), class: "btn btn-sm btn-outline-secondary" %>
+                    <%= button_to "Remove", transaction_path(transaction), method: :delete, data: { turbo_confirm: "Are you sure you want to remove this transaction from the chain?" }, class: "btn btn-sm btn-outline-danger" %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-4">
+              <p class="text-muted mb-3">No transactions have been added to this chain yet.</p>
+              <%= link_to "Add First Transaction", new_transaction_path(chain_id: @chain.id), class: "btn btn-sm btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
 <div class="container py-4">
   <!-- Breadcrumb Navigation -->
   <nav aria-label="breadcrumb" class="mb-3">
