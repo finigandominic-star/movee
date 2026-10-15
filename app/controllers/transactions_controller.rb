@@ -20,11 +20,6 @@ class TransactionsController < ApplicationController
   def create
     @transaction = Transaction.new(transaction_params)
     @transaction.user = current_user if current_user.present?
-
-    # Fallback to create a default chain if none exists and none specified
-    if @transaction.chain_id.blank? && Chain.none?
-      @transaction.chain = Chain.create(active: true, user: current_user)
-    end
     authorize @transaction
 
     if @transaction.save

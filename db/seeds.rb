@@ -100,7 +100,11 @@ puts "Created  25 Involved Parties."
 
 
 puts "Creating Properties..."
-sellers = [frances, william, amelia, oliver, emma, james, charlotte, george, jack, mia, liam, harper, noah, ava, evelyn, mason, logan, arthur, grace, theo, lily, finn]
+sellers = [
+  emma, james, amelia, george, jack, mia, liam, harper,
+  noah, ava, evelyn, mason, logan, arthur, grace,
+  oliver, frances, william, theo, lily, finn, charlotte
+]
 realtors = [sarah, toni, mark, emily, john]
 
 # Link involved parties to agents
@@ -251,9 +255,25 @@ completed_scenarios = [
   est_comp_d = start_d + 84.days
   s_dates = build_stage_dates(start_d, est_comp_d, scenario[:stage], scenario[:actual_offsets])
 
-  tx = Transaction.create!(
-    chain_id: chains[i % chains.length].id,
-    involved_party_id: buyers[i].id,
+  # Deliberate chaining for Chain 2 (FTB Harry -> Emma -> James -> Amelia leaving market)
+  # and Chain 3 (Charlotte has home to sell -> George buying onward)
+  target_chain = if i < 3
+                   chain2
+                 else
+                   chain3
+                 end
+
+  target_buyer = case i
+                 when 0 then harry      # FTB (buyer only)
+                 when 1 then emma       # Links from Property 1 sale
+                 when 2 then james      # Links from Property 2 sale
+                 when 3 then charlotte  # Has home to sell (not FTB)
+                 else buyers[i]
+                 end
+
+  Transaction.create!(
+    chain_id: target_chain.id,
+    involved_party_id: target_buyer.id,
     property_id: unsold_properties[i].id,
     user_id: realtors[i % realtors.length].id,
     completed: false,
@@ -275,9 +295,17 @@ end
   act_comp_d = start_d + scenario[:actual_comp_days].days
   s_dates = build_stage_dates(start_d, est_comp_d, "completion", scenario[:actual_offsets])
 
+  # Deliberate chaining for Chain 1: Sophie (FTB) -> Oliver -> Frances (leaving market)
+  target_chain = (i < 2) ? chain1 : chain3
+  target_buyer = case i
+                 when 0 then sophie     # FTB (buyer only)
+                 when 1 then oliver     # Links from Property 16 sale
+                 else buyers[15 + i]
+                 end
+
   Transaction.create!(
-    chain_id: chains[i % chains.length].id,
-    involved_party_id: buyers[15 + i].id,
+    chain_id: target_chain.id,
+    involved_party_id: target_buyer.id,
     property_id: sold_properties[i].id,
     user_id: realtors[(15 + i) % realtors.length].id,
     completed: true,
@@ -290,4 +318,6 @@ end
   )
 end
 
-puts "Created 20 transactions with realistic UK conveyancing dates and on/behind target approvals."
+Chain.find_each(&:sync_status!)
+
+puts "Created 20 transactions with realistic UK conveyancing dates, boundary checks, and on/behind target approvals."

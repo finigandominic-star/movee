@@ -153,8 +153,13 @@ class Transaction < ApplicationRecord
 
   validates :legal_stage, inclusion: { in: LEGAL_STAGES }
 
+  before_validation :ensure_chain, on: :create
   before_validation :sync_completion_and_stage
   before_validation :initialize_stage_and_completion_dates
+
+  after_save :handle_chain_reassignment, if: :saved_change_to_chain_id?
+  after_save :sync_chain_status
+  after_destroy :cleanup_empty_chain_and_sync
 
   scope :completed, -> { where(completed: true) }
   scope :pending, -> { where(completed: [false, nil]) }
@@ -480,7 +485,54 @@ class Transaction < ApplicationRecord
     end
   end
 
+  def join_chain!(target_chain)
+    target_id = target_chain.is_a?(Chain) ? target_chain.id : target_chain
+    return if chain_id == target_id
+
+    update!(chain_id: target_id)
+  end
+
   private
+
+  def ensure_chain
+    return if chain.present? || chain_id.present?
+
+    self.chain = Chain.new(user: creator_or_listing_user, active: true)
+  end
+
+  def handle_chain_reassignment
+    old_id, new_id = saved_changes["chain_id"]
+    if old_id.present?
+      old_chain = Chain.find_by(id: old_id)
+      if old_chain && !old_chain.destroyed?
+        if old_chain.transactions.reload.empty?
+          old_chain.destroy
+        else
+          old_chain.sync_status!
+        end
+      end
+    end
+    if new_id.present?
+      Chain.find_by(id: new_id)&.sync_status!
+    end
+  end
+
+  def sync_chain_status
+    chain&.sync_status!
+  end
+
+  def cleanup_empty_chain_and_sync
+    return unless chain_id.present?
+
+    ch = Chain.find_by(id: chain_id)
+    return unless ch && !ch.destroyed?
+
+    if ch.transactions.reload.empty?
+      ch.destroy
+    else
+      ch.sync_status!
+    end
+  end
 
   def sync_completion_and_stage
     self.legal_stage ||= "offer_accepted"

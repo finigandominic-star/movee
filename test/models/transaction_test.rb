@@ -200,4 +200,25 @@ class TransactionTest < ActiveSupport::TestCase
     assert_equal "solicitors_instructed", tx.legal_stage
     assert_equal approval_d, tx.stage_actual_date("offer_accepted")
   end
+
+  test "creating a transaction without chain_id automatically creates a new chain" do
+    assert_difference("Chain.count", 1) do
+      tx = Transaction.create!(property: @property, user: @user)
+      assert tx.chain_id.present?
+      assert tx.chain.present?
+      assert_equal @user, tx.chain.user
+    end
+  end
+
+  test "joining a new chain inherits that chain id and cleans up empty old chain" do
+    tx = Transaction.create!(property: @property, user: @user)
+    old_chain_id = tx.chain_id
+
+    new_chain = Chain.create!(user: @user)
+
+    tx.join_chain!(new_chain)
+
+    assert_equal new_chain.id, tx.reload.chain_id
+    assert_not Chain.exists?(old_chain_id)
+  end
 end

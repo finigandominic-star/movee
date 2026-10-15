@@ -1,88 +1,3 @@
-<div class="container my-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-1">
-          <li class="breadcrumb-item"><%= link_to "Chains", chains_path %></li>
-          <li class="breadcrumb-item active" aria-current="page">Chain #<%= @chain.id %></li>
-        </ol>
-      </nav>
-      <h1 class="h3 fw-bold mb-0">Chain Details #<%= @chain.id %></h1>
-    </div>
-    <div class="d-flex gap-2">
-      <%= link_to "Edit Chain", edit_chain_path(@chain), class: "btn btn-outline-secondary btn-sm" %>
-      <%= link_to "Back to Chains", chains_path, class: "btn btn-outline-primary btn-sm" %>
-    </div>
-  </div>
-
-  <div class="row g-4">
-    <!-- Chain Status Card -->
-    <div class="col-md-4">
-      <div class="card shadow-sm border h-100">
-        <div class="card-header bg-white py-3">
-          <h5 class="card-title mb-0 fw-semibold">Status</h5>
-        </div>
-        <div class="card-body">
-          <p class="mb-3">
-            <span class="text-muted small d-block mb-1">Current State:</span>
-            <% if @chain.active? %>
-              <span class="badge bg-success fs-6 px-3 py-2">Active</span>
-            <% else %>
-              <span class="badge bg-secondary fs-6 px-3 py-2">Inactive</span>
-            <% end %>
-          </p>
-          <p class="text-muted small mb-0">
-            Created on: <%= @chain.created_at.strftime("%d %b %Y, %H:%M") %>
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Transactions List Card -->
-    <div class="col-md-8">
-      <div class="card shadow-sm border h-100">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-          <h5 class="card-title mb-0 fw-semibold">Transactions in this Chain (<%= @chain.transactions.count %>)</h5>
-          <%= link_to "Add Transaction", new_transaction_path(chain_id: @chain.id), class: "btn btn-primary btn-sm" %>
-        </div>
-        <div class="card-body">
-          <% if @chain.transactions.any? %>
-            <div class="list-group list-group-flush">
-              <% @chain.transactions.each do |transaction| %>
-                <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="mb-1 fw-medium">
-                      <% if transaction.property.present? %>
-                        <%= [transaction.property.house_number, transaction.property.street, transaction.property.city].compact.join(", ") %>
-                      <% else %>
-                        <span class="text-muted fst-italic">Property not assigned</span>
-                      <% end %>
-                    </h6>
-                    <p class="small text-muted mb-1">
-                      Party:
-                      <% if transaction.involved_party.present? %>
-                        <%= "#{transaction.involved_party.first_name} #{transaction.involved_party.last_name}" %>
-                      <% else %>
-                        <span class="fst-italic">None</span>
-                      <% end %>
-                    </p>
-                    <span class="badge <%= transaction.status_badge_class %>"><%= transaction.status_label %></span>
-                  </div>
-                  <div class="d-flex gap-2">
-                    <%= link_to "View", transaction_path(transaction), class: "btn btn-sm btn-outline-secondary" %>
-                    <%= button_to "Remove", transaction_path(transaction), method: :delete, data: { turbo_confirm: "Are you sure you want to remove this transaction from the chain?" }, class: "btn btn-sm btn-outline-danger" %>
-                  </div>
-                </div>
-              <% end %>
-            </div>
-          <% else %>
-            <div class="text-center py-4">
-              <p class="text-muted mb-3">No transactions have been added to this chain yet.</p>
-              <%= link_to "Add First Transaction", new_transaction_path(chain_id: @chain.id), class: "btn btn-sm btn-primary" %>
-            </div>
-          <% end %>
-        </div>
-      </div>
 <div class="container py-4">
   <!-- Breadcrumb Navigation -->
   <nav aria-label="breadcrumb" class="mb-3">
@@ -98,10 +13,15 @@
     <div>
       <div class="d-flex align-items-center gap-2 mb-1">
         <h1 class="h2 fw-bold text-dark mb-0">Chain #<%= @chain.id %></h1>
-        <span class="badge <%= @chain.active? ? 'bg-success' : 'bg-secondary' %> fs-6">
-          <i class="fa-solid <%= @chain.active? ? 'fa-link' : 'fa-lock' %> me-1"></i>
-          <%= @chain.active? ? "Active Chain" : "Closed Chain" %>
-        </span>
+        <% if @chain.chain_completed? %>
+          <span class="badge bg-success fs-6">
+            <i class="fa-solid fa-circle-check me-1"></i> Completed Chain
+          </span>
+        <% else %>
+          <span class="badge bg-primary fs-6">
+            <i class="fa-solid fa-link me-1"></i> Open Chain (<%= @chain.both_ends_closed? ? "In Progress" : "Ends Open" %>)
+          </span>
+        <% end %>
       </div>
       <p class="text-muted mb-0 small">
         Created on <%= @chain.created_at&.strftime("%B %d, %Y") || "Recently" %>
@@ -115,16 +35,23 @@
     </div>
 
     <!-- Actions -->
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
       <%= link_to chains_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm" do %>
         <i class="fa-solid fa-arrow-left"></i>
         <span>Back to Chains</span>
       <% end %>
 
       <% if policy(@chain).update? %>
-        <%= link_to edit_chain_path(@chain), class: "btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" do %>
+        <% if @available_merge_chains.present? && @available_merge_chains.any? %>
+          <button type="button" class="btn btn-outline-primary d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#mergeChainModal">
+            <i class="fa-solid fa-code-merge"></i>
+            <span>Merge Chain</span>
+          </button>
+        <% end %>
+
+        <%= link_to edit_chain_path(@chain), class: "btn btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm" do %>
           <i class="fa-solid fa-pen"></i>
-          <span>Edit Chain</span>
+          <span>Edit</span>
         <% end %>
       <% end %>
 
@@ -138,22 +65,109 @@
 
   <!-- Summary Stats -->
   <div class="row g-3 mb-4">
-    <div class="col-12 col-sm-4">
-      <div class="card border-0 shadow-sm p-3">
-        <span class="text-muted small text-uppercase fw-semibold d-block">Total Links in Chain</span>
+    <div class="col-12 col-sm-3">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <span class="text-muted small text-uppercase fw-semibold d-block">Total Links</span>
         <span class="fs-4 fw-bold text-dark"><%= pluralize(@chain.transactions.size, "transaction") %></span>
       </div>
     </div>
-    <div class="col-12 col-sm-4">
-      <div class="card border-0 shadow-sm p-3">
+    <div class="col-12 col-sm-3">
+      <div class="card border-0 shadow-sm p-3 h-100">
         <span class="text-muted small text-uppercase fw-semibold d-block">Completed Links</span>
         <span class="fs-4 fw-bold text-success"><%= @chain.transactions.completed.size %></span>
       </div>
     </div>
-    <div class="col-12 col-sm-4">
-      <div class="card border-0 shadow-sm p-3">
+    <div class="col-12 col-sm-3">
+      <div class="card border-0 shadow-sm p-3 h-100">
         <span class="text-muted small text-uppercase fw-semibold d-block">In Progress Links</span>
         <span class="fs-4 fw-bold text-warning-emphasis"><%= @chain.transactions.pending.size %></span>
+      </div>
+    </div>
+    <div class="col-12 col-sm-3">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <span class="text-muted small text-uppercase fw-semibold d-block">Overall State</span>
+        <span class="fs-5 fw-bold <%= @chain.chain_completed? ? 'text-success' : 'text-primary' %>">
+          <%= @chain.chain_completed? ? "Completed" : "Open" %>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain Boundaries (Start & End Rules for UK Property Chains) -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3 border-bottom">
+      <h5 class="card-title fw-bold text-dark mb-0">
+        <i class="fa-solid fa-arrows-left-right text-primary me-2"></i> Chain Boundary Analysis
+      </h5>
+      <p class="text-muted small mb-0 mt-1">
+        Under UK conveyancing rules, a chain remains <strong>open</strong> until both ends are closed (a First-Time Buyer at the bottom and a person leaving the property market at the top) and all transactions are completed.
+      </p>
+    </div>
+    <div class="card-body p-4">
+      <div class="row g-3">
+        <!-- Start Boundary (Bottom) -->
+        <div class="col-12 col-md-6">
+          <% start_info = @chain.start_node_status %>
+          <div class="border rounded p-3 h-100 <%= start_info[:closed] ? 'bg-success bg-opacity-10 border-success' : 'bg-warning bg-opacity-10 border-warning' %>">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="small text-uppercase fw-bold text-secondary">
+                <i class="fa-solid fa-arrow-down-short-wide me-1"></i> Start of Chain (Bottom)
+              </span>
+              <span class="badge <%= start_info[:badge_class] %>"><%= start_info[:label] %></span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">
+              <%= start_info[:party_name] %>
+            </h6>
+            <p class="small text-muted mb-0">
+              <%= start_info[:description] %>
+            </p>
+          </div>
+        </div>
+
+        <!-- End Boundary (Top) -->
+        <div class="col-12 col-md-6">
+          <% end_info = @chain.end_node_status %>
+          <div class="border rounded p-3 h-100 <%= end_info[:closed] ? 'bg-success bg-opacity-10 border-success' : 'bg-warning bg-opacity-10 border-warning' %>">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="small text-uppercase fw-bold text-secondary">
+                <i class="fa-solid fa-arrow-up-wide-short me-1"></i> End of Chain (Top)
+              </span>
+              <span class="badge <%= end_info[:badge_class] %>"><%= end_info[:label] %></span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">
+              <%= end_info[:party_name] %>
+            </h6>
+            <p class="small text-muted mb-0">
+              <%= end_info[:description] %>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chain Status Explainer Alert -->
+      <div class="mt-3">
+        <% if @chain.chain_completed? %>
+          <div class="alert alert-success d-flex align-items-center gap-2 mb-0 py-2">
+            <i class="fa-solid fa-circle-check fs-5"></i>
+            <span class="small">
+              <strong>Chain Fully Completed:</strong> Both ends are closed (First-Time Buyer at start, vendor leaving property market at end) and all transactions in the chain have completed.
+            </span>
+          </div>
+        <% elsif @chain.both_ends_closed? %>
+          <div class="alert alert-info d-flex align-items-center gap-2 mb-0 py-2">
+            <i class="fa-solid fa-circle-info fs-5"></i>
+            <span class="small">
+              <strong>Both Ends Closed (Chain In Progress):</strong> The start has a First-Time Buyer and the end vendor is leaving the property market. The chain is open while conveyancing proceeds on <%= pluralize(@chain.transactions.pending.size, 'transaction') %>.
+            </span>
+          </div>
+        <% else %>
+          <div class="alert alert-warning d-flex align-items-center gap-2 mb-0 py-2">
+            <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+            <span class="small">
+              <strong>Chain is Open:</strong> The chain boundaries are not yet closed. It requires a First-Time Buyer at the bottom and a vendor leaving the market at the top before it can reach completion.
+            </span>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
@@ -162,7 +176,7 @@
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
       <h5 class="card-title fw-bold text-dark mb-0">
-        <i class="fa-solid fa-arrows-split-up-and-left text-primary me-2"></i> Chain Sequence & Cooperating Agents
+        <i class="fa-solid fa-arrows-split-up-and-left text-primary me-2"></i> Chain Sequence &amp; Cooperating Agents
       </h5>
       <%= link_to new_transaction_path(chain_id: @chain.id), class: "btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" do %>
         <i class="fa-solid fa-plus"></i>
@@ -171,7 +185,8 @@
     </div>
 
     <div class="card-body p-4">
-      <% if @chain.transactions.empty? %>
+      <% ordered_txs = @chain.ordered_transactions %>
+      <% if ordered_txs.empty? %>
         <div class="text-center py-4 text-muted">
           <i class="fa-solid fa-link-slash fa-2x mb-2 text-secondary opacity-50"></i>
           <p class="small mb-2">No transactions currently linked to this chain.</p>
@@ -181,7 +196,7 @@
         </div>
       <% else %>
         <div class="position-relative">
-          <% @chain.transactions.each_with_index do |tx, idx| %>
+          <% ordered_txs.each_with_index do |tx, idx| %>
             <div class="card border mb-4 shadow-none <%= 'border-success' if tx.completed? %>">
               <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -259,10 +274,10 @@
                     <% end %>
                   </div>
 
-                  <!-- Client / Interested Party (Personal data protected from unassociated users) -->
+                  <!-- Client / Purchaser Party -->
                   <div class="col-12 col-md-4">
                     <span class="text-muted small text-uppercase fw-semibold d-block mb-1">
-                      <i class="fa-solid fa-user-group me-1 text-primary"></i> Client Party
+                      <i class="fa-solid fa-user-group me-1 text-primary"></i> Purchaser (Buyer)
                     </span>
                     <% if tx.involved_party %>
                       <% if policy(tx.involved_party).show_personal_data? %>
@@ -294,7 +309,7 @@
               </div>
             </div>
 
-            <% unless idx == @chain.transactions.size - 1 %>
+            <% unless idx == ordered_txs.size - 1 %>
               <div class="text-center my-3 text-muted">
                 <i class="fa-solid fa-arrow-down fa-lg text-primary opacity-75"></i>
               </div>
@@ -305,3 +320,46 @@
     </div>
   </div>
 </div>
+
+<!-- Merge Chain Modal -->
+<% if policy(@chain).update? && @available_merge_chains.present? && @available_merge_chains.any? %>
+  <div class="modal fade" id="mergeChainModal" tabindex="-1" aria-labelledby="mergeChainModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="mergeChainModalLabel">
+            <i class="fa-solid fa-code-merge text-primary me-2"></i> Merge with Another Chain
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <%= form_with url: merge_chain_path(@chain), method: :post, local: true do |f| %>
+          <div class="modal-body">
+            <div class="alert alert-info py-2 small mb-3">
+              <i class="fa-solid fa-circle-info me-1"></i>
+              <strong>Lowest ID Rule:</strong> When two chains merge, all transactions are combined and the resulting chain automatically inherits the <strong>lowest ID</strong> (<%= @chain.id %> or the target chain's ID). The higher ID chain will be removed.
+            </div>
+
+            <div class="mb-3">
+              <label for="target_chain_id" class="form-label fw-semibold small text-secondary">
+                Select Chain to Merge With:
+              </label>
+              <select name="target_chain_id" id="target_chain_id" class="form-select" required>
+                <option value="">-- Choose a chain --</option>
+                <% @available_merge_chains.each do |c| %>
+                  <option value="<%= c.id %>">
+                    Chain #<%= c.id %> (<%= pluralize(c.transactions.size, 'link') %>) — <%= c.status_label %>
+                    <%= "(Inherits ID ##{[c.id, @chain.id].min})" %>
+                  </option>
+                <% end %>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <%= f.submit "Confirm Merge", class: "btn btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

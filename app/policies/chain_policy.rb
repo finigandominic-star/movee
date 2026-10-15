@@ -19,6 +19,10 @@ class ChainPolicy < ApplicationPolicy
     user.present? && (user.admin? || record.user == user)
   end
 
+  def merge?
+    update?
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope.all
