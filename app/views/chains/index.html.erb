@@ -1,0 +1,67 @@
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 fw-bold mb-0">Housing Chains</h1>
+    <%= link_to "New Chain", new_chain_path, class: "btn btn-primary shadow-sm" %>
+  </div>
+
+  <% if @chains.any? %>
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+      <% @chains.each do |chain| %>
+        <div class="col">
+          <div class="card h-100 shadow-sm border">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+              <h5 class="card-title mb-0 fw-semibold">
+                Chain #<%= chain.id %>
+              </h5>
+              <div>
+                <% if chain.active? %>
+                  <span class="badge bg-success">Active</span>
+                <% else %>
+                  <span class="badge bg-secondary">Inactive</span>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <h6 class="text-muted small fw-bold text-uppercase mb-2">Transactions in Chain (<%= chain.transactions.count %>)</h6>
+              <% if chain.transactions.any? %>
+                <ul class="list-group list-group-flush mb-3">
+                  <% chain.transactions.each do |transaction| %>
+                    <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                      <div>
+                        <% if transaction.property.present? %>
+                          <span class="fw-medium">
+                            <%= [transaction.property.house_number, transaction.property.street, transaction.property.city].compact.join(", ") %>
+                          </span>
+                        <% else %>
+                          <span class="text-muted fst-italic">No property assigned</span>
+                        <% end %>
+                      </div>
+                      <div>
+                        <span class="badge <%= transaction.status_badge_class %>"><%= transaction.status_label %></span>
+                      </div>
+                    </li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <p class="text-muted small fst-italic mb-3">No transactions added to this chain yet.</p>
+              <% end %>
+            </div>
+
+            <div class="card-footer bg-white border-top-0 d-flex justify-content-end gap-2 pb-3">
+              <%= link_to "View Details", chain_path(chain), class: "btn btn-sm btn-outline-primary" %>
+              <%= link_to "Edit", edit_chain_path(chain), class: "btn btn-sm btn-outline-secondary" %>
+              <%= button_to "Delete", chain_path(chain), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "btn btn-sm btn-outline-danger" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-5 bg-light rounded border">
+      <i class="fa-solid fa-link-slash fa-3x text-muted mb-3"></i>
+      <p class="text-muted">No housing chains found.</p>
+      <%= link_to "Create your first chain", new_chain_path, class: "btn btn-primary btn-sm mt-2" %>
+    </div>
+  <% end %>
+</div>
