@@ -148,6 +148,47 @@ class Chain < ApplicationRecord
     Chain.merge!(self, other_chain)
   end
 
+  # Connects a property to this chain without requiring the user to identify or know any other chain.
+  # If the property is already part of another chain, the chains are automatically merged under the lowest ID.
+  # If the property is not yet in a chain, it creates a linking transaction.
+  def connect_property!(property, position: :top, current_user: nil)
+    raise ArgumentError, "Property must be present" if property.nil?
+
+    # Check if property already belongs to another chain
+    existing_other_chain = property.chains.where.not(id: id).first ||
+                           property.transactions.where.not(chain_id: id).first&.chain
+
+    if existing_other_chain.present? && existing_other_chain.id != id
+      return Chain.merge!(self, existing_other_chain)
+    end
+
+    # Otherwise, create a transaction connecting this chain to the property
+    if position.to_sym == :top
+      buyer = end_transaction&.property&.involved_party
+      Transaction.create!(
+        chain: self,
+        property: property,
+        involved_party: buyer,
+        user: current_user || property.user,
+        legal_stage: "offer_accepted"
+      )
+    else
+      seller = start_transaction&.involved_party
+      property.update!(involved_party: seller) if seller.present? && property.involved_party.nil?
+      Transaction.create!(
+        chain: self,
+        property: property,
+        involved_party: nil,
+        user: current_user || property.user,
+        legal_stage: "offer_accepted"
+      )
+    end
+
+    reload
+    sync_status!
+    self
+  end
+
   # UI Presentation Helpers
   def status_label
     if chain_completed?

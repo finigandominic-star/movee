@@ -23,6 +23,10 @@ class ChainPolicy < ApplicationPolicy
     update?
   end
 
+  def connect_property?
+    update?
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope.all

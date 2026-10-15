@@ -183,4 +183,32 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
     assert_select "span", text: /Start of Chain/
     assert_select "span", text: /End of Chain/
   end
+
+  test "connect_property action automatically merges chains when property is in another chain" do
+    other_chain = Chain.create!(user: @user, active: true)
+    target_prop = Property.create!(
+      user: @user,
+      house_number: "77",
+      street: "Connect Street",
+      post_code: "M2 2BB"
+    )
+    Transaction.create!(chain: other_chain, property: target_prop, user: @user)
+
+    lowest_id = [@chain.id, other_chain.id].min
+
+    assert_difference("Chain.count", -1) do
+      post connect_property_chain_url(@chain), params: { property_id: target_prop.id, position: "top" }
+    end
+
+    assert_redirected_to chain_url(lowest_id)
+    assert_match(/Connected #{target_prop.short_address}/i, flash[:notice])
+    assert_equal 2, Chain.find(lowest_id).transactions.count
+  end
+
+  test "show renders connect property modal and buttons" do
+    get chain_url(@chain)
+    assert_response :success
+    assert_select "#connectPropertyModal"
+    assert_select "button[data-bs-target='#connectPropertyModal']"
+  end
 end

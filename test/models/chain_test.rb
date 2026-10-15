@@ -225,4 +225,44 @@ class ChainTest < ActiveSupport::TestCase
     assert chain.reload.chain_completed?
     assert_equal false, chain.active?
   end
+
+  test "connect_property! automatically merges chains under lowest ID when property is in another chain" do
+    chain_low = Chain.create!(user: @agent)
+    chain_high = Chain.create!(user: @agent)
+    assert chain_low.id < chain_high.id
+
+    # chain_low has Property 1
+    Transaction.create!(chain: chain_low, property: @prop1, user: @agent)
+
+    # chain_high has Property 2
+    Transaction.create!(chain: chain_high, property: @prop2, user: @agent)
+
+    # User connects Property 2 to chain_low (searching by property, not chain ID!)
+    surviving = chain_low.connect_property!(@prop2, position: :top, current_user: @agent)
+
+    assert_equal chain_low.id, surviving.id
+    assert Chain.exists?(chain_low.id)
+    assert_not Chain.exists?(chain_high.id)
+    assert_equal 2, surviving.transactions.count
+  end
+
+  test "connect_property! creates a new linking transaction when property is unchained" do
+    chain = Chain.create!(user: @agent)
+    Transaction.create!(chain: chain, property: @prop1, involved_party: @ftb, user: @agent)
+
+    unchained_prop = Property.create!(
+      user: @agent,
+      house_number: "50",
+      street: "Unchained Way",
+      post_code: "B1 1AA",
+      involved_party: @market_exit
+    )
+
+    assert_difference("Transaction.count", 1) do
+      chain.connect_property!(unchained_prop, position: :top, current_user: @agent)
+    end
+
+    assert_equal 2, chain.transactions.count
+    assert_equal unchained_prop, chain.end_transaction.property
+  end
 end

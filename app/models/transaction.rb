@@ -159,6 +159,7 @@ class Transaction < ApplicationRecord
 
   after_save :handle_chain_reassignment, if: :saved_change_to_chain_id?
   after_save :sync_chain_status
+  after_create :auto_merge_chains_sharing_property
   after_destroy :cleanup_empty_chain_and_sync
 
   scope :completed, -> { where(completed: true) }
@@ -531,6 +532,18 @@ class Transaction < ApplicationRecord
       ch.destroy
     else
       ch.sync_status!
+    end
+  end
+
+  def auto_merge_chains_sharing_property
+    return unless chain.present? && property.present?
+
+    # Check if this property already has transactions in another chain
+    other_chain = property.chains.where.not(id: chain_id).first ||
+                  property.transactions.where.not(chain_id: chain_id).first&.chain
+
+    if other_chain.present? && other_chain.id != chain_id
+      Chain.merge!(chain, other_chain)
     end
   end
 

@@ -247,8 +247,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_141000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
+    t.string "legal_stage", default: "offer_accepted", null: false
+    t.date "estimated_completion_date"
+    t.date "actual_completion_date"
+    t.jsonb "stage_dates", default: {}, null: false
     t.index ["chain_id"], name: "index_transactions_on_chain_id"
     t.index ["involved_party_id"], name: "index_transactions_on_involved_party_id"
+    t.index ["legal_stage"], name: "index_transactions_on_legal_stage"
     t.index ["property_id"], name: "index_transactions_on_property_id"
     t.index ["user_id"], name: "index_transactions_on_user_id"
   end
