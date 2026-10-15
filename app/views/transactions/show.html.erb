@@ -208,6 +208,26 @@
               <span class="fw-semibold text-dark"><%= @transaction.legal_stage_definition[:lead_actor] %></span>
             </li>
             <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+              <span class="text-muted">Target Completion</span>
+              <span class="fw-semibold text-dark">
+                <%= @transaction.estimated_completion_date&.strftime("%d %b %Y") || "—" %>
+              </span>
+            </li>
+            <% if @transaction.actual_completion_date.present? %>
+              <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                <span class="text-muted">Actual Completion</span>
+                <span class="fw-semibold text-dark">
+                  <%= @transaction.actual_completion_date.strftime("%d %b %Y") %>
+                </span>
+              </li>
+            <% end %>
+            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+              <span class="text-muted">Timing Performance</span>
+              <span class="badge <%= @transaction.overall_timing_status[:badge_class] %>">
+                <%= @transaction.overall_timing_status[:label] %>
+              </span>
+            </li>
+            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
               <span class="text-muted">Transaction ID</span>
               <span class="fw-semibold text-dark">#<%= @transaction.id %></span>
             </li>

@@ -110,6 +110,9 @@
                     <i class="fa-solid <%= tx.legal_stage_definition[:icon] %> me-1"></i>
                     <%= tx.legal_stage_short_title %>
                   </span>
+                  <span class="badge <%= tx.overall_timing_status[:badge_class] %>" style="font-size: 0.7rem;">
+                    <%= tx.overall_timing_status[:label] %>
+                  </span>
                 </div>
                 <div class="btn-group btn-group-sm">
                   <%= link_to transaction_path(tx), class: "btn btn-outline-primary" do %>

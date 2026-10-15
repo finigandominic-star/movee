@@ -62,9 +62,14 @@ class TransactionsController < ApplicationController
   def update_stage
     authorize @transaction
     stage = params[:legal_stage] || params.dig(:transaction, :legal_stage)
+    approval_date = if params[:approval_date].present?
+                      Date.parse(params[:approval_date]) rescue Date.current
+                    else
+                      Date.current
+                    end
 
     if stage.present? && Transaction::LEGAL_STAGES.include?(stage)
-      @transaction.update(legal_stage: stage)
+      @transaction.set_legal_stage_with_timing!(stage, approval_date)
       redirect_to @transaction, notice: "Legal conveyancing stage updated to: #{@transaction.legal_stage_title}."
     else
       redirect_to @transaction, alert: "Invalid legal stage selected."
@@ -78,6 +83,14 @@ class TransactionsController < ApplicationController
   end
 
   def transaction_params
-    params.require(:transaction).permit(:property_id, :chain_id, :involved_party_id, :completed, :legal_stage)
+    params.require(:transaction).permit(
+      :property_id,
+      :chain_id,
+      :involved_party_id,
+      :completed,
+      :legal_stage,
+      :estimated_completion_date,
+      :actual_completion_date
+    )
   end
 end

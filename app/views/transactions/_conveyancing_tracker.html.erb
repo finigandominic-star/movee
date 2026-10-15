@@ -3,6 +3,7 @@
 <% percent = @transaction.legal_stage_percentage %>
 <% current_def = @transaction.legal_stage_definition %>
 <% can_update = policy(@transaction).update? %>
+<% overall_timing = @transaction.overall_timing_status %>
 
 <div class="card border-0 shadow-sm mb-4" data-controller="tooltip">
   <div class="card-header bg-white py-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
@@ -15,7 +16,10 @@
         Post-offer acceptance legal workflow under England &amp; Wales conveyancing law.
       </p>
     </div>
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="badge <%= overall_timing[:badge_class] %> px-2 py-1">
+        <i class="fa-regular fa-clock me-1"></i> <%= overall_timing[:label] %>
+      </span>
       <span class="badge <%= @transaction.completed? ? 'bg-success' : 'bg-primary' %>-subtle text-<%= @transaction.completed? ? 'success' : 'primary' %> border border-<%= @transaction.completed? ? 'success' : 'primary' %>-subtle px-2 py-1">
         Stage <%= current_idx %> of <%= total_stages %> (<%= percent %>%)
       </span>
@@ -26,12 +30,20 @@
   </div>
 
   <div class="card-body p-4">
-    <!-- Overall Progress Bar -->
+    <!-- Overall Progress Bar & Transaction Target Dates -->
     <div class="mb-4">
-      <div class="d-flex justify-content-between text-muted small mb-1 fw-semibold">
-        <span><i class="fa-solid fa-handshake me-1 text-secondary"></i> Offer Agreed (SSTC)</span>
-        <span>Stage: <strong><%= current_def[:short_name] %></strong> (<%= percent %>%)</span>
-        <span><i class="fa-solid fa-key me-1 text-success"></i> Completion &amp; Handover</span>
+      <div class="d-flex justify-content-between text-muted small mb-1 fw-semibold flex-wrap gap-1">
+        <span>
+          <i class="fa-solid fa-handshake me-1 text-secondary"></i> Offer Agreed:
+          <strong><%= @transaction.transaction_start_date.strftime("%d %b %Y") %></strong>
+        </span>
+        <span>
+          Current: <strong><%= current_def[:short_name] %></strong> (<%= percent %>%)
+        </span>
+        <span>
+          <i class="fa-solid fa-key me-1 text-success"></i> Target Completion:
+          <strong><%= @transaction.estimated_completion_date&.strftime("%d %b %Y") || "—" %></strong>
+        </span>
       </div>
       <div class="progress" style="height: 8px;">
         <div class="progress-bar <%= @transaction.completed? ? 'bg-success' : 'bg-primary' %> progress-bar-striped <%= 'progress-bar-animated' unless @transaction.completed? %>"
@@ -44,7 +56,7 @@
       </div>
     </div>
 
-    <!-- Stepper Pipeline -->
+    <!-- Stepper Pipeline (Visual status & date indicators with tooltips; non-clickable) -->
     <div class="conveyancing-pipeline">
       <div class="conveyancing-pipeline__track">
         <% Transaction::LEGAL_STAGES.each do |stage_key| %>
@@ -55,61 +67,58 @@
           <% is_pending = s_idx > current_idx %>
 
           <% step_state = is_done ? "completed" : (is_current ? "current" : "pending") %>
-          <% tooltip_title = "#{s_idx}. #{stage_def[:name]}: #{stage_def[:tooltip]} (Lead: #{stage_def[:lead_actor]})" %>
+          <% timing = @transaction.stage_timing(stage_key) %>
+          <% est_date = timing[:estimated_date] %>
+          <% act_date = timing[:actual_date] %>
 
-          <div class="conveyancing-pipeline__step conveyancing-pipeline__step--<%= step_state %> <%= 'conveyancing-pipeline__step--clickable' if can_update %>"
+          <% tooltip_title = "<strong>Stage #{s_idx}: #{ERB::Util.html_escape(stage_def[:name])}</strong><br>" \
+                             "<span class='badge bg-light text-dark my-1'>Lead: #{ERB::Util.html_escape(stage_def[:lead_actor])}</span><br>" \
+                             "#{ERB::Util.html_escape(stage_def[:tooltip])}<br>" \
+                             "<hr class='my-1 border-secondary-subtle'>" \
+                             "<strong>Estimated Date:</strong> #{est_date&.strftime('%d %b %Y')}<br>" \
+                             "<strong>Actual Date:</strong> #{act_date ? act_date.strftime('%d %b %Y') : (is_current ? 'In Progress' : 'Pending')}<br>" \
+                             "<strong>Status:</strong> #{timing[:full_label]}" %>
+
+          <div class="conveyancing-pipeline__step conveyancing-pipeline__step--<%= step_state %>"
                data-bs-toggle="tooltip"
+               data-bs-html="true"
                data-bs-placement="top"
                data-bs-title="<%= tooltip_title %>">
+            <div class="conveyancing-pipeline__circle">
+              <% if is_done %>
+                <i class="fa-solid fa-check"></i>
+              <% elsif is_current %>
+                <i class="fa-solid <%= stage_def[:icon] %>"></i>
+              <% else %>
+                <span><%= s_idx %></span>
+              <% end %>
+            </div>
+            <span class="conveyancing-pipeline__label">
+              <%= stage_def[:short_name] %>
+            </span>
 
-            <% if can_update %>
-              <%= button_to update_stage_transaction_path(@transaction),
-                            method: :patch,
-                            params: { legal_stage: stage_key },
-                            class: "btn p-0 border-0 bg-transparent text-center d-flex flex-column align-items-center w-100",
-                            data: { turbo_confirm: is_current ? nil : "Update this transaction's legal stage to: #{stage_def[:name]}?" } do %>
-                <div class="conveyancing-pipeline__circle">
-                  <% if is_done %>
-                    <i class="fa-solid fa-check"></i>
-                  <% elsif is_current %>
-                    <i class="fa-solid <%= stage_def[:icon] %>"></i>
-                  <% else %>
-                    <span><%= s_idx %></span>
-                  <% end %>
-                </div>
-                <span class="conveyancing-pipeline__label">
-                  <%= stage_def[:short_name] %>
+            <!-- Timing Badge & Date -->
+            <div class="conveyancing-pipeline__timing text-center mt-1">
+              <span class="badge <%= timing[:badge_class] %>" style="font-size: 0.65rem;">
+                <%= timing[:label] %>
+              </span>
+              <% if act_date.present? %>
+                <span class="conveyancing-pipeline__date d-none d-md-block text-muted" style="font-size: 0.62rem;">
+                  Done: <%= act_date.strftime("%d %b") %>
                 </span>
-                <span class="conveyancing-pipeline__time d-none d-md-block">
-                  <%= stage_def[:timeline] %>
+              <% else %>
+                <span class="conveyancing-pipeline__date d-none d-md-block text-muted" style="font-size: 0.62rem;">
+                  Est: <%= est_date&.strftime("%d %b") %>
                 </span>
               <% end %>
-            <% else %>
-              <div class="conveyancing-pipeline__circle">
-                <% if is_done %>
-                  <i class="fa-solid fa-check"></i>
-                <% elsif is_current %>
-                  <i class="fa-solid <%= stage_def[:icon] %>"></i>
-                <% else %>
-                  <span><%= s_idx %></span>
-                <% end %>
-              </div>
-              <span class="conveyancing-pipeline__label">
-                <%= stage_def[:short_name] %>
-              </span>
-              <span class="conveyancing-pipeline__time d-none d-md-block">
-                <%= stage_def[:timeline] %>
-              </span>
-            <% end %>
+            </div>
           </div>
         <% end %>
       </div>
-      <% if can_update %>
-        <p class="text-center text-muted small mt-2 mb-0 fst-italic">
-          <i class="fa-solid fa-circle-info me-1 text-primary"></i>
-          Hover over any step for conveyancing tooltips, or click any step above to update the stage directly.
-        </p>
-      <% end %>
+      <p class="text-center text-muted small mt-2 mb-0 fst-italic">
+        <i class="fa-solid fa-circle-info me-1 text-primary"></i>
+        Hover over any step to review milestone tooltips and target dates. Use the <strong>Advance Stage</strong> button or <strong>Change Stage</strong> dropdown below to update the transaction.
+      </p>
     </div>
 
     <!-- Active Stage Command Card -->
@@ -125,13 +134,13 @@
                 <i class="fa-solid fa-user-gear me-1"></i> Lead: <%= current_def[:lead_actor] %>
               </span>
               <span class="badge bg-info-subtle text-info-emphasis border">
-                <i class="fa-regular fa-clock me-1"></i> Typical: <%= current_def[:timeline] %>
+                <i class="fa-regular fa-clock me-1"></i> Benchmark: <%= current_def[:timeline] %>
               </span>
             </div>
             <h5 class="fw-bold text-dark mt-2 mb-1"><%= current_def[:summary] %></h5>
           </div>
 
-          <!-- Quick Stage Actions -->
+          <!-- Official Update Controls: Advance to Stage X & Change Stage -->
           <% if can_update %>
             <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center">
               <% if @transaction.next_legal_stage %>
@@ -140,7 +149,7 @@
                               method: :patch,
                               params: { legal_stage: @transaction.next_legal_stage },
                               class: "btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 shadow-sm text-nowrap",
-                              data: { bs_toggle: "tooltip", bs_title: "Advance to Stage #{nxt_def[:index]}: #{nxt_def[:name]}" } do %>
+                              data: { bs_toggle: "tooltip", bs_title: "Advance transaction to Stage #{nxt_def[:index]}: #{nxt_def[:name]}" } do %>
                   <span>Advance to Stage <%= nxt_def[:index] %></span>
                   <i class="fa-solid fa-arrow-right"></i>
                 <% end %>
@@ -148,7 +157,7 @@
 
               <!-- Dropdown to select any stage -->
               <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-1 w-100"
+                <button class="btn btn-outline-secondary dropdown-toggle d-inline-flex align-items-center justify-content-center gap-1 w-100"
                         type="button"
                         data-bs-toggle="dropdown"
                         aria-expanded="false">
@@ -156,7 +165,7 @@
                   <span>Change Stage</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                  <li><h6 class="dropdown-header text-uppercase small">Update Legal Stage</h6></li>
+                  <li><h6 class="dropdown-header text-uppercase small">Select Conveyancing Stage</h6></li>
                   <% Transaction::LEGAL_STAGES.each do |stg| %>
                     <% s_def = Transaction::LEGAL_STAGE_DEFINITIONS[stg] %>
                     <li>
@@ -180,8 +189,34 @@
           <% end %>
         </div>
 
+        <!-- Stage Target Date vs Actual Date Comparison -->
+        <% curr_timing = @transaction.stage_timing(@transaction.legal_stage) %>
+        <div class="row g-2 align-items-center bg-white p-3 rounded border mb-3">
+          <div class="col-12 col-sm-4">
+            <span class="text-muted small text-uppercase fw-semibold d-block">Estimated Completion</span>
+            <span class="fw-bold text-dark fs-6">
+              <i class="fa-regular fa-calendar-check text-primary me-1"></i>
+              <%= curr_timing[:estimated_date]&.strftime("%d %B %Y") || "—" %>
+            </span>
+          </div>
+          <div class="col-12 col-sm-4">
+            <span class="text-muted small text-uppercase fw-semibold d-block">Actual Completion</span>
+            <span class="fw-bold fs-6 <%= curr_timing[:actual_date] ? 'text-dark' : 'text-muted fst-italic' %>">
+              <i class="fa-solid fa-flag-checkered text-secondary me-1"></i>
+              <%= curr_timing[:actual_date]&.strftime("%d %B %Y") || "In Progress" %>
+            </span>
+          </div>
+          <div class="col-12 col-sm-4">
+            <span class="text-muted small text-uppercase fw-semibold d-block">Target Status</span>
+            <span class="badge <%= curr_timing[:badge_class] %> fs-6 px-2 py-1">
+              <i class="fa-solid <%= curr_timing[:status] == :behind || curr_timing[:status] == :overdue ? 'fa-triangle-exclamation' : 'fa-check' %> me-1"></i>
+              <%= curr_timing[:full_label] %>
+            </span>
+          </div>
+        </div>
+
         <!-- Detailed Legal Context & Agent Action Guidance -->
-        <div class="row g-3 mt-1">
+        <div class="row g-3">
           <div class="col-12 col-md-6">
             <div class="active-stage-card__context-box h-100 bg-white border rounded p-3">
               <h6 class="fw-bold text-dark small text-uppercase mb-2">
@@ -209,12 +244,16 @@
             <i class="fa-solid fa-circle-check fs-4 text-success"></i>
             <div>
               <strong>Transaction Completed!</strong> Keys have been formally released to the buyer and legal completion is finalized.
+              <span class="d-block small text-muted mt-1">
+                Completed on <strong><%= @transaction.actual_completion_date&.strftime("%d %B %Y") || @transaction.updated_at.strftime("%d %B %Y") %></strong>
+                (<%= overall_timing[:label] %> relative to estimated completion date <%= @transaction.estimated_completion_date&.strftime("%d %B %Y") %>).
+              </span>
               <% if @transaction.property && !@transaction.property.sold? && policy(@transaction.property).update? %>
-                <div class="mt-1">
+                <div class="mt-2">
                   <%= button_to property_path(@transaction.property),
                                 method: :patch,
                                 params: { property: { sold: true } },
-                                class: "btn btn-sm btn-success mt-1 shadow-sm" do %>
+                                class: "btn btn-sm btn-success shadow-sm" do %>
                     <i class="fa-solid fa-house-circle-check me-1"></i> Mark Property as Sold
                   <% end %>
                 </div>

@@ -81,18 +81,6 @@
                       <p class="small text-dark mb-0">
                         <%= stage_def[:agent_action] %>
                       </p>
-                      <% if policy(@transaction).update? && !is_current %>
-                        <div class="mt-3 pt-2 border-top">
-                          <%= button_to update_stage_transaction_path(@transaction),
-                                        method: :patch,
-                                        params: { legal_stage: stage_key },
-                                        class: "btn btn-sm btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center gap-1",
-                                        data: { turbo_confirm: "Switch transaction stage to #{stage_def[:name]}?" } do %>
-                            <i class="fa-solid fa-arrow-turn-down"></i>
-                            <span>Set as Current Stage</span>
-                          <% end %>
-                        </div>
-                      <% end %>
                     </div>
                   </div>
                 </div>

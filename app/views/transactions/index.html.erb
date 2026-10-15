@@ -168,9 +168,14 @@
                       <% end %>
                     </td>
                     <td>
-                      <span class="badge <%= tx.status_badge_class %> mb-1">
-                        <%= tx.status_label %>
-                      </span>
+                      <div class="d-flex align-items-center gap-1 mb-1 flex-wrap">
+                        <span class="badge <%= tx.status_badge_class %>">
+                          <%= tx.status_label %>
+                        </span>
+                        <span class="badge <%= tx.overall_timing_status[:badge_class] %>" style="font-size: 0.68rem;">
+                          <%= tx.overall_timing_status[:label] %>
+                        </span>
+                      </div>
                       <div>
                         <span class="badge <%= tx.legal_stage_badge_class %>"
                               data-bs-toggle="tooltip"

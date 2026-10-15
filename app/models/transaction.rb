@@ -16,6 +16,18 @@ class Transaction < ApplicationRecord
     completion
   ].freeze
 
+  # Standard day offsets from commencement (12-week / 84-day benchmark for England & Wales conveyancing)
+  STAGE_DEFAULT_OFFSETS = {
+    "offer_accepted"        => 3,
+    "solicitors_instructed" => 14,
+    "draft_contract_pack"   => 21,
+    "searches_and_enquiries"=> 42,
+    "survey_and_mortgage"   => 56,
+    "enquiries_resolved"    => 70,
+    "exchange_of_contracts" => 77,
+    "completion"            => 84
+  }.freeze
+
   LEGAL_STAGE_DEFINITIONS = {
     "offer_accepted" => {
       index: 1,
@@ -26,6 +38,7 @@ class Transaction < ApplicationRecord
       badge_class: "bg-info text-dark",
       status_pill_class: "text-info border-info-subtle bg-info-subtle",
       timeline: "Day 1 - 3",
+      default_days: 3,
       summary: "Offer agreed Subject to Contract (SSTC). Memorandum of Sale issued to buyer, vendor, and both solicitors.",
       tooltip: "The sale is agreed Subject to Contract (SSTC). The estate agent drafts and issues the Memorandum of Sale setting out the agreed price, parties, special conditions, and conveyancer details. Not yet legally binding.",
       legal_context: "In England and Wales, residential property sales remain non-binding until exchange of contracts. Either party can withdraw or renegotiate at this stage without legal liability. The sales memo formally triggers conveyancing.",
@@ -40,6 +53,7 @@ class Transaction < ApplicationRecord
       badge_class: "bg-primary text-white",
       status_pill_class: "text-primary border-primary-subtle bg-primary-subtle",
       timeline: "Week 1 - 2",
+      default_days: 14,
       summary: "Both parties formally instruct legal representatives. AML/KYC identity checks and money on account submitted.",
       tooltip: "Solicitors cannot start legal work until signed client care letters, Anti-Money Laundering (AML) identity validation, and upfront disbursement funds for search fees are received.",
       legal_context: "Regulated conveyancers are bound by statutory Anti-Money Laundering Regulations and the SRA/CLC rules. Proof of identity and source of wealth/funds must be strictly verified before opening the file.",
@@ -54,6 +68,7 @@ class Transaction < ApplicationRecord
       badge_class: "bg-primary text-white",
       status_pill_class: "text-primary border-primary-subtle bg-primary-subtle",
       timeline: "Week 2 - 3",
+      default_days: 21,
       summary: "Seller's solicitor prepares title deeds, TA6 property info, TA10 fittings forms, and issues draft contract.",
       tooltip: "The seller's solicitor obtains Land Registry official copies and has the vendor complete Law Society forms: TA6 (Property Info) and TA10 (Fittings & Contents). For flats, TA7 and the LPE1 management pack are also required.",
       legal_context: "Under the Law Society Conveyancing Protocol, the seller's conveyancer draws up the contract using official Land Registry title entries and plans. Any un-disclosed restrictions or defects here can stall the whole chain.",
@@ -68,6 +83,7 @@ class Transaction < ApplicationRecord
       badge_class: "bg-warning text-dark",
       status_pill_class: "text-warning-emphasis border-warning-subtle bg-warning-subtle",
       timeline: "Week 3 - 6",
+      default_days: 42,
       summary: "Statutory searches (Local Authority, Drainage, Environmental) submitted and pre-contract enquiries raised.",
       tooltip: "Buyer's solicitor orders conveyancing searches (LLC1/CON29 local council, water/drainage, environmental) and raises specific legal enquiries regarding planning permissions, building regs, and boundaries.",
       legal_context: "Caveat emptor ('buyer beware') applies in UK property law. The buyer's solicitor must investigate all risks, rights of access, planning history, and covenants before advising the client or mortgage lender to proceed.",
@@ -82,6 +98,7 @@ class Transaction < ApplicationRecord
       badge_class: "bg-warning text-dark",
       status_pill_class: "text-warning-emphasis border-warning-subtle bg-warning-subtle",
       timeline: "Week 4 - 7",
+      default_days: 56,
       summary: "RICS survey performed and formal binding Mortgage Offer issued by the lender.",
       tooltip: "The lender completes property valuation and formal underwriting to release the Mortgage Offer. The buyer arranges an independent RICS Home Survey (Level 2 or 3) to uncover structural defects.",
       legal_context: "A mortgage offer is required by the buyer's conveyancer before exchange, ensuring funds will be drawn down for completion. If the valuation comes in low, renegotiations or structural retentions must be resolved.",
@@ -96,6 +113,7 @@ class Transaction < ApplicationRecord
       badge_class: "bg-info text-dark",
       status_pill_class: "text-info border-info-subtle bg-info-subtle",
       timeline: "Week 8 - 10",
+      default_days: 70,
       summary: "All enquiries answered, Report on Title sent, contracts and TR1 signed, and 10% deposit lodged.",
       tooltip: "All legal enquiries are satisfied. The buyer receives their Report on Title. Both parties sign contracts and TR1 transfer deeds in counterpart. The buyer sends cleared deposit funds (usually 10%) to their solicitor.",
       legal_context: "Before exchange, solicitors must obtain formal, unequivocal written authority from clients, hold signed identical contracts, and hold cleared deposit funds in their client account.",
@@ -110,6 +128,7 @@ class Transaction < ApplicationRecord
       badge_class: "bg-success text-white",
       status_pill_class: "text-success border-success-subtle bg-success-subtle",
       timeline: "Week 10 - 12",
+      default_days: 77,
       summary: "Contracts formally exchanged by telephone (Law Society Formula). Deal is legally binding and completion date is fixed.",
       tooltip: "The pivotal milestone in UK conveyancing! Solicitors exchange contracts by phone. The contract is now legally binding: neither party can back out without severe financial penalty. Deposit is locked in.",
       legal_context: "Under the Law Society Formula (typically Formula B), solicitors effect legal exchange on a recorded telephone call. Once complete, the vendor is bound to sell and the purchaser is bound to buy on the agreed completion date.",
@@ -124,6 +143,7 @@ class Transaction < ApplicationRecord
       badge_class: "bg-success text-white",
       status_pill_class: "text-success border-success-subtle bg-success-subtle",
       timeline: "Completion Day",
+      default_days: 84,
       summary: "Purchase funds transferred, mortgages redeemed, ownership legally transferred, and keys handed over.",
       tooltip: "Completion Day! Final balance of purchase funds is wired via CHAPS. Once seller's solicitor confirms receipt of funds, they contact the estate agent with formal authority to release the keys.",
       legal_context: "Legal title passes when purchase money is received by the seller's solicitor. The buyer's solicitor subsequently lodges the TR1 transfer deed and mortgage charge with HM Land Registry and pays Stamp Duty (SDLT).",
@@ -134,6 +154,7 @@ class Transaction < ApplicationRecord
   validates :legal_stage, inclusion: { in: LEGAL_STAGES }
 
   before_validation :sync_completion_and_stage
+  before_validation :initialize_stage_and_completion_dates
 
   scope :completed, -> { where(completed: true) }
   scope :pending, -> { where(completed: [false, nil]) }
@@ -195,15 +216,196 @@ class Transaction < ApplicationRecord
     curr_idx.positive? ? LEGAL_STAGES[curr_idx - 1] : nil
   end
 
-  def advance_stage!
+  # Timeline & Target Estimation Methods
+  def transaction_start_date
+    (created_at || Date.current).to_date
+  end
+
+  # Calculates or returns the estimated completion date for any stage.
+  # The estimation is based on the target completion date or standard timeline from creation.
+  def stage_estimated_date(stage_key)
+    stage_key = stage_key.to_s
+    if stage_dates.is_a?(Hash) && stage_dates.dig(stage_key, "estimated_date").present?
+      Date.parse(stage_dates[stage_key]["estimated_date"])
+    else
+      start = transaction_start_date
+      target_comp = estimated_completion_date || (start + 84.days)
+      span = [target_comp - start, 7].max.to_f
+      offset_ratio = (STAGE_DEFAULT_OFFSETS[stage_key] || 84) / 84.0
+      start + (offset_ratio * span).round.days
+    end
+  end
+
+  def stage_actual_date(stage_key)
+    stage_key = stage_key.to_s
+    if stage_dates.is_a?(Hash) && stage_dates.dig(stage_key, "actual_date").present?
+      Date.parse(stage_dates[stage_key]["actual_date"])
+    elsif stage_key == "completion" && actual_completion_date.present?
+      actual_completion_date
+    end
+  end
+
+  # Returns detailed timing metrics comparing estimated vs actual completion dates
+  def stage_timing(stage_key)
+    stage_key = stage_key.to_s
+    est = stage_estimated_date(stage_key)
+    act = stage_actual_date(stage_key)
+    is_done = legal_stage_completed?(stage_key) || act.present?
+    is_curr = legal_stage_current?(stage_key)
+
+    if act.present?
+      diff = (act - est).to_i
+      if diff < 0
+        {
+          status: :ahead,
+          label: "#{diff.abs}d ahead",
+          full_label: "#{diff.abs} days ahead of target",
+          badge_class: "bg-success-subtle text-success border border-success-subtle",
+          text_class: "text-success",
+          estimated_date: est,
+          actual_date: act,
+          days_diff: diff
+        }
+      elsif diff == 0
+        {
+          status: :on_target,
+          label: "On target",
+          full_label: "Completed on target date",
+          badge_class: "bg-success-subtle text-success border border-success-subtle",
+          text_class: "text-success",
+          estimated_date: est,
+          actual_date: act,
+          days_diff: 0
+        }
+      else
+        {
+          status: :behind,
+          label: "+#{diff}d behind",
+          full_label: "#{diff} days behind target",
+          badge_class: "bg-danger-subtle text-danger border border-danger-subtle",
+          text_class: "text-danger",
+          estimated_date: est,
+          actual_date: act,
+          days_diff: diff
+        }
+      end
+    elsif is_curr
+      diff = (Date.current - est).to_i
+      if diff > 0
+        {
+          status: :overdue,
+          label: "+#{diff}d overdue",
+          full_label: "Behind target (overdue by #{diff} days)",
+          badge_class: "bg-danger-subtle text-danger border border-danger-subtle",
+          text_class: "text-danger",
+          estimated_date: est,
+          actual_date: nil,
+          days_diff: diff
+        }
+      elsif diff == 0
+        {
+          status: :due_today,
+          label: "Due today",
+          full_label: "Target deadline is today",
+          badge_class: "bg-warning-subtle text-warning-emphasis border border-warning-subtle",
+          text_class: "text-warning",
+          estimated_date: est,
+          actual_date: nil,
+          days_diff: 0
+        }
+      else
+        days_left = diff.abs
+        {
+          status: :on_track,
+          label: "#{days_left}d left",
+          full_label: "On track (#{days_left} days remaining)",
+          badge_class: "bg-primary-subtle text-primary border border-primary-subtle",
+          text_class: "text-primary",
+          estimated_date: est,
+          actual_date: nil,
+          days_diff: diff
+        }
+      end
+    else
+      {
+        status: :pending,
+        label: "Est: #{est&.strftime('%d %b')}",
+        full_label: "Target: #{est&.strftime('%d %B %Y')}",
+        badge_class: "bg-light text-secondary border",
+        text_class: "text-secondary",
+        estimated_date: est,
+        actual_date: nil,
+        days_diff: nil
+      }
+    end
+  end
+
+  def overall_timing_status
+    est = estimated_completion_date || stage_estimated_date("completion")
+    if completed?
+      act = actual_completion_date || stage_actual_date("completion") || updated_at.to_date
+      diff = (act - est).to_i
+      if diff < 0
+        { status: :ahead, label: "Completed #{diff.abs}d ahead of target", badge_class: "bg-success text-white", days_diff: diff }
+      elsif diff == 0
+        { status: :on_target, label: "Completed on target", badge_class: "bg-success text-white", days_diff: 0 }
+      else
+        { status: :behind, label: "Completed #{diff}d behind target", badge_class: "bg-warning text-dark", days_diff: diff }
+      end
+    else
+      curr_timing = stage_timing(legal_stage)
+      if curr_timing[:status] == :overdue || (Date.current > est)
+        days = [Date.current - est, curr_timing[:days_diff] || 0].max.to_i
+        { status: :behind, label: "Behind Target (+#{days}d)", badge_class: "bg-danger text-white", days_diff: days }
+      else
+        { status: :on_track, label: "On Track", badge_class: "bg-success-subtle text-success border border-success-subtle", days_diff: 0 }
+      end
+    end
+  end
+
+  # Updates stage and automatically records approval dates for completed stages
+  def set_legal_stage_with_timing!(new_stage, approval_date = Date.current)
+    new_idx = LEGAL_STAGE_DEFINITIONS.dig(new_stage.to_s, :index) || 1
+    curr_idx = legal_stage_index
+
+    self.stage_dates ||= {}
+
+    # If moving forward, record actual approval dates for preceding stages if not already recorded
+    if new_idx > curr_idx
+      LEGAL_STAGES.each do |stg|
+        s_idx = LEGAL_STAGE_DEFINITIONS[stg][:index]
+        if s_idx < new_idx && stage_actual_date(stg).nil?
+          self.stage_dates[stg] ||= {}
+          self.stage_dates[stg]["estimated_date"] ||= stage_estimated_date(stg).to_s
+          self.stage_dates[stg]["actual_date"] = approval_date.to_s
+        end
+      end
+    end
+
+    self.legal_stage = new_stage
+    if new_stage == "completion"
+      self.completed = true
+      self.actual_completion_date ||= approval_date
+      self.stage_dates["completion"] ||= {}
+      self.stage_dates["completion"]["estimated_date"] ||= stage_estimated_date("completion").to_s
+      self.stage_dates["completion"]["actual_date"] = approval_date.to_s
+    elsif completed?
+      self.completed = false
+      self.actual_completion_date = nil
+    end
+
+    save!
+  end
+
+  def advance_stage!(approval_date = Date.current)
     if (nxt = next_legal_stage)
-      update!(legal_stage: nxt)
+      set_legal_stage_with_timing!(nxt, approval_date)
     end
   end
 
   def rollback_stage!
     if (prev = previous_legal_stage)
-      update!(legal_stage: prev)
+      set_legal_stage_with_timing!(prev)
     end
   end
 
@@ -228,6 +430,27 @@ class Transaction < ApplicationRecord
           self.completed = false
         end
       end
+    end
+  end
+
+  def initialize_stage_and_completion_dates
+    start = transaction_start_date
+    self.estimated_completion_date ||= start + 84.days
+    self.stage_dates ||= {}
+
+    span = [estimated_completion_date - start, 7].max.to_f
+    LEGAL_STAGES.each do |stg|
+      self.stage_dates[stg] ||= {}
+      if self.stage_dates[stg]["estimated_date"].blank?
+        offset_ratio = (STAGE_DEFAULT_OFFSETS[stg] || 84) / 84.0
+        self.stage_dates[stg]["estimated_date"] = (start + (offset_ratio * span).round.days).to_s
+      end
+    end
+
+    if completed?
+      self.actual_completion_date ||= (updated_at&.to_date || Date.current)
+      self.stage_dates["completion"] ||= {}
+      self.stage_dates["completion"]["actual_date"] ||= self.actual_completion_date.to_s
     end
   end
 end

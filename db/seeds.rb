@@ -168,49 +168,126 @@ sold_properties = all_properties.select { |p| p.sold }
 
 transactions_to_create = []
 
-open_stages = %w[
-  offer_accepted
-  solicitors_instructed
-  draft_contract_pack
-  searches_and_enquiries
-  survey_and_mortgage
-  enquiries_resolved
-  exchange_of_contracts
+today = Date.current
+
+# Helper to generate granular stage milestone dates
+def build_stage_dates(start_date, target_comp_date, current_stage, actual_offsets = {})
+  span = [target_comp_date - start_date, 7].max.to_f
+  dates = {}
+  curr_idx = Transaction::LEGAL_STAGE_DEFINITIONS.dig(current_stage, :index) || 1
+
+  Transaction::LEGAL_STAGES.each do |stg|
+    s_idx = Transaction::LEGAL_STAGE_DEFINITIONS[stg][:index]
+    default_days = Transaction::STAGE_DEFAULT_OFFSETS[stg]
+    est_date = start_date + ((default_days / 84.0) * span).round.days
+
+    act_date = nil
+    if s_idx < curr_idx || (current_stage == "completion" && s_idx == 8)
+      act_offset = actual_offsets[stg] || default_days
+      act_date = start_date + act_offset.days
+    end
+
+    dates[stg] = {
+      "estimated_date" => est_date.to_s,
+      "actual_date" => act_date&.to_s
+    }
+  end
+  dates
+end
+
+# 15 distinct open scenarios covering various dates and on/behind target statuses
+open_scenarios = [
+  # 1. Offer accepted 2 days ago (On track: due tomorrow)
+  { days_ago: 2, stage: "offer_accepted", actual_offsets: {} },
+  # 2. Offer accepted 8 days ago (Behind target: overdue by 5d)
+  { days_ago: 8, stage: "offer_accepted", actual_offsets: {} },
+  # 3. Solicitors instructed 10 days ago (On track: stage 1 approved in 2d [ahead])
+  { days_ago: 10, stage: "solicitors_instructed", actual_offsets: { "offer_accepted" => 2 } },
+  # 4. Solicitors instructed 24 days ago (Behind target: AML checks took long, overdue by 10d)
+  { days_ago: 24, stage: "solicitors_instructed", actual_offsets: { "offer_accepted" => 3 } },
+  # 5. Draft contracts 18 days ago (On track / Ahead: stages 1 & 2 done swiftly)
+  { days_ago: 18, stage: "draft_contract_pack", actual_offsets: { "offer_accepted" => 2, "solicitors_instructed" => 10 } },
+  # 6. Draft contracts 38 days ago (Behind target: TA7 / leasehold pack delayed, overdue by 17d)
+  { days_ago: 38, stage: "draft_contract_pack", actual_offsets: { "offer_accepted" => 3, "solicitors_instructed" => 14 } },
+  # 7. Searches & enquiries 35 days ago (On track: searches progressing normally, due in 7d)
+  { days_ago: 35, stage: "searches_and_enquiries", actual_offsets: { "offer_accepted" => 3, "solicitors_instructed" => 12, "draft_contract_pack" => 19 } },
+  # 8. Searches & enquiries 55 days ago (Behind target: council search backlog, overdue by 13d)
+  { days_ago: 55, stage: "searches_and_enquiries", actual_offsets: { "offer_accepted" => 3, "solicitors_instructed" => 14, "draft_contract_pack" => 21 } },
+  # 9. Survey & mortgage 50 days ago (On track: valuation done, offer expected in 6d)
+  { days_ago: 50, stage: "survey_and_mortgage", actual_offsets: { "offer_accepted" => 2, "solicitors_instructed" => 12, "draft_contract_pack" => 20, "searches_and_enquiries" => 40 } },
+  # 10. Survey & mortgage 70 days ago (Behind target: down-valuation renegotiation, overdue by 14d)
+  { days_ago: 70, stage: "survey_and_mortgage", actual_offsets: { "offer_accepted" => 3, "solicitors_instructed" => 14, "draft_contract_pack" => 21, "searches_and_enquiries" => 42 } },
+  # 11. Enquiries resolved / contracts signed 65 days ago (On track: contracts out for signature, due in 5d)
+  { days_ago: 65, stage: "enquiries_resolved", actual_offsets: { "offer_accepted" => 3, "solicitors_instructed" => 13, "draft_contract_pack" => 21, "searches_and_enquiries" => 41, "survey_and_mortgage" => 55 } },
+  # 12. Enquiries resolved / contracts signed 88 days ago (Behind target: missing FENSA/building regs, overdue by 18d)
+  { days_ago: 88, stage: "enquiries_resolved", actual_offsets: { "offer_accepted" => 3, "solicitors_instructed" => 14, "draft_contract_pack" => 22, "searches_and_enquiries" => 44, "survey_and_mortgage" => 60 } },
+  # 13. Exchange of contracts 74 days ago (On track: authority to exchange in place, due in 3d)
+  { days_ago: 74, stage: "exchange_of_contracts", actual_offsets: { "offer_accepted" => 2, "solicitors_instructed" => 12, "draft_contract_pack" => 20, "searches_and_enquiries" => 40, "survey_and_mortgage" => 54, "enquiries_resolved" => 68 } },
+  # 14. Exchange of contracts 96 days ago (Behind target: chain link deposit delay, overdue by 19d)
+  { days_ago: 96, stage: "exchange_of_contracts", actual_offsets: { "offer_accepted" => 3, "solicitors_instructed" => 15, "draft_contract_pack" => 25, "searches_and_enquiries" => 48, "survey_and_mortgage" => 62, "enquiries_resolved" => 78 } },
+  # 15. Searches & enquiries 45 days ago (Mixed: early ahead, then delayed, now 3d overdue)
+  { days_ago: 45, stage: "searches_and_enquiries", actual_offsets: { "offer_accepted" => 1, "solicitors_instructed" => 20, "draft_contract_pack" => 23 } }
 ]
 
-# 1. Create 15 OPEN transactions across different legal stages for UNSOLD properties
+# 5 completed scenarios showing early, on-target, and delayed completions
+completed_scenarios = [
+  # 16. Completed 12 days ahead of target (Target 84d, Actual 72d)
+  { days_ago: 92, actual_comp_days: 72, actual_offsets: { "offer_accepted" => 2, "solicitors_instructed" => 10, "draft_contract_pack" => 17, "searches_and_enquiries" => 35, "survey_and_mortgage" => 48, "enquiries_resolved" => 60, "exchange_of_contracts" => 66, "completion" => 72 } },
+  # 17. Completed exactly on target (Target 84d, Actual 84d)
+  { days_ago: 100, actual_comp_days: 84, actual_offsets: { "offer_accepted" => 3, "solicitors_instructed" => 14, "draft_contract_pack" => 21, "searches_and_enquiries" => 42, "survey_and_mortgage" => 56, "enquiries_resolved" => 70, "exchange_of_contracts" => 77, "completion" => 84 } },
+  # 18. Completed 16 days behind target (Target 84d, Actual 100d - search and mortgage delay)
+  { days_ago: 116, actual_comp_days: 100, actual_offsets: { "offer_accepted" => 3, "solicitors_instructed" => 14, "draft_contract_pack" => 22, "searches_and_enquiries" => 52, "survey_and_mortgage" => 70, "enquiries_resolved" => 86, "exchange_of_contracts" => 93, "completion" => 100 } },
+  # 19. Completed 35 days behind target (Target 84d, Actual 119d - chain & probate delay)
+  { days_ago: 135, actual_comp_days: 119, actual_offsets: { "offer_accepted" => 3, "solicitors_instructed" => 16, "draft_contract_pack" => 28, "searches_and_enquiries" => 60, "survey_and_mortgage" => 80, "enquiries_resolved" => 102, "exchange_of_contracts" => 110, "completion" => 119 } },
+  # 20. Completed 4 days ahead of target (Target 84d, Actual 80d)
+  { days_ago: 88, actual_comp_days: 80, actual_offsets: { "offer_accepted" => 2, "solicitors_instructed" => 12, "draft_contract_pack" => 19, "searches_and_enquiries" => 38, "survey_and_mortgage" => 52, "enquiries_resolved" => 66, "exchange_of_contracts" => 74, "completion" => 80 } }
+]
+
+# 1. Create 15 OPEN transactions with staggered dates and milestone approvals
 15.times do |i|
-  transactions_to_create << {
+  scenario = open_scenarios[i]
+  start_time = (today - scenario[:days_ago].days).beginning_of_day + 10.hours
+  start_d = start_time.to_date
+  est_comp_d = start_d + 84.days
+  s_dates = build_stage_dates(start_d, est_comp_d, scenario[:stage], scenario[:actual_offsets])
+
+  tx = Transaction.create!(
     chain_id: chains[i % chains.length].id,
     involved_party_id: buyers[i].id,
     property_id: unsold_properties[i].id,
     user_id: realtors[i % realtors.length].id,
     completed: false,
-    legal_stage: open_stages[i % open_stages.length]
-  }
+    legal_stage: scenario[:stage],
+    created_at: start_time,
+    updated_at: start_time + [scenario[:days_ago] - 1, 1].max.days,
+    estimated_completion_date: est_comp_d,
+    actual_completion_date: nil,
+    stage_dates: s_dates
+  )
 end
 
-# 2. Create 5 COMPLETED transactions for SOLD properties (at completion stage)
+# 2. Create 5 COMPLETED transactions for SOLD properties with realistic completion dates
 5.times do |i|
-  transactions_to_create << {
+  scenario = completed_scenarios[i]
+  start_time = (today - scenario[:days_ago].days).beginning_of_day + 9.hours
+  start_d = start_time.to_date
+  est_comp_d = start_d + 84.days
+  act_comp_d = start_d + scenario[:actual_comp_days].days
+  s_dates = build_stage_dates(start_d, est_comp_d, "completion", scenario[:actual_offsets])
+
+  Transaction.create!(
     chain_id: chains[i % chains.length].id,
-    involved_party_id: buyers[15 + i].id, # Continue cycling through buyers
+    involved_party_id: buyers[15 + i].id,
     property_id: sold_properties[i].id,
     user_id: realtors[(15 + i) % realtors.length].id,
     completed: true,
-    legal_stage: "completion"
-  }
-end
-
-# Execute creation
-transactions_to_create.each do |data|
-  Transaction.create!(
-    chain_id: data[:chain_id],
-    involved_party_id: data[:involved_party_id],
-    property_id: data[:property_id],
-    user_id: data[:user_id],
-    completed: data[:completed],
-    legal_stage: data[:legal_stage]
+    legal_stage: "completion",
+    created_at: start_time,
+    updated_at: act_comp_d.beginning_of_day + 14.hours,
+    estimated_completion_date: est_comp_d,
+    actual_completion_date: act_comp_d,
+    stage_dates: s_dates
   )
 end
-puts "Created 20 transactions (15 open, 5 completed)."
+
+puts "Created 20 transactions with realistic UK conveyancing dates and on/behind target approvals."

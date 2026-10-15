@@ -131,4 +131,65 @@ class TransactionTest < ActiveSupport::TestCase
     assert tx.legal_stage_current?("searches_and_enquiries")
     assert_not tx.legal_stage_current?("offer_accepted")
   end
+
+  test "stage estimation based on creation and target completion date" do
+    start_date = Date.current - 20.days
+    target_comp = start_date + 84.days
+    tx = Transaction.create!(
+      chain: @chain,
+      property: @property,
+      created_at: start_date.beginning_of_day,
+      estimated_completion_date: target_comp
+    )
+
+    assert_equal start_date + 3.days, tx.stage_estimated_date("offer_accepted")
+    assert_equal start_date + 14.days, tx.stage_estimated_date("solicitors_instructed")
+    assert_equal start_date + 42.days, tx.stage_estimated_date("searches_and_enquiries")
+    assert_equal target_comp, tx.stage_estimated_date("completion")
+  end
+
+  test "timing status for ahead, on-target, and behind stages" do
+    start_date = Date.current - 30.days
+    tx = Transaction.create!(
+      chain: @chain,
+      property: @property,
+      created_at: start_date.beginning_of_day,
+      legal_stage: "draft_contract_pack",
+      stage_dates: {
+        "offer_accepted" => {
+          "estimated_date" => (start_date + 3.days).to_s,
+          "actual_date" => (start_date + 1.day).to_s
+        },
+        "solicitors_instructed" => {
+          "estimated_date" => (start_date + 14.days).to_s,
+          "actual_date" => (start_date + 14.days).to_s
+        },
+        "draft_contract_pack" => {
+          "estimated_date" => (start_date + 21.days).to_s,
+          "actual_date" => nil
+        }
+      }
+    )
+
+    timing_s1 = tx.stage_timing("offer_accepted")
+    assert_equal :ahead, timing_s1[:status]
+    assert_match(/2d ahead/i, timing_s1[:label])
+
+    timing_s2 = tx.stage_timing("solicitors_instructed")
+    assert_equal :on_target, timing_s2[:status]
+    assert_equal "On target", timing_s2[:label]
+
+    timing_s3 = tx.stage_timing("draft_contract_pack")
+    assert_equal :overdue, timing_s3[:status]
+    assert_match(/behind target/i, timing_s3[:full_label])
+  end
+
+  test "set_legal_stage_with_timing! records actual approval date" do
+    tx = Transaction.create!(chain: @chain, property: @property, legal_stage: "offer_accepted")
+    approval_d = Date.current - 1.day
+    tx.set_legal_stage_with_timing!("solicitors_instructed", approval_d)
+
+    assert_equal "solicitors_instructed", tx.legal_stage
+    assert_equal approval_d, tx.stage_actual_date("offer_accepted")
+  end
 end
