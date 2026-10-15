@@ -195,4 +195,33 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".badge", text: "Seller", count: 0
     assert_select ".badge", text: "Buyer", count: 0
   end
+
+  test "properties index masks involved party of other agent's property even if other user has transaction with party" do
+    chain = Chain.create!(user: @other_user, active: true)
+    other_prop = Property.create!(user: @other_user, house_number: "10", street: "Downing St", post_code: "SW1A 2AA")
+    Transaction.create!(user: @other_user, property: other_prop, chain: chain, involved_party: @party)
+
+    sign_in @other_user
+    get properties_url
+    assert_response :success
+
+    # On @property (listed by @user), Sarah Connor must NOT be visible to other agents
+    assert_select "body", text: /Protected Client/
+    assert_select "tr" do |rows|
+      baker_row = rows.find { |r| r.text.include?("Baker Street") }
+      if baker_row
+        assert_includes baker_row.text, "Protected Client"
+        refute_includes baker_row.text, "Sarah Connor"
+      end
+    end
+  end
+
+  test "property show masks client details for non-owner non-admin" do
+    sign_in @other_user
+    get property_url(@property)
+    assert_response :success
+
+    assert_select "body", text: /Sarah Connor/, count: 0
+    assert_select "p", text: /Confidential client/
+  end
 end

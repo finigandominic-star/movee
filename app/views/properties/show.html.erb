@@ -213,7 +213,7 @@
           </div>
 
           <% if party %>
-            <% if policy(party).show_personal_data? %>
+            <% if policy(@property).show_involved_party? %>
               <p class="fw-semibold mb-1"><%= party.full_name %></p>
               <ul class="list-unstyled small mb-0">
                 <% if party.phone.present? %>

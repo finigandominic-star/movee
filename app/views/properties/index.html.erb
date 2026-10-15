@@ -154,7 +154,7 @@
                         <span class="text-muted"><i class="fa-solid fa-user-tie me-1"></i> Involved Party</span>
                       </div>
                       <% if property.involved_party %>
-                        <% if policy(property.involved_party).show_personal_data? %>
+                        <% if policy(property).show_involved_party? %>
                           <div class="fw-semibold text-dark">
                             <%= property.involved_party.first_name %> <%= property.involved_party.last_name %>
                           </div>
@@ -300,7 +300,7 @@
                     </td>
                     <td>
                       <% if property.involved_party %>
-                        <% if policy(property.involved_party).show_personal_data? %>
+                        <% if policy(property).show_involved_party? %>
                           <div class="fw-medium">
                             <%= property.involved_party.first_name %> <%= property.involved_party.last_name %>
                           </div>

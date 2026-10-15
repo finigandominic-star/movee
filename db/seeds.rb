@@ -55,11 +55,13 @@ logan = InvolvedParty.create!(first_name: "Logan", last_name: "Allen", email: "l
 theo = InvolvedParty.create!(first_name: "Theo", last_name: "Barnes", email: "theo.barnes@fastmail.fm", phone: "+44 7700 901567", contact_info: "27 Willow Close, Bath, BA1 3QR", seller: true, buyer: true)
 lily = InvolvedParty.create!(first_name: "Lily", last_name: "Cooper", email: "lily.c@icloud.co.uk", phone: "+44 1865 496 212", contact_info: "9 Ash Tree Lane, Oxford, OX2 4ST", seller: true, buyer: true)
 
-# Assign each party to a managing agent
-realtors = [sarah, toni, mark, emily, john]
-InvolvedParty.all.each_with_index do |party, idx|
-  party.update!(user: realtors[idx % realtors.length])
-end
+# Assign FTB buyers to their managing agent
+sophie.update!(user: toni)
+harry.update!(user: sarah)
+isabella.update!(user: emily)
+liam.update!(user: mark)
+noah.update!(user: john)
+grace.update!(user: mark)
 puts "Created 25 Involved Parties (6 FTBs, 5 Market Exits, 14 Movers)."
 
 puts "Creating Properties..."
@@ -92,13 +94,14 @@ property_configs = [
   { num: "76", street: "Beech Road", second: "Flat 5", city: "Reading", post_code: "RG1 8EF", sold: true, user: mark, seller: frances },
   # Additional Sold Properties (Sold 19-22)
   { num: "30", street: "Fir Tree Lane", second: "", city: "Oxford", post_code: "OX1 9GH", sold: true, user: emily, seller: charlotte },
-  { num: "52", street: "Cypress Drive", second: "", city: "Cambridge", post_code: "CB1 0IJ", sold: true, user: john, seller: george },
-  { num: "88", street: "Juniper Court", second: "Suite 1", city: "York", post_code: "YO1 1KL", sold: true, user: sarah, seller: william },
-  { num: "44", street: "Primrose Hill", second: "Garden Apt", city: "London", post_code: "NW3 3AA", sold: true, user: toni, seller: amelia }
+  { num: "52", street: "Cypress Drive", second: "", city: "Cambridge", post_code: "CB1 0IJ", sold: true, user: john, seller: lily },
+  { num: "88", street: "Juniper Court", second: "Suite 1", city: "York", post_code: "YO1 1KL", sold: true, user: sarah, seller: emma },
+  { num: "44", street: "Primrose Hill", second: "Garden Apt", city: "London", post_code: "NW3 3AA", sold: true, user: toni, seller: james }
 ]
 
 properties = []
 property_configs.each_with_index do |cfg, index|
+  cfg[:seller].update!(user: cfg[:user]) if cfg[:seller].user.nil? || cfg[:seller].user != cfg[:user]
   photo_path = "/images/properties/property_#{(index % 20) + 1}.jpg"
   p = Property.create!(
     user: cfg[:user],
