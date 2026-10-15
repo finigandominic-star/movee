@@ -37,13 +37,17 @@
         <span>Back to List</span>
       <% end %>
 
-      <%= link_to edit_involved_party_path(@involved_party), class: "btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" do %>
-        <i class="fa-solid fa-pen"></i>
-        <span>Edit Party</span>
+      <% if policy(@involved_party).update? %>
+        <%= link_to edit_involved_party_path(@involved_party), class: "btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" do %>
+          <i class="fa-solid fa-pen"></i>
+          <span>Edit Party</span>
+        <% end %>
       <% end %>
 
-      <%= link_to involved_party_path(@involved_party), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete #{@involved_party.full_name}?" }, class: "btn btn-outline-danger d-inline-flex align-items-center shadow-sm", title: "Delete Party" do %>
-        <i class="fa-solid fa-trash-can"></i>
+      <% if policy(@involved_party).destroy? %>
+        <%= link_to involved_party_path(@involved_party), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete #{@involved_party.full_name}?" }, class: "btn btn-outline-danger d-inline-flex align-items-center shadow-sm", title: "Delete Party" do %>
+          <i class="fa-solid fa-trash-can"></i>
+        <% end %>
       <% end %>
     </div>
   </div>
@@ -288,30 +292,45 @@
             </div>
           </div>
 
-          <ul class="list-group list-group-flush small">
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted"><i class="fa-solid fa-envelope me-1"></i> Email</span>
-              <a href="mailto:<%= @involved_party.email %>" class="text-decoration-none fw-medium text-truncate" style="max-width: 180px;">
-                <%= @involved_party.email %>
-              </a>
-            </li>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted"><i class="fa-solid fa-phone me-1"></i> Phone</span>
-              <a href="tel:<%= @involved_party.phone %>" class="text-decoration-none fw-medium">
-                <%= @involved_party.phone %>
-              </a>
-            </li>
-            <% if @involved_party.contact_info.present? %>
-              <li class="list-group-item px-0 py-2">
-                <span class="text-muted d-block mb-1"><i class="fa-solid fa-circle-info me-1"></i> Notes</span>
-                <p class="text-dark mb-0 small bg-light p-2 rounded"><%= @involved_party.contact_info %></p>
+          <% if policy(@involved_party).show_personal_data? %>
+            <ul class="list-group list-group-flush small">
+              <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                <span class="text-muted"><i class="fa-solid fa-envelope me-1"></i> Email</span>
+                <a href="mailto:<%= @involved_party.email %>" class="text-decoration-none fw-medium text-truncate" style="max-width: 180px;">
+                  <%= @involved_party.email %>
+                </a>
               </li>
-            <% end %>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center text-muted">
-              <span><i class="fa-regular fa-calendar me-1"></i> Added</span>
-              <span><%= @involved_party.created_at.strftime("%d %b %Y") %></span>
-            </li>
-          </ul>
+              <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                <span class="text-muted"><i class="fa-solid fa-phone me-1"></i> Phone</span>
+                <a href="tel:<%= @involved_party.phone %>" class="text-decoration-none fw-medium">
+                  <%= @involved_party.phone %>
+                </a>
+              </li>
+              <% if @involved_party.contact_info.present? %>
+                <li class="list-group-item px-0 py-2">
+                  <span class="text-muted d-block mb-1"><i class="fa-solid fa-circle-info me-1"></i> Notes</span>
+                  <p class="text-dark mb-0 small bg-light p-2 rounded"><%= @involved_party.contact_info %></p>
+                </li>
+              <% end %>
+              <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center text-muted">
+                <span><i class="fa-regular fa-calendar me-1"></i> Added</span>
+                <span><%= @involved_party.created_at&.strftime("%d %b %Y") || "—" %></span>
+              </li>
+            </ul>
+          <% else %>
+            <div class="alert alert-warning py-3 px-3 small mb-0 border-0">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="fa-solid fa-lock text-warning"></i>
+                <span class="fw-semibold text-dark">Personal Contact Details Protected</span>
+              </div>
+              <p class="mb-0 text-muted">
+                Direct contact information is restricted to the associated agent
+                <% if @involved_party.user %>
+                  (<strong><%= @involved_party.user.user_name %></strong><% if @involved_party.user.company.present? %> — <%= @involved_party.user.company %><% end %>)
+                <% end %>.
+              </p>
+            </div>
+          <% end %>
         </div>
       </div>
 

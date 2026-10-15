@@ -25,6 +25,30 @@
           <%= form.submit "Create Chain", class: "btn btn-primary btn-sm" %>
         </div>
       <% end %>
+<div class="container py-4">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><%= link_to "Home", root_path, class: "text-decoration-none" %></li>
+      <li class="breadcrumb-item"><%= link_to "Chains", chains_path, class: "text-decoration-none" %></li>
+      <li class="breadcrumb-item active" aria-current="page">New Chain</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+          <h1 class="h4 fw-bold text-dark mb-0">
+            <i class="fa-solid fa-link text-primary me-2"></i>Create New Chain
+          </h1>
+          <%= link_to chains_path, class: "btn btn-sm btn-outline-secondary" do %>
+            <i class="fa-solid fa-arrow-left me-1"></i> Back
+          <% end %>
+        </div>
+        <div class="card-body p-4">
+          <%= render "form", chain: @chain, submit_label: "Create Chain" %>
+        </div>
+      </div>
     </div>
   </div>
 </div>

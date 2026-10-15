@@ -1,350 +1,154 @@
-<div class="container py-4">
-  <!-- Breadcrumb Navigation -->
-  <nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><%= link_to "Home", root_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item"><%= link_to "Properties", properties_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item active" aria-current="page"><%= @property.short_address %></li>
-    </ol>
-  </nav>
+<% stages = property_progress_stages(@property) %>
+<% current_index = stages.index { |stage| !stage[:done] } %>
+<% party = @property.involved_party %>
 
-  <!-- Page Header & Action Bar -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
-    <div>
-      <div class="d-flex align-items-center gap-2 mb-1">
-        <h1 class="h2 fw-bold text-dark mb-0"><%= @property.short_address %></h1>
-        <% if @property.sold? %>
-          <span class="badge bg-secondary fs-6"><i class="fa-solid fa-check me-1"></i> Sold</span>
-        <% else %>
-          <span class="badge bg-success fs-6"><i class="fa-solid fa-house-chimney me-1"></i> Available</span>
-        <% end %>
-      </div>
-      <p class="text-muted mb-0 small">
-        <i class="fa-solid fa-location-dot text-danger me-1"></i>
-        <%= @property.full_address %>
-      </p>
-    </div>
-
-    <!-- Actions -->
-    <div class="d-flex gap-2">
-      <%= link_to properties_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm" do %>
-        <i class="fa-solid fa-arrow-left"></i>
-        <span>Back to List</span>
-      <% end %>
-
-      <%= link_to edit_property_path(@property), class: "btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" do %>
-        <i class="fa-solid fa-pen"></i>
-        <span>Edit Property</span>
-      <% end %>
-
-      <%= link_to property_path(@property), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this property?" }, class: "btn btn-outline-danger d-inline-flex align-items-center shadow-sm", title: "Delete property" do %>
-        <i class="fa-solid fa-trash-can"></i>
-      <% end %>
-    </div>
+<!-- Hero Image -->
+<% if @property.photos.present? %>
+  <div class="property-hero">
+    <img src="<%= @property.photos %>" alt="<%= @property.short_address %>">
   </div>
+<% else %>
+  <div class="property-hero property-hero--empty">
+    <i class="fa-solid fa-house-chimney fa-5x"></i>
+  </div>
+<% end %>
 
-  <div class="row g-4">
-    <!-- Main Column: Photo, Address Specs, and Transactions -->
-    <div class="col-12 col-lg-8">
-      <!-- Property Photo Card -->
-      <div class="card border-0 shadow-sm overflow-hidden mb-4">
-        <% if @property.photos.present? %>
-          <img src="<%= @property.photos %>" class="card-img-top object-fit-cover w-100" alt="<%= @property.short_address %>" style="max-height: 420px;">
+<section class="property-show">
+  <div class="container">
+    <div class="row g-5">
+      <!-- Address, Actions & Progress -->
+      <div class="col-12 col-lg-7">
+        <div class="d-flex flex-wrap align-items-center gap-3">
+          <h1 class="property-show__title"><%= @property.short_address %></h1>
+
+          <% if policy(@property).update? %>
+            <%= link_to "Update", edit_property_path(@property), class: "btn property-show__update-btn ms-lg-5" %>
+          <% end %>
+
+          <% if policy(@property).destroy? %>
+            <%= link_to property_path(@property), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this property?" }, class: "btn btn-sm btn-outline-danger", title: "Delete property" do %>
+              <i class="fa-solid fa-trash-can"></i>
+            <% end %>
+          <% end %>
+        </div>
+
+        <p class="text-muted small mt-2 mb-0">
+          <i class="fa-solid fa-location-dot me-1"></i><%= @property.full_address %>
+          <% if @property.sold? %>
+            <span class="badge bg-secondary ms-2">Sold</span>
+          <% else %>
+            <span class="badge bg-success ms-2">Available</span>
+          <% end %>
+        </p>
+
+        <h2 class="h6 fw-bold mt-5 mb-0">Progress:</h2>
+        <div class="progress-tracker">
+          <% stages.each_with_index do |stage, index| %>
+            <% state = if stage[:done] then "done" elsif index == current_index then "current" end %>
+            <div class="progress-tracker__stage <%= "progress-tracker__stage--#{state}" if state %>">
+              <span class="progress-tracker__label" title="<%= stage[:name] %>"><%= stage[:name] %></span>
+              <span class="progress-tracker__dot"></span>
+              <div class="progress-tracker__bar"></div>
+              <% if index == current_index %>
+                <div class="progress-tracker__info"><%= stage[:info] %></div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Transactions & Chains -->
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+          <h2 class="h6 fw-bold mb-0">Transactions &amp; Chains:</h2>
+          <%= link_to new_transaction_path(property_id: @property.id), class: "btn btn-sm property-show__update-btn" do %>
+            <i class="fa-solid fa-plus me-1"></i> Add Transaction
+          <% end %>
+        </div>
+
+        <% if @property.transactions.any? %>
+          <ul class="property-transactions">
+            <% @property.transactions.each do |transaction| %>
+              <li class="property-transactions__item <%= "property-transactions__item--completed" if transaction.completed? %>">
+                <div>
+                  <%= link_to "Transaction ##{transaction.id}", transaction_path(transaction), class: "property-transactions__link" %>
+                  <span class="property-transactions__meta">
+                    <% if transaction.chain %>
+                      <%= link_to "Chain ##{transaction.chain.id}", chain_path(transaction.chain) %>
+                      · <%= transaction.chain.active? ? "Active" : "Inactive" %> ·
+                    <% end %>
+                    <%= transaction.created_at.strftime("%d %b %Y") %>
+                  </span>
+                </div>
+                <span class="property-transactions__status"><%= transaction.status_label %></span>
+              </li>
+            <% end %>
+          </ul>
         <% else %>
-          <div class="bg-light py-5 text-center text-muted d-flex flex-column align-items-center justify-content-center" style="min-height: 280px;">
-            <i class="fa-solid fa-house-chimney fa-4x text-secondary opacity-50 mb-3"></i>
-            <h5 class="text-secondary fw-normal mb-1">No property photos uploaded</h5>
-            <p class="small text-muted mb-0">You can upload property images when editing this listing.</p>
-          </div>
+          <p class="small text-muted mb-0">No transactions or chain records are currently linked to this property.</p>
         <% end %>
       </div>
 
-      <!-- Address & Location Details Card -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
-          <h5 class="card-title fw-bold text-dark mb-0">
-            <i class="fa-solid fa-map-location-dot text-primary me-2"></i> Address & Location
-          </h5>
-          <span class="badge bg-light text-dark border">Property #<%= @property.id %></span>
-        </div>
-        <div class="card-body p-4">
-          <div class="row g-3">
-            <div class="col-12 col-sm-6">
-              <div class="p-3 bg-light rounded-3">
-                <span class="text-muted small text-uppercase fw-semibold d-block mb-1">House / Building Number</span>
-                <span class="fs-5 fw-bold text-dark"><%= @property.house_number %></span>
-              </div>
-            </div>
-
-            <div class="col-12 col-sm-6">
-              <div class="p-3 bg-light rounded-3">
-                <span class="text-muted small text-uppercase fw-semibold d-block mb-1">Street Name</span>
-                <span class="fs-5 fw-bold text-dark"><%= @property.street %></span>
-              </div>
-            </div>
-
-            <div class="col-12 col-sm-6">
-              <div class="p-3 bg-light rounded-3">
-                <span class="text-muted small text-uppercase fw-semibold d-block mb-1">Second Line of Address</span>
-                <span class="fs-6 fw-semibold text-dark"><%= @property.second_line_of_address.presence || "—" %></span>
-              </div>
-            </div>
-
-            <div class="col-12 col-sm-6">
-              <div class="p-3 bg-light rounded-3">
-                <span class="text-muted small text-uppercase fw-semibold d-block mb-1">City / Town</span>
-                <span class="fs-6 fw-semibold text-dark"><%= @property.city.presence || "—" %></span>
-              </div>
-            </div>
-
-            <div class="col-12">
-              <div class="p-3 bg-light rounded-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div>
-                  <span class="text-muted small text-uppercase fw-semibold d-block mb-1">Postal Code</span>
-                  <span class="badge bg-primary fs-6 px-3 py-2"><%= @property.post_code %></span>
-                </div>
-                <div class="text-muted small">
-                  <i class="fa-solid fa-flag me-1"></i> United Kingdom
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Chain & Transaction Activity Card -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
-          <div class="d-flex align-items-center gap-2">
-            <h5 class="card-title fw-bold text-dark mb-0">
-              <i class="fa-solid fa-link text-primary me-2"></i> Transactions & Chains
-            </h5>
-            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
-              <%= @property.transactions.size %> Associated
-            </span>
-          </div>
-          <%= link_to new_transaction_path(property_id: @property.id), class: "btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" do %>
-            <i class="fa-solid fa-plus"></i>
-            <span>Add Transaction</span>
-          <% end %>
-        </div>
-        <div class="card-body p-4">
-          <% if @property.transactions.any? %>
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light small text-uppercase text-muted">
-                  <tr>
-                    <th>Transaction #</th>
-                    <th>Chain</th>
-                    <th>Status</th>
-                    <th>Involved Party</th>
-                    <th>Created</th>
-                    <th class="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% @property.transactions.each do |transaction| %>
-                    <tr>
-                      <td class="fw-semibold">
-                        <%= link_to "##{transaction.id}", transaction_path(transaction), class: "text-decoration-none fw-bold" %>
-                      </td>
-                      <td>
-                        <% if transaction.chain %>
-                          <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
-                            Chain #<%= transaction.chain.id %> <%= transaction.chain.active? ? "(Active)" : "(Inactive)" %>
-                          </span>
-                        <% else %>
-                          <span class="text-muted">—</span>
-                        <% end %>
-                      </td>
-                      <td>
-                        <% if transaction.completed? %>
-                          <span class="badge bg-success">Completed</span>
-                        <% else %>
-                          <span class="badge bg-warning text-dark">In Progress</span>
-                        <% end %>
-                      </td>
-                      <td>
-                        <% if transaction.involved_party %>
-                          <%= transaction.involved_party.first_name %> <%= transaction.involved_party.last_name %>
-                        <% else %>
-                          <span class="text-muted">—</span>
-                        <% end %>
-                      </td>
-                      <td class="small text-muted"><%= transaction.created_at.strftime("%d %b %Y") %></td>
-                      <td class="text-end">
-                        <div class="btn-group btn-group-sm">
-                          <%= link_to transaction_path(transaction), class: "btn btn-outline-primary", title: "View" do %>
-                            <i class="fa-solid fa-eye"></i>
-                          <% end %>
-                          <%= link_to edit_transaction_path(transaction), class: "btn btn-outline-secondary", title: "Edit" do %>
-                            <i class="fa-solid fa-pen"></i>
-                          <% end %>
-                        </div>
-                      </td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          <% else %>
-            <div class="p-3 text-center text-muted bg-light rounded-3">
-              <i class="fa-solid fa-circle-info me-1 text-primary"></i>
-              No transactions or chain records are currently linked to this property.
-            </div>
-          <% end %>
-        </div>
-      </div>
-    </div>
-
-    <!-- Sidebar Column: Status, Involved Party, Listed By, Quick Links -->
-    <div class="col-12 col-lg-4">
-      <!-- Status Card -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 border-bottom">
-          <h6 class="card-title fw-bold text-dark mb-0">
-            <i class="fa-solid fa-circle-info text-primary me-2"></i> Listing Summary
-          </h6>
-        </div>
-        <div class="card-body p-3">
-          <ul class="list-group list-group-flush small">
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Status</span>
-              <% if @property.sold? %>
-                <span class="badge bg-secondary">Sold</span>
-              <% else %>
-                <span class="badge bg-success">Available for Sale</span>
-              <% end %>
-            </li>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Property ID</span>
-              <span class="fw-semibold text-dark">#<%= @property.id %></span>
-            </li>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Listed On</span>
-              <span class="text-dark fw-medium"><%= @property.created_at&.strftime("%d %b %Y, %H:%M") || "—" %></span>
-            </li>
-            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-              <span class="text-muted">Last Updated</span>
-              <span class="text-dark fw-medium"><%= @property.updated_at&.strftime("%d %b %Y, %H:%M") || "—" %></span>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Involved Party Card -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-          <h6 class="card-title fw-bold text-dark mb-0">
-            <i class="fa-solid fa-user-tie text-primary me-2"></i> Involved Party
-          </h6>
-          <% if @property.involved_party %>
-            <div>
-              <% if @property.involved_party.seller? %>
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Seller</span>
-              <% end %>
-              <% if @property.involved_party.buyer? %>
-                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Buyer</span>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-        <div class="card-body p-3">
-          <% if @property.involved_party %>
-            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
-              <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                <i class="fa-solid fa-user fa-lg"></i>
-              </div>
+      <!-- Side Panel: Client & Agent -->
+      <div class="col-12 col-lg-5 d-flex">
+        <div class="property-show__panel w-100">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 fw-bold mb-0">Client</h2>
+            <% if party %>
               <div>
-                <h6 class="fw-bold text-dark mb-0">
-                  <%= @property.involved_party.first_name %> <%= @property.involved_party.last_name %>
-                </h6>
-                <span class="text-muted small">Primary Contact</span>
+                <% if party.seller? %><span class="badge bg-primary">Seller</span><% end %>
+                <% if party.buyer? %><span class="badge bg-warning text-dark">Buyer</span><% end %>
               </div>
-            </div>
+            <% end %>
+          </div>
 
-            <ul class="list-group list-group-flush small">
-              <% if @property.involved_party.phone.present? %>
-                <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                  <span class="text-muted"><i class="fa-solid fa-phone me-1"></i> Phone</span>
-                  <a href="tel:<%= @property.involved_party.phone %>" class="text-decoration-none fw-medium">
-                    <%= @property.involved_party.phone %>
-                  </a>
-                </li>
-              <% end %>
+          <% if party %>
+            <% if policy(party).show_personal_data? %>
+              <p class="fw-semibold mb-1"><%= party.full_name %></p>
+              <ul class="list-unstyled small mb-0">
+                <% if party.phone.present? %>
+                  <li><i class="fa-solid fa-phone me-1 text-muted"></i><a href="tel:<%= party.phone %>" class="text-decoration-none"><%= party.phone %></a></li>
+                <% end %>
+                <% if party.email.present? %>
+                  <li><i class="fa-solid fa-envelope me-1 text-muted"></i><a href="mailto:<%= party.email %>" class="text-decoration-none"><%= party.email %></a></li>
+                <% end %>
+                <% if party.contact_info.present? %>
+                  <li class="mt-1 text-muted"><%= party.contact_info %></li>
+                <% end %>
+              </ul>
+            <% else %>
+              <p class="small text-muted mb-0">
+                <i class="fa-solid fa-user-shield me-1"></i>
+                Confidential client — personal contact details are protected under agent privacy policies.
+              </p>
+            <% end %>
 
-              <% if @property.involved_party.email.present? %>
-                <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                  <span class="text-muted"><i class="fa-solid fa-envelope me-1"></i> Email</span>
-                  <a href="mailto:<%= @property.involved_party.email %>" class="text-decoration-none fw-medium text-truncate" style="max-width: 180px;">
-                    <%= @property.involved_party.email %>
-                  </a>
-                </li>
+            <% if policy(@property).update? %>
+              <%= button_to remove_involved_party_property_path(@property), method: :delete, data: { turbo_confirm: "Unassign #{party.full_name} from this property?" }, class: "btn btn-sm btn-outline-danger mt-2" do %>
+                <i class="fa-solid fa-user-xmark me-1"></i> Remove Client
               <% end %>
-
-              <% if @property.involved_party.contact_info.present? %>
-                <li class="list-group-item px-0 py-2">
-                  <span class="text-muted d-block mb-1"><i class="fa-solid fa-circle-info me-1"></i> Contact Details</span>
-                  <p class="text-dark mb-0 small bg-light p-2 rounded"><%= @property.involved_party.contact_info %></p>
-                </li>
-              <% end %>
-            </ul>
-
-            <div class="mt-3 pt-2 border-top">
-              <%= button_to remove_involved_party_property_path(@property), method: :delete, data: { turbo_confirm: "Unassign #{@property.involved_party.full_name} from this property?" }, class: "btn btn-sm btn-outline-danger w-100 d-inline-flex align-items-center justify-content-center gap-1" do %>
-                <i class="fa-solid fa-user-xmark"></i>
-                <span>Remove Client from Property</span>
-              <% end %>
-            </div>
+            <% end %>
           <% else %>
-            <div class="text-center py-3 text-muted">
-              <i class="fa-solid fa-user-slash fa-2x mb-2 text-secondary opacity-50"></i>
-              <p class="small mb-2">No involved party assigned yet.</p>
+            <p class="small text-muted mb-2">No involved party assigned yet.</p>
+            <% if policy(@property).update? %>
               <%= link_to edit_property_path(@property), class: "btn btn-sm btn-outline-primary" do %>
                 <i class="fa-solid fa-user-plus me-1"></i> Assign Client
               <% end %>
-            </div>
+            <% end %>
           <% end %>
-        </div>
-      </div>
 
-      <!-- Listing Agent / User Card -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 border-bottom">
-          <h6 class="card-title fw-bold text-dark mb-0">
-            <i class="fa-solid fa-id-card text-primary me-2"></i> Listed By
-          </h6>
-        </div>
-        <div class="card-body p-3">
+          <hr>
+
+          <h2 class="h6 fw-bold mb-2">Listed By</h2>
           <% if @property.user %>
-            <div class="d-flex align-items-center gap-3">
-              <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary p-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-                <i class="fa-solid fa-user-gear"></i>
-              </div>
-              <div class="overflow-hidden">
-                <span class="text-dark fw-semibold d-block text-truncate" title="<%= @property.user.email %>">
-                  <%= @property.user.email %>
-                </span>
-                <span class="text-muted small">Registered Account</span>
-              </div>
-            </div>
+            <p class="mb-0 fw-semibold"><%= @property.user.user_name.presence || @property.user.email %></p>
+            <% if @property.user.company.present? %>
+              <p class="small text-muted mb-0"><i class="fa-solid fa-building me-1"></i><%= @property.user.company %></p>
+            <% end %>
+            <p class="small text-muted mb-0"><%= @property.user.email %></p>
           <% else %>
-            <p class="text-muted small mb-0">No user assigned.</p>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- Quick Actions Card -->
-      <div class="card border-0 shadow-sm">
-        <div class="card-body p-3 d-grid gap-2">
-          <%= link_to edit_property_path(@property), class: "btn btn-outline-primary d-flex align-items-center justify-content-center gap-1" do %>
-            <i class="fa-solid fa-pen"></i> Edit Listing
-          <% end %>
-          <%= link_to properties_path, class: "btn btn-outline-secondary d-flex align-items-center justify-content-center gap-1" do %>
-            <i class="fa-solid fa-list"></i> All Properties
+            <p class="small text-muted mb-0">No user assigned.</p>
           <% end %>
         </div>
       </div>
     </div>
   </div>
-</div>
+</section>

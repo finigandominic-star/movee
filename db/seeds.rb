@@ -12,11 +12,16 @@
 puts "Cleaning database..."
 User.destroy_all
 Chain.destroy_all
-Involved_Party.destroy_all
-Property.destroy_all
+InvolvedParty.destroy_all
 Transaction.destroy_all
+Property.destroy_all
 
 puts "Creating users..."
+# Admin Users
+dom = User.create!(user_name: "Dom Finigan", email: "dom@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
+joao = User.create!(user_name: "Joao", email: "joao@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
+sophia = User.create!(user_name: "Sophia", email: "sophia@moveee.me", password: "MoveeeAdmin123", company: "Moveee", admin: true)
+
 # 1
 sarah = User.create!(user_name: "Sarah Rizzoli", email: "sarah.rizzoli@harbourandheath.co.uk", password: "SaRi1234", company: "Harbour & Heath Properties")
 #2
@@ -27,12 +32,12 @@ mark = User.create!(user_name: "Mark McBride", email: "mcbride.mark@thistleandth
 emily = User.create!(user_name: "Emily Song", email: "e.song@crownstoneestates.co.uk", password: "eSong789", company: "Crownstone Estates")
 # 5
 john = User.create!(user_name: "John Akachi", email: "john.akachi@harbourandheath.co.uk", password: "ImGreat1", company: "Harbour & Heath Properties")
-puts "Created 5 users."
+puts "Created 8 users (3 admins, 5 agents)."
 
 puts "Creating Chains..."
-chain1 = Chain.create!(active: true)
-chain2 = Chain.create!(active: true)
-chain3 = Chain.create!(active: true)
+chain1 = Chain.create!(active: true, user: dom)
+chain2 = Chain.create!(active: true, user: sarah)
+chain3 = Chain.create!(active: true, user: toni)
 puts "Created 3 active Chains."
 
 puts "Creating Involved Parties..."
@@ -52,7 +57,7 @@ harry = InvolvedParty.create!(first_name: "Harry", last_name: "Roberts", email: 
 # 6
 isabella = InvolvedParty.create!(first_name: "Isabella", last_name: "Jones", email: "isabella.jones@aol.co.uk", phone: "+44 7700 900901", contact_info: "55 Victoria Road, Glasgow, G1 1ST", seller: false, buyer: true)
 
-#both
+# both
 # 7
 oliver = InvolvedParty.create!(first_name: "Oliver", last_name: "Thompson", email: "oliver.thompson@gmail.co.uk", phone: "+44 7700 900123", contact_info: "42 High Street, Manchester, M1 1AB", seller: true, buyer: true)
 # 8
@@ -98,6 +103,11 @@ puts "Creating Properties..."
 sellers = [frances, william, amelia, oliver, emma, james, charlotte, george, jack, mia, liam, harper, noah, ava, evelyn, mason, logan, arthur, grace, theo, lily, finn]
 realtors = [sarah, toni, mark, emily, john]
 
+# Link involved parties to agents
+InvolvedParty.all.each_with_index do |party, idx|
+  party.update!(user: realtors[idx % realtors.length])
+end
+
 property_data = [
   { house_number: "10", street: "Maple Drive", second_line: "", city: "London", post_code: "SW1A 1AA", sold: false },
   { house_number: "42", street: "Oak Avenue", second_line: "Flat 2", city: "Manchester", post_code: "M1 2AB", sold: false },
@@ -127,9 +137,7 @@ property_data.each_with_index do |data, index|
   # Cycle through realtors (0-4) and sellers (0-21)
   realtor = realtors[index % 5]
   seller = sellers[index % sellers.length]
-  # Generate photo path (ensure these files exist in public/images/properties/)
-  # Verify that you have 20 image files named property_1.jpg through property_20.jpg inside the assets'
-  # /images/properties/ folder. If not, the links will be broken in the app.
+  # Photos live in public/images/properties/ (CC0 images, see CREDITS.txt there)
   photo_path = "/images/properties/property_#{index + 1}.jpg"
 
   # Create the property and push it to the array
@@ -150,6 +158,7 @@ end
 puts "Created 20 Properties (5 sold)."
 
 puts "Creating Transactions..."
+chains = [chain1, chain2, chain3]
 realtors = [sarah, toni, mark, emily, john]
 buyers = [sophie, harry, isabella, oliver, emma, james, charlotte, george, jack, mia, liam, harper, noah, ava, evelyn, mason, logan, arthur, grace, theo, lily, finn]
 
@@ -162,9 +171,10 @@ transactions_to_create = []
 # 1. Create 15 OPEN transactions for UNSOLD properties
 15.times do |i|
   transactions_to_create << {
-    chain_id: (i % 3) + 1,
+    chain_id: chains[i % chains.length].id,
     involved_party_id: buyers[i].id,
     property_id: unsold_properties[i].id,
+    user_id: realtors[i % realtors.length].id,
     completed: false
   }
 end
@@ -172,9 +182,10 @@ end
 # 2. Create 5 COMPLETED transactions for SOLD properties
 5.times do |i|
   transactions_to_create << {
-    chain_id: (i % 3) + 1,
+    chain_id: chains[i % chains.length].id,
     involved_party_id: buyers[15 + i].id, # Continue cycling through buyers
     property_id: sold_properties[i].id,
+    user_id: realtors[(15 + i) % realtors.length].id,
     completed: true
   }
 end
@@ -185,6 +196,7 @@ transactions_to_create.each do |data|
     chain_id: data[:chain_id],
     involved_party_id: data[:involved_party_id],
     property_id: data[:property_id],
+    user_id: data[:user_id],
     completed: data[:completed]
   )
 end
