@@ -22,6 +22,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_094411) do
     t.index ["user_id"], name: "index_chains_on_user_id"
   end
 
+  create_table "chats", force: :cascade do |t|
+    t.string "title"
+    t.bigint "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_chats_on_user_id"
+  end
+
   create_table "involved_parties", force: :cascade do |t|
     t.string "first_name"
     t.string "last_name"
@@ -34,6 +42,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_094411) do
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.index ["user_id"], name: "index_involved_parties_on_user_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.string "role"
+    t.text "content"
+    t.bigint "chat_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chat_id"], name: "index_messages_on_chat_id"
   end
 
   create_table "properties", force: :cascade do |t|
@@ -230,13 +247,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_094411) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
-    t.string "legal_stage", default: "offer_accepted", null: false
-    t.date "estimated_completion_date"
-    t.date "actual_completion_date"
-    t.jsonb "stage_dates", default: {}, null: false
     t.index ["chain_id"], name: "index_transactions_on_chain_id"
     t.index ["involved_party_id"], name: "index_transactions_on_involved_party_id"
-    t.index ["legal_stage"], name: "index_transactions_on_legal_stage"
     t.index ["property_id"], name: "index_transactions_on_property_id"
     t.index ["user_id"], name: "index_transactions_on_user_id"
   end
@@ -257,7 +269,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_094411) do
   end
 
   add_foreign_key "chains", "users"
+  add_foreign_key "chats", "users"
   add_foreign_key "involved_parties", "users"
+  add_foreign_key "messages", "chats"
   add_foreign_key "properties", "involved_parties"
   add_foreign_key "properties", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
