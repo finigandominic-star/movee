@@ -3,7 +3,7 @@
 
 require 'open-uri'
 
-class APITool < RubyLLM::Tool
+class ApiTool < RubyLLM::Tool
   description "What this tool does"
   param :name, desc: "What this param is"
 
