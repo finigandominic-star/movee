@@ -67,6 +67,7 @@ group :development do
   gem "httplog"
   gem "pry-byebug"
   gem "pry-rails"
+  gem "mission_control-jobs"
 end
 
 group :test do
