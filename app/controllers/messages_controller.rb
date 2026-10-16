@@ -17,29 +17,11 @@ class MessagesController < ApplicationController
     @message.role = "user"
 
     if @message.save
-    # for background jobs: moved to create_chat_assistant_message_job
-    # # Initialize as instance variable so other methods can see it -- if not needed, just ruby_llm_chat = ...
-    # @ruby_llm_chat = RubyLLM.chat
+    # for background jobs: moved most methods to create_chat_assistant_message_job
 
-    # build_conversation_history
-    # # Ensure instructions returns a string
-    # response = @ruby_llm_chat.with_instructions(instructions).ask(@message.content)
 
-    # @assistant_message = Message.create(role: "assistant", content: response.content, chat: @chat)
-
-    # response = ask_llm
-    # @assistant_message.update(content: response.content)
-    # broadcast_replace(@assistant_message)
-
-    # @chat.generate_title_from_first_message
-
-    #   # use these lines without Turbo Stream
-    #   # redirect_to chat_path(@chat)
-    #   # else
-    #     # render "chats/show", status: :unprocessable_entity
-    #   # end
-
-    #   # use this version with Turbo Stream
+    # with background jobs: this needs to stay here
+    # ToDo: check for our use case if the path can be used or if we need another path
       respond_to do |format|
         format.turbo_stream # renders `app/views/messages/create.turbo_stream.erb`
         format.html { redirect_to chat_path(@chat) }
@@ -57,17 +39,7 @@ class MessagesController < ApplicationController
 
   private
 
-  # also for background jobs: moved to create_chat_assistant_message_job
-  # # placeholder context method to give context to the LLM
-  # # ToDO: modify it to our app
-  # # def challenge_context
-  # #   "Here is the context of the challenge: #{@challenge.content}."
-  # # end
-
-  # def instructions
-  #   # properly define context and instance for the .system_propmt
-  #   # [SYSTEM_PROMPT, challenge_context, @challenge.system_prompt].compact.join("\n\n")
-  # end
+  # for background jobs: moved most methods to create_chat_assistant_message_job
 
   def message_params
     params.require(:message).permit(:content)

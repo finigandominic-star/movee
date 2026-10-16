@@ -62,6 +62,7 @@ class CreateChatAssistantMessageJob < ApplicationJob
 
   def broadcast_replace(message)
     Turbo::StreamsChannel.broadcast_replace_to(@chat, target: dom_id(message), partial: "messages/message", locals: { message: message })
+    # Note: we can broadcast content without the need of a partial
   end
 
   def build_conversation_history
@@ -81,5 +82,6 @@ class CreateChatAssistantMessageJob < ApplicationJob
   def instructions
     # placeholder for now
     # ToDo: properly define context and instance for the .system_propmt
-    # [SYSTEM_PROMPT, challenge_context, @challenge.system_prompt].compact.join("\n\n")  end
+    # [SYSTEM_PROMPT, challenge_context, @challenge.system_prompt].compact.join("\n\n")
+  end
 end
