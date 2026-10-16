@@ -39,6 +39,14 @@
             </div>
 
             <div class="mb-3">
+              <%= f.input :phone,
+                          required: false,
+                          label: "Contact Phone Number",
+                          placeholder: "e.g. +44 20 7946 0123",
+                          input_html: { class: "form-control" } %>
+            </div>
+
+            <div class="mb-3">
               <%= f.input :email,
                           required: true,
                           label: "Email Address",

@@ -78,19 +78,55 @@
   <!-- Chain Selection -->
   <div class="mb-4">
     <%= f.label :chain_id, class: "form-label fw-semibold small text-secondary" do %>
-      Property Chain <span class="text-muted fw-normal">(Optional / Auto-assigned)</span>
+      Property Chain <span class="text-muted fw-normal">(Optional — Auto-creates a new chain if left blank)</span>
     <% end %>
 
     <div class="input-group">
       <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-link"></i></span>
       <%= f.collection_select :chain_id,
-          Chain.all,
+          Chain.all.order(:id),
           :id,
-          ->(c) { "Chain ##{c.id} (#{c.active? ? 'Active' : 'Inactive'}) — #{pluralize(c.transactions.count, 'transaction')}" },
-          { prompt: (Chain.any? ? "-- Select Chain (or leave blank to create a new one) --" : "Auto-create a new active chain upon save") },
+          ->(c) { "Chain ##{c.id} (#{c.status_label}) — #{pluralize(c.transactions.count, 'transaction')}" },
+          { include_blank: "-- Create New Chain (Auto-generate Chain ID) --" },
           { class: "form-select" } %>
     </div>
-    <div class="form-text small">Connect this transaction to an existing deal chain, or leave blank to automatically create a new chain.</div>
+    <div class="form-text small">Connect this transaction to an existing deal chain (inheriting its Chain ID), or leave blank to automatically spawn a new chain.</div>
+  </div>
+
+  <!-- UK Conveyancing Legal Stage -->
+  <div class="mb-4">
+    <%= f.label :legal_stage, class: "form-label fw-semibold small text-secondary" do %>
+      Conveyancing Legal Stage <span class="text-danger">*</span>
+    <% end %>
+
+    <div class="input-group">
+      <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-scale-balanced"></i></span>
+      <%= f.select :legal_stage,
+          Transaction::LEGAL_STAGES.map { |stg|
+            d = Transaction::LEGAL_STAGE_DEFINITIONS[stg]
+            ["Step #{d[:index]}: #{d[:name]} (#{d[:timeline]})", stg]
+          },
+          {},
+          { class: "form-select #{'is-invalid' if transaction.errors[:legal_stage].any?}" } %>
+      <% if transaction.errors[:legal_stage].any? %>
+        <div class="invalid-feedback"><%= transaction.errors[:legal_stage].first %></div>
+      <% end %>
+    </div>
+    <div class="form-text small">
+      Select the current legal stage under UK conveyancing procedure (England &amp; Wales). Selecting "Completion &amp; Keys Released" will mark the transaction completed.
+    </div>
+  </div>
+
+  <!-- Target Completion Date -->
+  <div class="mb-4">
+    <%= f.label :estimated_completion_date, class: "form-label fw-semibold small text-secondary" do %>
+      Target Completion Date <span class="text-muted fw-normal">(Optional — defaults to 12 weeks from creation)</span>
+    <% end %>
+    <div class="input-group">
+      <span class="input-group-text bg-light text-muted"><i class="fa-regular fa-calendar-check"></i></span>
+      <%= f.date_field :estimated_completion_date, class: "form-control" %>
+    </div>
+    <div class="form-text small">Milestone deadlines for all intermediate conveyancing stages are calculated relative to this target completion date.</div>
   </div>
 
   <!-- Completion Status Toggle -->
