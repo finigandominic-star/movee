@@ -2,6 +2,7 @@ class CreateChatAssistantMessageJob < ApplicationJob
   queue_as :default
 
   def perform(user_message)
+    # we might want to still configure when the job is performed
     @message = user_message
     @chat = user_message.chat
 
