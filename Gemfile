@@ -67,7 +67,7 @@ group :development do
   gem "httplog"
   gem "pry-byebug"
   gem "pry-rails"
-  gem "mission_control-jobs"
+
 end
 
 group :test do
@@ -84,3 +84,4 @@ gem "rouge"
 gem "kramdown-parser-gfm"
 gem "pundit"
 gem "ruby-vips", "~> 2.3"
+gem "mission_control-jobs"
