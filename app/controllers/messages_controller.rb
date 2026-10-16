@@ -53,6 +53,8 @@ class MessagesController < ApplicationController
     end
   end
 
+   # all other methods need to go create_chat_assistant_message_job as wwll (not here)
+
   private
 
   # also for background jobs: moved to create_chat_assistant_message_job

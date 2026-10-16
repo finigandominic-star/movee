@@ -19,7 +19,7 @@ class CreateChatAssistantMessageJob < ApplicationJob
 
     response = ask_llm
     @assistant_message.update(content: response.content)
-    
+
     broadcast_replace(@assistant_message)
 
     @chat.generate_title_from_first_message
@@ -38,6 +38,8 @@ class CreateChatAssistantMessageJob < ApplicationJob
       @ruby_llm_chat.add_message(message)
     end
   end
+
+  # all other methods need to go here as wwll (not into messages_controller)
 
   private
 
