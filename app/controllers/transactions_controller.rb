@@ -1,5 +1,5 @@
 class TransactionsController < ApplicationController
-  before_action :set_transaction, only: %i[show edit update destroy remove_involved_party]
+  before_action :set_transaction, only: %i[show edit update destroy remove_involved_party update_stage]
 
   def index
     @transactions = policy_scope(Transaction).includes(:property, :chain, :involved_party, :user).order(created_at: :desc)
@@ -20,11 +20,6 @@ class TransactionsController < ApplicationController
   def create
     @transaction = Transaction.new(transaction_params)
     @transaction.user = current_user if current_user.present?
-
-    # Fallback to create a default chain if none exists and none specified
-    if @transaction.chain_id.blank? && Chain.none?
-      @transaction.chain = Chain.create(active: true, user: current_user)
-    end
     authorize @transaction
 
     if @transaction.save
@@ -59,6 +54,23 @@ class TransactionsController < ApplicationController
     redirect_back fallback_location: @transaction, notice: "Involved party was unassigned from this transaction."
   end
 
+  def update_stage
+    authorize @transaction
+    stage = params[:legal_stage] || params.dig(:transaction, :legal_stage)
+    approval_date = if params[:approval_date].present?
+                      Date.parse(params[:approval_date]) rescue Date.current
+                    else
+                      Date.current
+                    end
+
+    if stage.present? && Transaction::LEGAL_STAGES.include?(stage)
+      @transaction.set_legal_stage_with_timing!(stage, approval_date)
+      redirect_to @transaction, notice: "Legal conveyancing stage updated to: #{@transaction.legal_stage_title}."
+    else
+      redirect_to @transaction, alert: "Invalid legal stage selected."
+    end
+  end
+
   private
 
   def set_transaction
@@ -66,6 +78,14 @@ class TransactionsController < ApplicationController
   end
 
   def transaction_params
-    params.require(:transaction).permit(:property_id, :chain_id, :involved_party_id, :completed)
+    params.require(:transaction).permit(
+      :property_id,
+      :chain_id,
+      :involved_party_id,
+      :completed,
+      :legal_stage,
+      :estimated_completion_date,
+      :actual_completion_date
+    )
   end
 end

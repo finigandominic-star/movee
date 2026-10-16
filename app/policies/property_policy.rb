@@ -28,6 +28,11 @@ class PropertyPolicy < ApplicationPolicy
     update?
   end
 
+  def show_involved_party?
+    user.present? && (user.admin? || record.user == user)
+  end
+  alias_method :show_personal_data?, :show_involved_party?
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope.all

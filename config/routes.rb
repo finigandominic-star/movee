@@ -1,7 +1,4 @@
 Rails.application.routes.draw do
-  get "messages/create"
-  get "chats/create"
-  get "chats/show"
   devise_for :users
   root to: "pages#home"
 
@@ -14,6 +11,7 @@ Rails.application.routes.draw do
   resources :transactions do
     member do
       delete :remove_involved_party
+      patch :update_stage
     end
   end
 
@@ -26,7 +24,12 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :chains
+  resources :chains do
+    member do
+      post :merge
+      post :connect_property
+    end
+  end
 
   resources :chats, only: :show do
     resources :messages, only: [:create]

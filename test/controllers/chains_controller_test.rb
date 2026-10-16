@@ -5,7 +5,8 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
     @user = User.create!(
       user_name: "chain_agent",
       email: "chain_agent@example.com",
-      password: "Password123"
+      password: "Password123",
+      phone: "+44 20 7946 0004"
     )
     @chain = Chain.create!(
       user: @user,
@@ -139,9 +140,75 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # The managing agent is visible:
     assert_select "h6", text: @user.user_name
+    assert_select "a[href='mailto:#{@user.email}']"
+    assert_select "a[href='tel:#{@user.phone}']"
     # The client personal data is protected:
     assert_select "span", text: /Client Confidential/
     assert_no_match @party.email, response.body
     assert_no_match @party.phone, response.body
+  end
+
+  test "should merge chains inheriting the lowest id" do
+    other_chain = Chain.create!(user: @user, active: true)
+    other_prop = Property.create!(
+      user: @user,
+      house_number: "99",
+      street: "Merge Street",
+      post_code: "M1 1AA"
+    )
+    other_tx = Transaction.create!(
+      chain: other_chain,
+      property: other_prop,
+      user: @user
+    )
+
+    lowest_id = [@chain.id, other_chain.id].min
+    highest_id = [@chain.id, other_chain.id].max
+
+    assert_difference("Chain.count", -1) do
+      post merge_chain_url(@chain), params: { target_chain_id: other_chain.id }
+    end
+
+    assert_redirected_to chain_url(lowest_id)
+    assert Chain.exists?(lowest_id)
+    assert_not Chain.exists?(highest_id)
+    assert_equal 2, Chain.find(lowest_id).transactions.count
+    assert_match(/Inherited lowest ID/i, flash[:notice])
+  end
+
+  test "show renders UK chain boundary analysis" do
+    get chain_url(@chain)
+    assert_response :success
+    assert_select "h5", text: /Chain Boundary Analysis/
+    assert_select "span", text: /Start of Chain/
+    assert_select "span", text: /End of Chain/
+  end
+
+  test "connect_property action automatically merges chains when property is in another chain" do
+    other_chain = Chain.create!(user: @user, active: true)
+    target_prop = Property.create!(
+      user: @user,
+      house_number: "77",
+      street: "Connect Street",
+      post_code: "M2 2BB"
+    )
+    Transaction.create!(chain: other_chain, property: target_prop, user: @user)
+
+    lowest_id = [@chain.id, other_chain.id].min
+
+    assert_difference("Chain.count", -1) do
+      post connect_property_chain_url(@chain), params: { property_id: target_prop.id, position: "top" }
+    end
+
+    assert_redirected_to chain_url(lowest_id)
+    assert_match(/Connected #{target_prop.short_address}/i, flash[:notice])
+    assert_equal 2, Chain.find(lowest_id).transactions.count
+  end
+
+  test "show renders connect property modal and buttons" do
+    get chain_url(@chain)
+    assert_response :success
+    assert_select "#connectPropertyModal"
+    assert_select "button[data-bs-target='#connectPropertyModal']"
   end
 end

@@ -101,7 +101,7 @@
       <span class="text-muted small">Showing <%= pluralize(@transactions.size, "transaction") %></span>
     </div>
 
-    <div class="tab-content" id="transactionViewTabsContent">
+    <div class="tab-content" id="transactionViewTabsContent" data-controller="tooltip">
       <!-- 1. Table View -->
       <div class="tab-pane fade show active" id="table-view" role="tabpanel" aria-labelledby="table-tab" tabindex="0">
         <div class="card border-0 shadow-sm overflow-hidden">
@@ -113,7 +113,7 @@
                   <th scope="col">Property</th>
                   <th scope="col">Involved Party</th>
                   <th scope="col">Chain</th>
-                  <th scope="col">Status</th>
+                  <th scope="col">Stage &amp; Schedule</th>
                   <th scope="col">Date</th>
                   <th scope="col" class="text-end" style="width: 130px;">Actions</th>
                 </tr>
@@ -137,12 +137,6 @@
                         <% if policy(tx.involved_party).show_personal_data? %>
                           <div class="fw-medium">
                             <%= tx.involved_party.first_name %> <%= tx.involved_party.last_name %>
-                            <% if tx.involved_party.seller? %>
-                              <span class="badge bg-primary-subtle text-primary ms-1">Seller</span>
-                            <% end %>
-                            <% if tx.involved_party.buyer? %>
-                              <span class="badge bg-warning-subtle text-warning-emphasis ms-1">Buyer</span>
-                            <% end %>
                           </div>
                           <small class="text-muted"><%= tx.involved_party.email %></small>
                         <% else %>
@@ -150,7 +144,13 @@
                             <i class="fa-solid fa-lock me-1"></i>Protected Client
                           </span>
                           <% if tx.creator_or_listing_user %>
-                            <small class="text-muted d-block">Agent: <%= tx.creator_or_listing_user.user_name %></small>
+                            <small class="text-muted d-block mt-1">Agent: <%= tx.creator_or_listing_user.user_name %></small>
+                            <small class="text-muted d-block">
+                              <a href="mailto:<%= tx.creator_or_listing_user.email %>" class="text-decoration-none"><i class="fa-solid fa-envelope me-1"></i><%= tx.creator_or_listing_user.email %></a>
+                              <% if tx.creator_or_listing_user.phone.present? %>
+                                • <a href="tel:<%= tx.creator_or_listing_user.phone %>" class="text-decoration-none"><i class="fa-solid fa-phone me-1"></i><%= tx.creator_or_listing_user.phone %></a>
+                              <% end %>
+                            </small>
                           <% end %>
                         <% end %>
                       <% else %>
@@ -168,9 +168,53 @@
                       <% end %>
                     </td>
                     <td>
-                      <span class="badge <%= tx.status_badge_class %>">
-                        <%= tx.status_label %>
-                      </span>
+                      <% tx_timing = tx.overall_timing_status %>
+                      <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge <%= tx.legal_stage_badge_class %>"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              data-bs-title="<%= tx.legal_stage_definition[:tooltip] %>">
+                          <i class="fa-solid <%= tx.legal_stage_definition[:icon] %> me-1"></i>
+                          <%= tx.legal_stage_short_title %>
+                        </span>
+                        <% if tx.completed? %>
+                          <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
+                            <i class="fa-solid fa-flag-checkered"></i>
+                            <span>Completed</span>
+                          </span>
+                        <% elsif tx_timing[:status] == :behind || tx_timing[:status] == :overdue %>
+                          <% days_over = (tx_timing[:days_over] || tx_timing[:days] || tx_timing[:days_diff]&.abs).to_i %>
+                          <% days_over = 1 if days_over < 1 %>
+                          <span class="badge rounded-pill bg-danger text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <span>+<%= days_over %>d Over</span>
+                          </span>
+                        <% elsif tx_timing[:status] == :ahead || tx_timing[:status] == :completed_ahead %>
+                          <% days_ahead = (tx_timing[:days] || tx_timing[:days_diff]&.abs).to_i %>
+                          <% days_ahead = 1 if days_ahead < 1 %>
+                          <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span><%= days_ahead %>d Ahead</span>
+                          </span>
+                        <% else %>
+                          <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                data-bs-title="<%= tx_timing[:full_label] || 'On course towards target' %>">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>On Course</span>
+                          </span>
+                        <% end %>
+                      </div>
                     </td>
                     <td class="small text-muted">
                       <%= tx.created_at.strftime("%d %b %Y") %>
@@ -206,9 +250,55 @@
           <% @transactions.each do |tx| %>
             <div class="col">
               <div class="card h-100 shadow-sm border-0 position-relative overflow-hidden">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-1">
                   <span class="fw-bold text-dark">Transaction #<%= tx.id %></span>
-                  <span class="badge <%= tx.status_badge_class %>"><%= tx.status_label %></span>
+                  <% tx_timing = tx.overall_timing_status %>
+                  <div class="d-flex align-items-center gap-1 flex-wrap">
+                    <span class="badge <%= tx.legal_stage_badge_class %>"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          data-bs-title="<%= tx.legal_stage_definition[:tooltip] %>">
+                      <i class="fa-solid <%= tx.legal_stage_definition[:icon] %> me-1"></i>
+                      <%= tx.legal_stage_short_title %>
+                    </span>
+                    <% if tx.completed? %>
+                      <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                        <span>Completed</span>
+                      </span>
+                    <% elsif tx_timing[:status] == :behind || tx_timing[:status] == :overdue %>
+                      <% days_over = (tx_timing[:days_over] || tx_timing[:days] || tx_timing[:days_diff]&.abs).to_i %>
+                      <% days_over = 1 if days_over < 1 %>
+                      <span class="badge rounded-pill bg-danger text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>+<%= days_over %>d Over</span>
+                      </span>
+                    <% elsif tx_timing[:status] == :ahead || tx_timing[:status] == :completed_ahead %>
+                      <% days_ahead = (tx_timing[:days] || tx_timing[:days_diff]&.abs).to_i %>
+                      <% days_ahead = 1 if days_ahead < 1 %>
+                      <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span><%= days_ahead %>d Ahead</span>
+                      </span>
+                    <% else %>
+                      <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            data-bs-title="<%= tx_timing[:full_label] || 'On course towards target' %>">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>On Course</span>
+                      </span>
+                    <% end %>
+                  </div>
                 </div>
 
                 <div class="card-body">
@@ -241,6 +331,25 @@
                         <span class="text-muted">—</span>
                       <% end %>
                     </li>
+                    <% agent = tx.creator_or_listing_user %>
+                    <% if agent %>
+                      <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fa-solid fa-user-tie me-1"></i> Agent</span>
+                        <div class="text-end small text-truncate" style="max-width: 170px;">
+                          <span class="fw-medium text-dark"><%= agent.user_name %></span>
+                          <div>
+                            <a href="mailto:<%= agent.email %>" class="text-decoration-none text-truncate d-block" title="<%= agent.email %>">
+                              <i class="fa-solid fa-envelope me-1"></i><%= agent.email %>
+                            </a>
+                            <% if agent.phone.present? %>
+                              <a href="tel:<%= agent.phone %>" class="text-decoration-none text-muted d-block" title="<%= agent.phone %>">
+                                <i class="fa-solid fa-phone me-1"></i><%= agent.phone %>
+                              </a>
+                            <% end %>
+                          </div>
+                        </div>
+                      </li>
+                    <% end %>
                     <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
                       <span class="text-muted"><i class="fa-solid fa-link me-1"></i> Chain</span>
                       <% if tx.chain %>
@@ -250,6 +359,15 @@
                       <% else %>
                         <span class="text-muted">—</span>
                       <% end %>
+                    </li>
+                    <li class="list-group-item px-0 py-2">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted"><i class="fa-solid fa-scale-balanced me-1"></i> Legal Stage</span>
+                        <span class="small fw-semibold text-dark"><%= tx.legal_stage_short_title %></span>
+                      </div>
+                      <div class="progress" style="height: 4px;">
+                        <div class="progress-bar <%= tx.completed? ? 'bg-success' : 'bg-primary' %>" style="width: <%= tx.legal_stage_percentage %>%;"></div>
+                      </div>
                     </li>
                     <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center text-muted">
                       <span><i class="fa-regular fa-calendar me-1"></i> Date</span>
