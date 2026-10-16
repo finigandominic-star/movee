@@ -1,0 +1,63 @@
+// Movee footer (app/views/shared/_footer.html.erb)
+$footer-movee-bg: #F7F7F7;
+$footer-movee-text: #000000;
+$footer-movee-muted: #555555;
+$footer-movee-icon: #828282;
+$footer-movee-divider: #4750DD;
+
+.footer-movee {
+  background: $footer-movee-bg;
+  padding-bottom: 2rem;
+  margin-top: 3rem;
+
+  .footer-movee-divider {
+    height: 1px;
+    background: $footer-movee-divider;
+    margin: 0 0 2.5rem;
+  }
+
+  .footer-movee-brand {
+    font-size: 1.6rem;
+    color: $footer-movee-text;
+    text-decoration: none;
+  }
+
+  .footer-movee-social {
+    display: flex;
+    gap: 1.75rem;
+    margin-top: 3rem;
+
+    a {
+      color: $footer-movee-icon;
+      font-size: 1.4rem;
+
+      &:hover {
+        color: $footer-movee-text;
+      }
+    }
+  }
+
+  .footer-movee-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+
+    a {
+      color: $footer-movee-muted;
+      text-decoration: none;
+
+      &:hover {
+        color: $footer-movee-text;
+        text-decoration: underline;
+      }
+    }
+  }
+
+  @media (min-width: 768px) {
+    .footer-movee-links {
+      text-align: right;
+    }
+  }
+}

@@ -21,72 +21,7 @@
   </head>
 
   <body>
-    <!-- Top Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm mb-3">
-      <div class="container">
-        <%= link_to root_path, class: "navbar-brand fw-bold text-primary d-flex align-items-center gap-2" do %>
-          <i class="fa-solid fa-house-chimney"></i>
-          <span>Movee</span>
-        <% end %>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <%= link_to "Properties", properties_path, class: "nav-link #{'active fw-semibold' if controller_name == 'properties'}" %>
-            </li>
-            <li class="nav-item">
-              <%= link_to "Transactions", transactions_path, class: "nav-link #{'active fw-semibold' if controller_name == 'transactions'}" %>
-            </li>
-            <li class="nav-item">
-              <%= link_to "Chains", chains_path, class: "nav-link #{'active fw-semibold' if controller_name == 'chains'}" %>
-            </li>
-            <li class="nav-item">
-              <%= link_to "Involved Parties", involved_parties_path, class: "nav-link #{'active fw-semibold' if controller_name == 'involved_parties'}" %>
-            </li>
-          </ul>
-
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-2">
-            <% if user_signed_in? %>
-              <li class="nav-item d-flex align-items-center me-2">
-                <span class="navbar-text small text-dark fw-medium">
-                  <i class="fa-solid fa-circle-user text-primary me-1"></i>
-                  <%= current_user.user_name.presence || current_user.email %>
-                  <% if current_user.company.present? %>
-                    <span class="text-muted fw-normal">(<%= current_user.company %>)</span>
-                  <% end %>
-                  <% if current_user.admin? %>
-                    <span class="badge bg-danger ms-1">Admin</span>
-                  <% end %>
-                </span>
-              </li>
-              <li class="nav-item">
-                <%= link_to edit_user_registration_path, class: "btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1", title: "Account Settings" do %>
-                  <i class="fa-solid fa-gear"></i>
-                  <span>Settings</span>
-                <% end %>
-              </li>
-              <li class="nav-item">
-                <%= button_to destroy_user_session_path, method: :delete, class: "btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1" do %>
-                  <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                  <span>Sign Out</span>
-                <% end %>
-              </li>
-            <% else %>
-              <li class="nav-item">
-                <%= link_to "Log In", new_user_session_path, class: "btn btn-sm btn-outline-primary" %>
-              </li>
-              <li class="nav-item">
-                <%= link_to "Sign Up", new_user_registration_path, class: "btn btn-sm btn-primary shadow-sm" %>
-              </li>
-            <% end %>
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <%= render "shared/navbar" %>
 
     <!-- Flash Notifications -->
     <% if notice %>
@@ -108,5 +43,7 @@
     <% end %>
 
     <%= yield %>
+
+    <%= render "shared/footer" %>
   </body>
 </html>

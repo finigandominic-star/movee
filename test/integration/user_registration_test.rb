@@ -30,9 +30,8 @@ class UserRegistrationTest < ActionDispatch::IntegrationTest
     assert_equal "Nexus Real Estate", user.company
     assert_equal "+44 20 7946 0999", user.phone
 
-    # Verify navbar shows user name and company
-    assert_select ".navbar-text", text: /alex_miller/
-    assert_select ".navbar-text", text: /Nexus Real Estate/
+    # Verify navbar avatar shows user name and company
+    assert_select ".navbar-movee-avatar[title=?]", "alex_miller · Nexus Real Estate"
   end
 
   test "user can update profile, company name, and phone" do
