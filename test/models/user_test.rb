@@ -1,15 +1,17 @@
 require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
-  test "valid user with required fields and company" do
+  test "valid user with required fields, company, and phone" do
     user = User.new(
       user_name: "test_agent",
       email: "agent@example.com",
       password: "Password1",
-      company: "Prime Agency"
+      company: "Prime Agency",
+      phone: "+44 20 7946 0555"
     )
     assert user.valid?, user.errors.full_messages.to_sentence
     assert_equal "Prime Agency", user.company
+    assert_equal "+44 20 7946 0555", user.phone
   end
 
   test "user without user_name is invalid" do

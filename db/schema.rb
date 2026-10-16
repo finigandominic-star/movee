@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_094411) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_141000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -247,8 +247,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_094411) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
+    t.string "legal_stage", default: "offer_accepted", null: false
+    t.date "estimated_completion_date"
+    t.date "actual_completion_date"
+    t.jsonb "stage_dates", default: {}, null: false
     t.index ["chain_id"], name: "index_transactions_on_chain_id"
     t.index ["involved_party_id"], name: "index_transactions_on_involved_party_id"
+    t.index ["legal_stage"], name: "index_transactions_on_legal_stage"
     t.index ["property_id"], name: "index_transactions_on_property_id"
     t.index ["user_id"], name: "index_transactions_on_user_id"
   end
@@ -264,6 +269,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_094411) do
     t.string "user_name"
     t.string "company"
     t.boolean "admin", default: false, null: false
+    t.string "phone"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

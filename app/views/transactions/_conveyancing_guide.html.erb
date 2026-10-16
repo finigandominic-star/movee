@@ -1,0 +1,173 @@
+<!-- UK Conveyancing Legal Stages Process Guide & Step Details Modal -->
+<div class="modal fade" id="legalExplainerModal" tabindex="-1" aria-labelledby="legalExplainerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-light border-bottom py-3">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </div>
+          <div>
+            <h5 class="modal-title fw-bold text-dark mb-0" id="legalExplainerModalLabel">
+              UK Conveyancing Guide &amp; Legal Stages
+            </h5>
+            <span class="text-muted small">England &amp; Wales conveyancing workflow post-offer acceptance</span>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <% current_def = @transaction.legal_stage_definition %>
+        <% current_idx = @transaction.legal_stage_index %>
+        <% curr_timing = @transaction.stage_timing(@transaction.legal_stage) %>
+
+        <!-- Active Stage Highlights Section -->
+        <div class="card border border-primary-subtle bg-primary bg-opacity-10 mb-4">
+          <div class="card-body p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+              <div>
+                <span class="badge bg-primary px-2 py-1 mb-1">
+                  Active Stage <%= current_idx %> of <%= Transaction::LEGAL_STAGES.size %>
+                </span>
+                <h5 class="fw-bold text-dark mb-1">
+                  <i class="fa-solid <%= current_def[:icon] %> text-primary me-1"></i>
+                  <%= current_def[:name] %>
+                </h5>
+                <p class="text-secondary small mb-0"><%= current_def[:summary] %></p>
+              </div>
+              <div class="text-end">
+                <span class="badge <%= curr_timing[:badge_class] %> px-2 py-1">
+                  <%= curr_timing[:label] %>
+                </span>
+              </div>
+            </div>
+
+            <div class="row g-2 text-muted small my-2 pt-2 border-top border-primary-subtle">
+              <div class="col-12 col-sm-6">
+                <strong><i class="fa-solid fa-user-gear me-1"></i> Lead Actor:</strong> <%= current_def[:lead_actor] %>
+              </div>
+              <div class="col-12 col-sm-6">
+                <strong><i class="fa-regular fa-clock me-1"></i> Benchmark:</strong> <%= current_def[:timeline] %>
+              </div>
+              <div class="col-12 col-sm-6">
+                <strong><i class="fa-regular fa-calendar me-1"></i> Target Date:</strong> <%= curr_timing[:estimated_date]&.strftime("%d %B %Y") || "—" %>
+              </div>
+              <div class="col-12 col-sm-6">
+                <strong><i class="fa-solid fa-flag-checkered me-1"></i> Actual Date:</strong> <%= curr_timing[:actual_date]&.strftime("%d %B %Y") || "In Progress" %>
+              </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+              <div class="col-12 col-md-6">
+                <div class="bg-white border rounded p-3 h-100">
+                  <h6 class="fw-bold text-dark small text-uppercase mb-2">
+                    <i class="fa-solid fa-gavel text-secondary me-1"></i> Legal Definition &amp; Procedure
+                  </h6>
+                  <p class="small text-secondary mb-0">
+                    <%= current_def[:legal_context] %>
+                  </p>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="bg-white border rounded p-3 h-100">
+                  <h6 class="fw-bold text-primary small text-uppercase mb-2">
+                    <i class="fa-solid fa-list-check text-primary me-1"></i> Agent Action Checklist
+                  </h6>
+                  <p class="small text-dark mb-0">
+                    <%= current_def[:agent_action] %>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-muted small mb-3">
+          In England &amp; Wales, property sales remain <em>Subject to Contract (SSTC)</em> and non-binding until <strong>Exchange of Contracts</strong>. Estate agents play a vital sales-progression role across all 8 stages below:
+        </p>
+
+        <!-- All 8 Stages Accordion -->
+        <h6 class="fw-bold text-dark text-uppercase small mb-3">
+          <i class="fa-solid fa-layer-group text-primary me-1"></i> All 8 Conveyancing Stages: Complete Guide
+        </h6>
+        <div class="accordion" id="modalStagesDetailedAccordion">
+          <% Transaction::LEGAL_STAGES.each do |stage_key| %>
+            <% stage_def = Transaction::LEGAL_STAGE_DEFINITIONS[stage_key] %>
+            <% is_current = @transaction.legal_stage == stage_key %>
+
+            <div class="accordion-item border rounded-3 mb-2 overflow-hidden shadow-none">
+              <h2 class="accordion-header" id="modal_heading_<%= stage_key %>">
+                <button class="accordion-button <%= 'collapsed' unless is_current %> py-3"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#modal_collapse_<%= stage_key %>"
+                        aria-expanded="<%= is_current %>"
+                        aria-controls="modal_collapse_<%= stage_key %>">
+                  <div class="d-flex align-items-center justify-content-between w-100 me-3 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="badge <%= is_current ? 'bg-primary' : 'bg-light text-dark border' %> rounded-pill px-2 py-1">
+                        Step <%= stage_def[:index] %>
+                      </span>
+                      <i class="fa-solid <%= stage_def[:icon] %> text-primary"></i>
+                      <strong class="text-dark"><%= stage_def[:name] %></strong>
+                      <% if is_current %>
+                        <span class="badge bg-success ms-1">Active</span>
+                      <% end %>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 text-muted small">
+                      <span><i class="fa-regular fa-clock me-1"></i> <%= stage_def[:timeline] %></span>
+                      <span class="d-none d-sm-inline">•</span>
+                      <span><i class="fa-solid fa-user-tie me-1"></i> <%= stage_def[:lead_actor] %></span>
+                    </div>
+                  </div>
+                </button>
+              </h2>
+
+              <div id="modal_collapse_<%= stage_key %>"
+                   class="accordion-collapse collapse <%= 'show' if is_current %>"
+                   aria-labelledby="modal_heading_<%= stage_key %>"
+                   data-bs-parent="#modalStagesDetailedAccordion">
+                <div class="accordion-body bg-light p-3 p-md-4">
+                  <div class="row g-3">
+                    <div class="col-12 col-md-7">
+                      <h6 class="fw-bold text-dark small text-uppercase mb-2">
+                        <i class="fa-solid fa-gavel text-primary me-1"></i> Legal Definition &amp; Procedure
+                      </h6>
+                      <p class="small text-secondary mb-3">
+                        <%= stage_def[:legal_context] %>
+                      </p>
+                      <div class="bg-white border rounded p-3 mb-2">
+                        <span class="fw-semibold small text-dark d-block mb-1">
+                          <i class="fa-solid fa-lightbulb text-warning me-1"></i> Quick Process Tooltip:
+                        </span>
+                        <p class="small text-muted mb-0 fst-italic">
+                          "<%= stage_def[:tooltip] %>"
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="col-12 col-md-5">
+                      <div class="bg-white border rounded p-3 h-100">
+                        <h6 class="fw-bold text-primary small text-uppercase mb-2">
+                          <i class="fa-solid fa-list-check text-primary me-1"></i> Agent Action &amp; Chasing Tip
+                        </h6>
+                        <p class="small text-dark mb-0">
+                          <%= stage_def[:agent_action] %>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light py-2 px-3">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

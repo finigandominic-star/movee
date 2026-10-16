@@ -23,6 +23,10 @@ class TransactionPolicy < ApplicationPolicy
     update?
   end
 
+  def update_stage?
+    update?
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope.all
