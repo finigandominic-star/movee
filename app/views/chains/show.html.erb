@@ -262,14 +262,19 @@
                       <i class="fa-solid fa-house me-1 text-primary"></i> Property
                     </span>
                     <% if tx.property %>
-                      <h6 class="fw-bold text-dark mb-1">
-                        <%= link_to tx.property.short_address, property_path(tx.property), class: "text-decoration-none text-dark" %>
-                      </h6>
-                      <div class="text-muted small">
-                        <%= tx.property.city %>, <%= tx.property.post_code %><br>
-                        <span class="badge <%= tx.property.sold? ? 'bg-secondary' : 'bg-success-subtle text-success border border-success-subtle' %>">
-                          <%= tx.property.sold? ? 'Sold' : 'Active Listing' %>
-                        </span>
+                      <div class="d-flex align-items-start gap-2">
+                        <%= link_to property_thumbnail(tx.property), property_path(tx.property) %>
+                        <div>
+                          <h6 class="fw-bold text-dark mb-1">
+                            <%= link_to tx.property.short_address, property_path(tx.property), class: "text-decoration-none text-dark" %>
+                          </h6>
+                          <div class="text-muted small">
+                            <%= tx.property.city %>, <%= tx.property.post_code %><br>
+                            <span class="badge <%= tx.property.sold? ? 'bg-secondary' : 'bg-success-subtle text-success border border-success-subtle' %>">
+                              <%= tx.property.sold? ? 'Sold' : 'Active Listing' %>
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     <% else %>
                       <span class="text-muted fst-italic small">No property assigned</span>
@@ -283,7 +288,10 @@
                     </span>
                     <% agent = tx.creator_or_listing_user %>
                     <% if agent %>
-                      <h6 class="fw-bold text-dark mb-1"><%= agent.user_name %></h6>
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <%= agent_avatar(agent, size: 36) %>
+                        <h6 class="fw-bold text-dark mb-0"><%= agent.user_name %></h6>
+                      </div>
                       <div class="text-muted small">
                         <% if agent.company.present? %>
                           <span class="d-block"><i class="fa-solid fa-building me-1 text-secondary"></i><%= agent.company %></span>

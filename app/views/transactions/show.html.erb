@@ -108,12 +108,12 @@
         <div class="card-body p-4">
           <% if @transaction.property %>
             <div class="row g-3 align-items-center">
-              <% if @transaction.property.photos.present? %>
+              <% if @transaction.property.photo.attached? %>
                 <div class="col-12 col-md-4">
-                  <img src="<%= @transaction.property.photos %>" class="img-fluid rounded object-fit-cover shadow-sm w-100" style="max-height: 160px;" alt="<%= @transaction.property.short_address %>">
+                  <%= image_tag @transaction.property.photo, class: "img-fluid rounded object-fit-cover shadow-sm w-100", style: "max-height: 160px;", alt: @transaction.property.short_address %>
                 </div>
               <% end %>
-              <div class="col-12 <%= @transaction.property.photos.present? ? 'col-md-8' : '' %>">
+              <div class="col-12 <%= @transaction.property.photo.attached? ? 'col-md-8' : '' %>">
                 <h5 class="fw-bold text-dark mb-1"><%= @transaction.property.short_address %></h5>
                 <% if @transaction.property.second_line_of_address.present? %>
                   <p class="text-muted small mb-1"><%= @transaction.property.second_line_of_address %></p>
@@ -222,9 +222,7 @@
           <% agent = @transaction.creator_or_listing_user %>
           <% if agent %>
             <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
-              <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                <i class="fa-solid fa-user-tie fa-lg"></i>
-              </div>
+              <%= agent_avatar(agent) %>
               <div>
                 <h6 class="fw-bold text-dark mb-0"><%= agent.user_name %></h6>
                 <% if agent.company.present? %>

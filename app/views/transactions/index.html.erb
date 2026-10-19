@@ -305,10 +305,15 @@
                   <div class="mb-3">
                     <span class="text-muted small text-uppercase fw-semibold d-block">Property</span>
                     <% if tx.property %>
-                      <h6 class="fw-bold text-dark mb-1">
-                        <%= link_to tx.property.short_address, property_path(tx.property), class: "text-decoration-none text-dark" %>
-                      </h6>
-                      <small class="text-muted"><%= tx.property.city %>, <%= tx.property.post_code %></small>
+                      <div class="d-flex align-items-center gap-2 mt-1">
+                        <%= link_to property_thumbnail(tx.property), property_path(tx.property) %>
+                        <div>
+                          <h6 class="fw-bold text-dark mb-1">
+                            <%= link_to tx.property.short_address, property_path(tx.property), class: "text-decoration-none text-dark" %>
+                          </h6>
+                          <small class="text-muted"><%= tx.property.city %>, <%= tx.property.post_code %></small>
+                        </div>
+                      </div>
                     <% else %>
                       <span class="text-muted fst-italic">None</span>
                     <% end %>

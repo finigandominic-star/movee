@@ -41,6 +41,15 @@
             </div>
 
             <div class="mb-3">
+              <%= f.input :avatar,
+                          as: :file,
+                          required: false,
+                          label: "Profile Photo",
+                          hint: "Optional. Shown as your avatar in the navigation bar.",
+                          input_html: { accept: "image/*", class: "form-control" } %>
+            </div>
+
+            <div class="mb-3">
               <%= f.input :email,
                           required: true,
                           label: "Email Address",

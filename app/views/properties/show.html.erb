@@ -1,9 +1,9 @@
 <% party = @property.involved_party %>
 
 <!-- Hero Image -->
-<% if @property.photos.present? %>
+<% if @property.photo.attached? %>
   <div class="property-hero">
-    <img src="<%= @property.photos %>" alt="<%= @property.short_address %>">
+    <%= image_tag @property.photo, alt: @property.short_address %>
   </div>
 <% else %>
   <div class="property-hero property-hero--empty">
@@ -234,7 +234,10 @@
               <% if @property.user %>
                 <div class="small text-muted bg-white p-2 rounded border mt-2">
                   <span class="fw-semibold text-dark d-block mb-1">Managing Agent:</span>
-                  <div><%= @property.user.user_name %> <% if @property.user.company.present? %>(<%= @property.user.company %>)<% end %></div>
+                  <div class="d-flex align-items-center gap-2">
+                    <%= agent_avatar(@property.user, size: 32) %>
+                    <div><%= @property.user.user_name %> <% if @property.user.company.present? %>(<%= @property.user.company %>)<% end %></div>
+                  </div>
                   <div class="mt-1">
                     <a href="mailto:<%= @property.user.email %>" class="text-decoration-none d-block"><i class="fa-solid fa-envelope me-1"></i><%= @property.user.email %></a>
                     <% if @property.user.phone.present? %>

@@ -97,8 +97,8 @@
                 </div>
 
                 <!-- Property Image / Placeholder Header -->
-                <% if property.photos.present? %>
-                  <img src="<%= property.photos %>" class="card-img-top object-fit-cover" alt="<%= [property.house_number, property.street].compact_blank.join(' ') %>" style="height: 200px;">
+                <% if property.photo.attached? %>
+                  <%= image_tag property.photo, class: "card-img-top object-fit-cover", alt: property.short_address, style: "height: 200px;" %>
                 <% else %>
                   <div class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center text-muted" style="height: 200px;">
                     <i class="fa-solid fa-house fa-3x text-secondary opacity-50 mb-2"></i>
@@ -271,8 +271,8 @@
                 <% @properties.each do |property| %>
                   <tr>
                     <td>
-                      <% if property.photos.present? %>
-                        <img src="<%= property.photos %>" class="rounded object-fit-cover" alt="Property thumbnail" width="48" height="48">
+                      <% if property.photo.attached? %>
+                        <%= image_tag property.photo, class: "rounded object-fit-cover", alt: "Property thumbnail", width: 48, height: 48 %>
                       <% else %>
                         <div class="rounded bg-light text-muted d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                           <i class="fa-solid fa-house text-secondary"></i>

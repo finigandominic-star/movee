@@ -47,6 +47,18 @@
             </div>
 
             <div class="mb-3">
+              <% if resource.avatar.attached? %>
+                <%= image_tag resource.avatar, alt: "Current profile photo", class: "rounded-circle object-fit-cover mb-2", width: 64, height: 64 %>
+              <% end %>
+              <%= f.input :avatar,
+                          as: :file,
+                          required: false,
+                          label: "Profile Photo",
+                          hint: "Optional. Shown as your avatar in the navigation bar.",
+                          input_html: { accept: "image/*", class: "form-control" } %>
+            </div>
+
+            <div class="mb-3">
               <%= f.input :email,
                           required: true,
                           label: "Email Address",
