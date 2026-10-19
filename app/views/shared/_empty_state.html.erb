@@ -1,0 +1,8 @@
+<%# Empty list placeholder. Render with a block for the call-to-action:
+    render layout: "shared/empty_state", locals: { icon: "fa-house", title: "No properties yet", text: "..." } do ... end %>
+<div class="empty-state">
+  <span class="empty-state__icon" aria-hidden="true"><i class="fa-solid <%= icon %>"></i></span>
+  <h2 class="h4"><%= title %></h2>
+  <p><%= text %></p>
+  <%= yield %>
+</div>

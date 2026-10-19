@@ -25,7 +25,8 @@ class ChainTest < ActiveSupport::TestCase
       email: "mick@example.com",
       phone: "+44 7700 900222",
       buyer: true,
-      seller: true
+      seller: true,
+      onward_purchase: "buying"
     )
 
     # Vendor leaving the market (seller only, no onward chain)
@@ -35,7 +36,8 @@ class ChainTest < ActiveSupport::TestCase
       email: "exit@example.com",
       phone: "+44 7700 900333",
       buyer: false,
-      seller: true
+      seller: true,
+      onward_purchase: "leaving_market"
     )
 
     # Properties

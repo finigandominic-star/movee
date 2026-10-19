@@ -2,6 +2,12 @@ Rails.application.routes.draw do
   devise_for :users
   root to: "pages#home"
 
+  # Signed-in home for agents
+  get "dashboard", to: "dashboards#show", as: :dashboard
+
+  # Guided "new sale" flow: vendor → property → buyer → chain
+  resource :sale, only: [:new, :create]
+
   resources :properties do
     member do
       delete :remove_involved_party

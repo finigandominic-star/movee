@@ -1,401 +1,168 @@
-<div class="container py-4">
-  <!-- Breadcrumb Navigation -->
-  <nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><%= link_to "Home", root_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item active" aria-current="page">Transactions</li>
-    </ol>
-  </nav>
-
-  <!-- Page Header & Actions -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
-    <div>
-      <h1 class="h2 fw-bold text-dark mb-1">
-        Transactions
-        <span class="badge bg-secondary fs-6 align-middle"><%= @transactions.size %></span>
-      </h1>
-      <p class="text-muted mb-0 small">Monitor all property deal transactions, party engagements, and completion stages.</p>
-    </div>
-    <div class="d-flex gap-2">
-      <%= link_to new_transaction_path, class: "btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" do %>
-        <i class="fa-solid fa-plus"></i>
-        <span>New Transaction</span>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- Summary Metric Cards -->
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-md-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center">
-          <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-            <i class="fa-solid fa-file-invoice-dollar fa-lg"></i>
-          </div>
-          <div>
-            <div class="text-muted small text-uppercase fw-semibold">Total Transactions</div>
-            <div class="h4 fw-bold mb-0"><%= @transactions.size %></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center">
-          <div class="rounded-circle bg-success bg-opacity-10 text-success p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-            <i class="fa-solid fa-circle-check fa-lg"></i>
-          </div>
-          <div>
-            <div class="text-muted small text-uppercase fw-semibold">Completed</div>
-            <div class="h4 fw-bold mb-0"><%= @transactions.count(&:completed?) %></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center">
-          <div class="rounded-circle bg-warning bg-opacity-10 text-warning p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-            <i class="fa-solid fa-hourglass-half fa-lg"></i>
-          </div>
-          <div>
-            <div class="text-muted small text-uppercase fw-semibold">In Progress</div>
-            <div class="h4 fw-bold mb-0"><%= @transactions.count { |t| !t.completed? } %></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="container py-4 py-lg-5" data-controller="tooltip">
+  <%= render layout: "shared/page_header", locals: { title: "Transactions", subtitle: "#{pluralize(@transactions.size, 'transaction')} across your chains" } do %>
+    <%= link_to new_transaction_path, class: "btn btn-primary" do %>
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      <span>New transaction</span>
+    <% end %>
+  <% end %>
 
   <% if @transactions.empty? %>
-    <!-- Empty State -->
-    <div class="card border-0 shadow-sm text-center py-5 my-4">
-      <div class="card-body py-5">
-        <div class="text-secondary opacity-50 mb-3">
-          <i class="fa-solid fa-file-circle-question fa-3x"></i>
-        </div>
-        <h3 class="h4 fw-bold text-dark">No Transactions Recorded</h3>
-        <p class="text-muted mb-4 mx-auto" style="max-width: 440px;">
-          Track property sales, purchases, and chain progress by creating your first transaction record.
-        </p>
-        <%= link_to new_transaction_path, class: "btn btn-primary" do %>
-          <i class="fa-solid fa-plus me-1"></i> Record First Transaction
-        <% end %>
-      </div>
-    </div>
+    <%= render layout: "shared/empty_state", locals: { icon: "fa-file-signature", title: "No transactions yet", text: "Track a sale through conveyancing by recording your first transaction." } do %>
+      <%= link_to new_transaction_path, class: "btn btn-primary" do %>
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>New transaction</span>
+      <% end %>
+    <% end %>
   <% else %>
-    <!-- View Switcher Tabs -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <ul class="nav nav-pills" id="transactionViewTabs" role="tablist">
+    <div class="page-toolbar">
+      <ul class="nav nav-pills small" id="transactionViewTabs" role="tablist" aria-label="Choose list layout">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active btn-sm" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-view" type="button" role="tab" aria-controls="table-view" aria-selected="true">
-            <i class="fa-solid fa-table-list me-1"></i> Table View
+          <button class="nav-link active" id="cards-tab" data-bs-toggle="pill" data-bs-target="#cards-view" type="button" role="tab" aria-controls="cards-view" aria-selected="true">
+            <i class="fa-solid fa-grip me-1" aria-hidden="true"></i>Cards
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link btn-sm" id="cards-tab" data-bs-toggle="pill" data-bs-target="#cards-view" type="button" role="tab" aria-controls="cards-view" aria-selected="false">
-            <i class="fa-solid fa-grip me-1"></i> Cards View
+          <button class="nav-link" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-view" type="button" role="tab" aria-controls="table-view" aria-selected="false">
+            <i class="fa-solid fa-table-list me-1" aria-hidden="true"></i>Table
           </button>
         </li>
       </ul>
-      <span class="text-muted small">Showing <%= pluralize(@transactions.size, "transaction") %></span>
     </div>
 
-    <div class="tab-content" id="transactionViewTabsContent" data-controller="tooltip">
-      <!-- 1. Table View -->
-      <div class="tab-pane fade show active" id="table-view" role="tabpanel" aria-labelledby="table-tab" tabindex="0">
-        <div class="card border-0 shadow-sm overflow-hidden">
-          <div class="table-responsive">
-            <table class="table table-hover table-striped align-middle mb-0">
-              <thead class="table-light text-uppercase small text-muted">
-                <tr>
-                  <th scope="col" style="width: 80px;">ID</th>
-                  <th scope="col">Property</th>
-                  <th scope="col">Involved Party</th>
-                  <th scope="col">Chain</th>
-                  <th scope="col">Stage &amp; Schedule</th>
-                  <th scope="col">Date</th>
-                  <th scope="col" class="text-end" style="width: 130px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% @transactions.each do |tx| %>
-                  <tr>
-                    <td class="fw-bold">#<%= tx.id %></td>
-                    <td>
-                      <% if tx.property %>
-                        <div class="fw-semibold text-dark">
-                          <%= link_to tx.property.short_address, property_path(tx.property), class: "text-decoration-none text-dark" %>
-                        </div>
-                        <small class="text-muted"><%= tx.property.city %>, <%= tx.property.post_code %></small>
-                      <% else %>
-                        <span class="text-muted fst-italic">None</span>
-                      <% end %>
-                    </td>
-                    <td>
-                      <% if tx.involved_party %>
-                        <% if policy(tx.involved_party).show_personal_data? %>
-                          <div class="fw-medium">
-                            <%= tx.involved_party.first_name %> <%= tx.involved_party.last_name %>
-                          </div>
-                          <small class="text-muted"><%= tx.involved_party.email %></small>
-                        <% else %>
-                          <span class="badge bg-light text-muted border">
-                            <i class="fa-solid fa-lock me-1"></i>Protected Client
-                          </span>
-                          <% if tx.creator_or_listing_user %>
-                            <small class="text-muted d-block mt-1">Agent: <%= tx.creator_or_listing_user.user_name %></small>
-                            <small class="text-muted d-block">
-                              <a href="mailto:<%= tx.creator_or_listing_user.email %>" class="text-decoration-none"><i class="fa-solid fa-envelope me-1"></i><%= tx.creator_or_listing_user.email %></a>
-                              <% if tx.creator_or_listing_user.phone.present? %>
-                                • <a href="tel:<%= tx.creator_or_listing_user.phone %>" class="text-decoration-none"><i class="fa-solid fa-phone me-1"></i><%= tx.creator_or_listing_user.phone %></a>
-                              <% end %>
-                            </small>
-                          <% end %>
-                        <% end %>
-                      <% else %>
-                        <span class="text-muted fst-italic">None</span>
-                      <% end %>
-                    </td>
-                    <td>
-                      <% if tx.chain %>
-                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
-                          Chain #<%= tx.chain.id %>
-                        </span>
-                        <small class="text-muted d-block"><%= tx.chain.active? ? "Active" : "Inactive" %></small>
-                      <% else %>
-                        <span class="text-muted">—</span>
-                      <% end %>
-                    </td>
-                    <td>
-                      <% tx_timing = tx.overall_timing_status %>
-                      <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <span class="badge <%= tx.legal_stage_badge_class %>"
-                              data-bs-toggle="tooltip"
-                              data-bs-placement="top"
-                              data-bs-title="<%= tx.legal_stage_definition[:tooltip] %>">
-                          <i class="fa-solid <%= tx.legal_stage_definition[:icon] %> me-1"></i>
-                          <%= tx.legal_stage_short_title %>
-                        </span>
-                        <% if tx.completed? %>
-                          <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
-                            <i class="fa-solid fa-flag-checkered"></i>
-                            <span>Completed</span>
-                          </span>
-                        <% elsif tx_timing[:status] == :behind || tx_timing[:status] == :overdue %>
-                          <% days_over = (tx_timing[:days_over] || tx_timing[:days] || tx_timing[:days_diff]&.abs).to_i %>
-                          <% days_over = 1 if days_over < 1 %>
-                          <span class="badge rounded-pill bg-danger text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
-                            <i class="fa-solid fa-circle-exclamation"></i>
-                            <span>+<%= days_over %>d Over</span>
-                          </span>
-                        <% elsif tx_timing[:status] == :ahead || tx_timing[:status] == :completed_ahead %>
-                          <% days_ahead = (tx_timing[:days] || tx_timing[:days_diff]&.abs).to_i %>
-                          <% days_ahead = 1 if days_ahead < 1 %>
-                          <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
-                            <i class="fa-solid fa-bolt"></i>
-                            <span><%= days_ahead %>d Ahead</span>
-                          </span>
-                        <% else %>
-                          <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                data-bs-title="<%= tx_timing[:full_label] || 'On course towards target' %>">
-                            <i class="fa-solid fa-circle-check"></i>
-                            <span>On Course</span>
-                          </span>
-                        <% end %>
-                      </div>
-                    </td>
-                    <td class="small text-muted">
-                      <%= tx.created_at.strftime("%d %b %Y") %>
-                    </td>
-                    <td class="text-end">
-                      <div class="btn-group btn-group-sm">
-                        <%= link_to transaction_path(tx), class: "btn btn-outline-primary", title: "View details" do %>
-                          <i class="fa-solid fa-eye"></i>
-                        <% end %>
-                        <% if policy(tx).update? %>
-                          <%= link_to edit_transaction_path(tx), class: "btn btn-outline-secondary", title: "Edit" do %>
-                            <i class="fa-solid fa-pen"></i>
-                          <% end %>
-                        <% end %>
-                        <% if policy(tx).destroy? %>
-                          <%= link_to transaction_path(tx), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete Transaction ##{tx.id}?" }, class: "btn btn-outline-danger", title: "Delete" do %>
-                            <i class="fa-solid fa-trash-can"></i>
-                          <% end %>
-                        <% end %>
-                      </div>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. Cards View -->
-      <div class="tab-pane fade" id="cards-view" role="tabpanel" aria-labelledby="cards-tab" tabindex="0">
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="tab-content" id="transactionViewTabsContent">
+      <div class="tab-pane fade show active" id="cards-view" role="tabpanel" aria-labelledby="cards-tab" tabindex="0">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 card-grid">
           <% @transactions.each do |tx| %>
+            <% party = tx.involved_party %>
+            <% agent = tx.creator_or_listing_user %>
             <div class="col">
-              <div class="card h-100 shadow-sm border-0 position-relative overflow-hidden">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-1">
-                  <span class="fw-bold text-dark">Transaction #<%= tx.id %></span>
-                  <% tx_timing = tx.overall_timing_status %>
-                  <div class="d-flex align-items-center gap-1 flex-wrap">
-                    <span class="badge <%= tx.legal_stage_badge_class %>"
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          data-bs-title="<%= tx.legal_stage_definition[:tooltip] %>">
-                      <i class="fa-solid <%= tx.legal_stage_definition[:icon] %> me-1"></i>
-                      <%= tx.legal_stage_short_title %>
-                    </span>
-                    <% if tx.completed? %>
-                      <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
-                        <i class="fa-solid fa-flag-checkered"></i>
-                        <span>Completed</span>
-                      </span>
-                    <% elsif tx_timing[:status] == :behind || tx_timing[:status] == :overdue %>
-                      <% days_over = (tx_timing[:days_over] || tx_timing[:days] || tx_timing[:days_diff]&.abs).to_i %>
-                      <% days_over = 1 if days_over < 1 %>
-                      <span class="badge rounded-pill bg-danger text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
-                        <i class="fa-solid fa-circle-exclamation"></i>
-                        <span>+<%= days_over %>d Over</span>
-                      </span>
-                    <% elsif tx_timing[:status] == :ahead || tx_timing[:status] == :completed_ahead %>
-                      <% days_ahead = (tx_timing[:days] || tx_timing[:days_diff]&.abs).to_i %>
-                      <% days_ahead = 1 if days_ahead < 1 %>
-                      <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            data-bs-title="<%= tx_timing[:full_label] || tx_timing[:label] %>">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span><%= days_ahead %>d Ahead</span>
-                      </span>
-                    <% else %>
-                      <span class="badge rounded-pill bg-success text-white d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            data-bs-title="<%= tx_timing[:full_label] || 'On course towards target' %>">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>On Course</span>
-                      </span>
-                    <% end %>
+              <div class="card record-card card--transaction">
+                <div class="card-header">
+                  <div>
+                    <h2 class="record-card__title">
+                      <%= link_to tx.property&.short_address || "Transaction ##{tx.id}", transaction_path(tx) %>
+                    </h2>
+                    <p class="record-card__subtitle">Chain: <%= chain_name(tx.chain) %></p>
                   </div>
+                  <%= render "transactions/status_tag", tx: tx, stage: true %>
                 </div>
 
                 <div class="card-body">
-                  <div class="mb-3">
-                    <span class="text-muted small text-uppercase fw-semibold d-block">Property</span>
-                    <% if tx.property %>
-                      <h6 class="fw-bold text-dark mb-1">
-                        <%= link_to tx.property.short_address, property_path(tx.property), class: "text-decoration-none text-dark" %>
-                      </h6>
-                      <small class="text-muted"><%= tx.property.city %>, <%= tx.property.post_code %></small>
-                    <% else %>
-                      <span class="text-muted fst-italic">None</span>
-                    <% end %>
-                  </div>
-
-                  <ul class="list-group list-group-flush small border-top pt-2">
-                    <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                      <span class="text-muted"><i class="fa-solid fa-user-tie me-1"></i> Party</span>
-                      <% if tx.involved_party %>
-                        <% if policy(tx.involved_party).show_personal_data? %>
-                          <span class="fw-medium text-dark text-truncate" style="max-width: 180px;">
-                            <%= tx.involved_party.first_name %> <%= tx.involved_party.last_name %>
-                          </span>
+                  <dl class="mb-0 d-flex flex-column gap-2">
+                    <div class="record-meta">
+                      <dt>Buyer</dt>
+                      <dd>
+                        <% if party.nil? %>
+                          <span class="text-muted">Not assigned</span>
+                        <% elsif policy(party).show_personal_data? %>
+                          <%= party.full_name %>
                         <% else %>
-                          <span class="badge bg-light text-muted border">
-                            <i class="fa-solid fa-lock me-1"></i>Protected Client
-                          </span>
+                          <span class="badge bg-light"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i>Protected Client</span>
                         <% end %>
-                      <% else %>
-                        <span class="text-muted">—</span>
-                      <% end %>
-                    </li>
-                    <% agent = tx.creator_or_listing_user %>
+                      </dd>
+                    </div>
+                    <div class="record-meta">
+                      <dt>Stage</dt>
+                      <dd><%= tx.legal_stage_index %>/<%= Transaction::LEGAL_STAGES.size %> · <%= tx.legal_stage_short_title %></dd>
+                    </div>
+                    <div class="record-meta">
+                      <dt>Target completion</dt>
+                      <dd><%= tx.estimated_completion_date&.strftime("%d %b %Y") || "—" %></dd>
+                    </div>
                     <% if agent %>
-                      <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                        <span class="text-muted"><i class="fa-solid fa-user-tie me-1"></i> Agent</span>
-                        <div class="text-end small text-truncate" style="max-width: 170px;">
-                          <span class="fw-medium text-dark"><%= agent.user_name %></span>
-                          <div>
-                            <a href="mailto:<%= agent.email %>" class="text-decoration-none text-truncate d-block" title="<%= agent.email %>">
-                              <i class="fa-solid fa-envelope me-1"></i><%= agent.email %>
-                            </a>
-                            <% if agent.phone.present? %>
-                              <a href="tel:<%= agent.phone %>" class="text-decoration-none text-muted d-block" title="<%= agent.phone %>">
-                                <i class="fa-solid fa-phone me-1"></i><%= agent.phone %>
-                              </a>
-                            <% end %>
-                          </div>
-                        </div>
-                      </li>
+                      <div class="record-meta">
+                        <dt>Agent</dt>
+                        <dd title="<%= agent.email %>"><%= agent.user_name %></dd>
+                      </div>
                     <% end %>
-                    <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                      <span class="text-muted"><i class="fa-solid fa-link me-1"></i> Chain</span>
-                      <% if tx.chain %>
-                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
-                          Chain #<%= tx.chain.id %> (<%= tx.chain.active? ? "Active" : "Inactive" %>)
-                        </span>
-                      <% else %>
-                        <span class="text-muted">—</span>
-                      <% end %>
-                    </li>
-                    <li class="list-group-item px-0 py-2">
-                      <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-muted"><i class="fa-solid fa-scale-balanced me-1"></i> Legal Stage</span>
-                        <span class="small fw-semibold text-dark"><%= tx.legal_stage_short_title %></span>
-                      </div>
-                      <div class="progress" style="height: 4px;">
-                        <div class="progress-bar <%= tx.completed? ? 'bg-success' : 'bg-primary' %>" style="width: <%= tx.legal_stage_percentage %>%;"></div>
-                      </div>
-                    </li>
-                    <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center text-muted">
-                      <span><i class="fa-regular fa-calendar me-1"></i> Date</span>
-                      <span><%= tx.created_at.strftime("%d %b %Y") %></span>
-                    </li>
-                  </ul>
+                  </dl>
                 </div>
 
-                <div class="card-footer bg-transparent border-top d-flex justify-content-between align-items-center py-2 px-3">
-                  <%= link_to transaction_path(tx), class: "btn btn-sm btn-outline-primary" do %>
-                    <i class="fa-solid fa-eye me-1"></i> Details
-                  <% end %>
-                  <div class="btn-group btn-group-sm">
+                <% if policy(tx).update? || policy(tx).destroy? %>
+                  <div class="card-footer">
                     <% if policy(tx).update? %>
-                      <%= link_to edit_transaction_path(tx), class: "btn btn-outline-secondary", title: "Edit" do %>
-                        <i class="fa-solid fa-pen"></i>
-                      <% end %>
+                      <%= link_to icon_label("fa-pen", "Edit transaction ##{tx.id}"), edit_transaction_path(tx), class: "btn btn-sm btn-outline-secondary btn-icon" %>
                     <% end %>
                     <% if policy(tx).destroy? %>
-                      <%= link_to transaction_path(tx), data: { turbo_method: :delete, turbo_confirm: "Delete this transaction?" }, class: "btn btn-outline-danger", title: "Delete" do %>
-                        <i class="fa-solid fa-trash-can"></i>
-                      <% end %>
+                      <%= link_to icon_label("fa-trash-can", "Delete transaction ##{tx.id}"), transaction_path(tx), data: { turbo_method: :delete, turbo_confirm: "Delete this transaction?" }, class: "btn btn-sm btn-outline-danger btn-icon" %>
                     <% end %>
                   </div>
-                </div>
+                <% end %>
               </div>
             </div>
           <% end %>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="table-view" role="tabpanel" aria-labelledby="table-tab" tabindex="0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <caption class="visually-hidden">Transactions</caption>
+            <thead>
+              <tr>
+                <th scope="col">Property</th>
+                <th scope="col">Buyer</th>
+                <th scope="col">Agent</th>
+                <th scope="col">Chain</th>
+                <th scope="col">Stage &amp; Schedule</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @transactions.each do |tx| %>
+                <% party = tx.involved_party %>
+                <% agent = tx.creator_or_listing_user %>
+                <tr>
+                  <td>
+                    <%= link_to tx.property&.short_address || "Transaction ##{tx.id}", transaction_path(tx), class: "fw-semibold text-decoration-none" %>
+                    <small class="text-muted d-block">#<%= tx.id %><%= " · #{tx.property.post_code}" if tx.property&.post_code.present? %></small>
+                  </td>
+                  <td>
+                    <% if party.nil? %>
+                      <span class="text-muted">—</span>
+                    <% elsif policy(party).show_personal_data? %>
+                      <%= party.full_name %>
+                      <small class="text-muted d-block"><%= party.email %></small>
+                    <% else %>
+                      <span class="badge bg-light"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i>Protected Client</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if agent %>
+                      <%= agent.user_name %>
+                      <small class="d-block">
+                        <a href="mailto:<%= agent.email %>" class="text-decoration-none"><%= agent.email %></a>
+                        <% if agent.phone.present? %>
+                          · <a href="tel:<%= agent.phone %>" class="text-decoration-none"><%= agent.phone %></a>
+                        <% end %>
+                      </small>
+                    <% else %>
+                      <span class="text-muted">—</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <%= link_to chain_name(tx.chain), chain_path(tx.chain), class: "text-decoration-none" %>
+                    <small class="text-muted d-block">Chain #<%= tx.chain.id %></small>
+                  </td>
+                  <td>
+                    <%= render "transactions/status_tag", tx: tx, stage: true %>
+                    <small class="text-muted d-block mt-1">
+                      Stage <%= tx.legal_stage_index %>/<%= Transaction::LEGAL_STAGES.size %> · target <%= tx.estimated_completion_date&.strftime("%d %b %Y") || "—" %>
+                    </small>
+                  </td>
+                  <td class="text-end text-nowrap">
+                    <%= link_to icon_label("fa-eye", "View transaction ##{tx.id}"), transaction_path(tx), class: "btn btn-sm btn-outline-primary btn-icon" %>
+                    <% if policy(tx).update? %>
+                      <%= link_to icon_label("fa-pen", "Edit transaction ##{tx.id}"), edit_transaction_path(tx), class: "btn btn-sm btn-outline-secondary btn-icon" %>
+                    <% end %>
+                    <% if policy(tx).destroy? %>
+                      <%= link_to icon_label("fa-trash-can", "Delete transaction ##{tx.id}"), transaction_path(tx), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete Transaction ##{tx.id}?" }, class: "btn btn-sm btn-outline-danger btn-icon" %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

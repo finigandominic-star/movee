@@ -22,7 +22,7 @@ class InvolvedPartiesController < ApplicationController
     authorize @involved_party
 
     if @involved_party.save
-      redirect_to @involved_party, notice: "Involved party was successfully created."
+      redirect_to @involved_party, notice: "Client was successfully created."
     else
       render :new, status: :unprocessable_entity
     end
@@ -35,7 +35,7 @@ class InvolvedPartiesController < ApplicationController
   def update
     authorize @involved_party
     if @involved_party.update(involved_party_params)
-      redirect_to @involved_party, notice: "Involved party was successfully updated."
+      redirect_to @involved_party, notice: "Client was successfully updated."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -44,7 +44,7 @@ class InvolvedPartiesController < ApplicationController
   def destroy
     authorize @involved_party
     @involved_party.destroy
-    redirect_to involved_parties_path, notice: "Involved party was successfully deleted."
+    redirect_to involved_parties_path, notice: "Client was successfully deleted."
   end
 
   # Assign an existing property to this involved party
@@ -67,7 +67,7 @@ class InvolvedPartiesController < ApplicationController
       property.update(involved_party: nil)
       redirect_to @involved_party, notice: "Property (#{property.short_address}) was unassigned from #{@involved_party.full_name}."
     else
-      redirect_to @involved_party, alert: "Property was not assigned to this party."
+      redirect_to @involved_party, alert: "Property was not assigned to this client."
     end
   end
 
@@ -91,7 +91,7 @@ class InvolvedPartiesController < ApplicationController
       transaction.update(involved_party: nil)
       redirect_to @involved_party, notice: "Transaction ##{transaction.id} was unassigned from #{@involved_party.full_name}."
     else
-      redirect_to @involved_party, alert: "Transaction was not assigned to this party."
+      redirect_to @involved_party, alert: "Transaction was not assigned to this client."
     end
   end
 
@@ -102,6 +102,6 @@ class InvolvedPartiesController < ApplicationController
   end
 
   def involved_party_params
-    params.require(:involved_party).permit(:first_name, :last_name, :email, :phone, :contact_info, :seller, :buyer)
+    params.require(:involved_party).permit(:first_name, :last_name, :email, :phone, :contact_info, :seller, :buyer, :onward_purchase)
   end
 end

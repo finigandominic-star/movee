@@ -1,0 +1,34 @@
+// Buttons are pills (radius set in config/_bootstrap_variables.scss).
+// Hierarchy: filled primary (indigo) > filled secondary (teal) > outline primary > outline secondary.
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+}
+
+// Brand accent: the single most important "next step" on a page.
+.btn-accent {
+  --bs-btn-color: #{$movee-navy};
+  --bs-btn-bg: #{$movee-lime};
+  --bs-btn-border-color: #{$movee-lime};
+  --bs-btn-hover-color: #{$movee-navy};
+  --bs-btn-hover-bg: #{darken($movee-lime, 8%)};
+  --bs-btn-hover-border-color: #{darken($movee-lime, 8%)};
+  --bs-btn-active-color: #{$movee-navy};
+  --bs-btn-active-bg: #{darken($movee-lime, 12%)};
+  --bs-btn-active-border-color: #{darken($movee-lime, 12%)};
+  --bs-btn-focus-shadow-rgb: 188, 251, 137;
+}
+
+// Square icon-only button that stays circular
+.btn-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+
+  &.btn-sm {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+}

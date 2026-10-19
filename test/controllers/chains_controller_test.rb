@@ -39,13 +39,14 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
   test "should get index" do
     get chains_url
     assert_response :success
-    assert_select "h1", text: /Transaction Chains/i
+    assert_select "h1", text: /Chains/
   end
 
   test "should get show" do
     get chain_url(@chain)
     assert_response :success
-    assert_select "h1", text: /Chain ##{@chain.id}/
+    assert_select "h1", text: /Wallaby Way/
+    assert_select ".page-subtitle", text: /Chain ##{@chain.id}/
   end
 
   test "should get new" do
@@ -75,6 +76,30 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to chain_url(@chain)
     assert_equal false, @chain.reload.active?
+  end
+
+  test "nickname replaces the address-based chain name" do
+    patch chain_url(@chain), params: { chain: { name: "  Holmes chain  " } }
+    assert_equal "Holmes chain", @chain.reload.name
+
+    get chain_url(@chain)
+    assert_select "h1", text: "Holmes chain"
+
+    patch chain_url(@chain), params: { chain: { name: "" } }
+    assert_nil @chain.reload.name
+  end
+
+  test "index defaults to table view with a transaction flow per chain" do
+    get chains_url
+    assert_select "#table-view.active .chain-flow a[href='#{transaction_path(@transaction)}']", text: /42 Wallaby Way/
+  end
+
+  test "index shows who manages a chain the viewer cannot edit" do
+    other = User.create!(user_name: "other_agent", email: "other_agent@example.com", password: "Password123")
+    sign_in other
+    get chains_url
+    assert_select ".chain-locked", text: /Managed by chain_agent/
+    assert_select "a[href='#{edit_chain_path(@chain)}']", count: 0
   end
 
   test "should destroy chain for creator" do

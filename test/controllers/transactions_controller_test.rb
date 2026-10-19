@@ -43,7 +43,8 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
   test "should get show" do
     get transaction_url(@transaction)
     assert_response :success
-    assert_select "h1", text: /Transaction ##{@transaction.id}/
+    assert_select "h1", text: /#{Regexp.escape(@property.short_address)}/
+    assert_select ".page-subtitle", text: /Transaction ##{@transaction.id}/
     assert_select "a[href='mailto:#{@user.email}']"
     assert_select "a[href='tel:#{@user.phone}']"
   end

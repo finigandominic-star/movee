@@ -1,0 +1,21 @@
+<%# Progress through the new-sale steps; completed steps link back with earlier choices kept %>
+<nav class="stepper" aria-label="New sale progress">
+  <ol class="stepper__list">
+    <% SalesController::STEPS.each_with_index do |step, index| %>
+      <% state = sale_step_state(step) %>
+      <%= tag.li class: "stepper__item stepper__item--#{state}", aria: { current: ("step" if state == :current) } do %>
+        <% if state == :done %>
+          <%= link_to new_sale_path(sale_step_params(step)), class: "stepper__link" do %>
+            <span class="stepper__marker" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+            <span class="stepper__label"><%= SalesController::STEP_LABELS[step] %><span class="visually-hidden"> (done, change)</span></span>
+          <% end %>
+        <% else %>
+          <span class="stepper__link">
+            <span class="stepper__marker" aria-hidden="true"><%= index + 1 %></span>
+            <span class="stepper__label"><%= SalesController::STEP_LABELS[step] %></span>
+          </span>
+        <% end %>
+      <% end %>
+    <% end %>
+  </ol>
+</nav>

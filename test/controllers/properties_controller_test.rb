@@ -164,8 +164,9 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     get properties_url
     assert_response :success
 
-    # Info panel only shows Total Properties (no sold or available cards)
-    assert_select ".card", text: /Total Properties/
+    # No stat cards: the count appears once, in the page subtitle
+    assert_select ".page-subtitle", text: /\d+ propert(y|ies)/
+    assert_select ".card", text: /Total Properties/, count: 0
     assert_select ".card", text: /Available \/ For Sale/, count: 0
     assert_select ".card", text: /Sold/, count: 0
 

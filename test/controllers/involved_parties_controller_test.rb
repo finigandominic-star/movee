@@ -35,7 +35,7 @@ class InvolvedPartiesControllerTest < ActionDispatch::IntegrationTest
   test "should get index" do
     get involved_parties_url
     assert_response :success
-    assert_select "h1", text: /Involved Parties/i
+    assert_select "h1", text: /Clients/
   end
 
   test "should get show" do

@@ -1,0 +1,316 @@
+// Guided "New sale" flow (sales/new): step progress, choice lists and the two-option layout.
+.sale-flow {
+  max-width: 1120px;
+  margin-inline: auto;
+}
+
+// Progress: Vendor · Property · Buyer · Chain
+.stepper {
+  margin-bottom: 1.5rem;
+}
+
+.stepper__list {
+  display: flex;
+  gap: .5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: none;
+}
+
+.stepper__item {
+  flex: 1 1 0;
+  min-width: 0;
+  position: relative;
+
+  // Connector line between steps
+  & + &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: calc(100% + .05rem);
+    width: .4rem;
+    height: 2px;
+    background: $movee-border;
+  }
+}
+
+.stepper__link {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .5rem .85rem .5rem .5rem;
+  border-radius: $border-radius-pill;
+  background: $movee-surface;
+  border: 1px solid $movee-border;
+  color: $movee-muted;
+  font-weight: 600;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.stepper__marker {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: $movee-surface-2;
+  border: 1px solid $movee-border;
+  font-size: .9rem;
+}
+
+.stepper__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stepper__item--current .stepper__link {
+  background: $movee-lime;
+  border-color: $movee-lime;
+  color: $movee-navy;
+
+  .stepper__marker {
+    background: $movee-navy;
+    border-color: $movee-navy;
+    color: #FFFFFF;
+  }
+}
+
+.stepper__item--done .stepper__link {
+  color: $movee-navy;
+
+  .stepper__marker {
+    background: $movee-green;
+    border-color: $movee-green;
+    color: #FFFFFF;
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: $movee-green;
+    background: rgba($movee-green, .08);
+  }
+}
+
+// Phones: markers only, label of the current step kept
+@include media-breakpoint-down(sm) {
+  .stepper__link {
+    justify-content: center;
+    padding: .35rem;
+  }
+
+  .stepper__item:not(.stepper__item--current) .stepper__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+}
+
+// Two options side by side on lg, stacked below
+.sale-options {
+  display: grid;
+  gap: 1.5rem;
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 2rem;
+  }
+}
+
+.sale-option__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $movee-navy;
+  margin-bottom: 1rem;
+}
+
+.sale-option__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+// "or" divider: horizontal when stacked, vertical on lg
+.sale-or {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  color: $movee-muted;
+  font-size: .85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: $movee-border;
+  }
+
+  @include media-breakpoint-up(lg) {
+    flex-direction: column;
+
+    &::before,
+    &::after {
+      width: 1px;
+      height: auto;
+    }
+  }
+}
+
+// Scrollable list of radio rows
+.choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  max-height: 22rem;
+  overflow-y: auto;
+  padding: .15rem;
+
+  &--open {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+.choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .7rem .9rem;
+  border: 1px solid $movee-border;
+  border-radius: $border-radius;
+  background: $movee-surface;
+  transition: border-color .15s ease, background-color .15s ease;
+
+  &:hover {
+    border-color: $movee-indigo;
+  }
+
+  &:has(.choice__input:checked) {
+    border-color: $movee-indigo;
+    background: rgba($movee-indigo, .06);
+    box-shadow: inset 3px 0 0 $movee-indigo;
+  }
+
+  &:has(.choice__input:focus-visible) {
+    outline: 2px solid $movee-indigo;
+    outline-offset: 2px;
+  }
+
+  .choice__input {
+    flex-shrink: 0;
+    margin: 0;
+  }
+}
+
+.choice__label {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+
+  // Whole row is clickable
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+}
+
+.choice__title {
+  display: block;
+  font-weight: 600;
+  color: $movee-navy;
+}
+
+.choice__meta {
+  display: block;
+  font-size: .85rem;
+  color: $movee-muted;
+  overflow-wrap: anywhere;
+}
+
+.choice__reason {
+  color: $movee-teal;
+  font-weight: 600;
+}
+
+.choice__tags {
+  flex-shrink: 0;
+  display: flex;
+  gap: .25rem;
+}
+
+.sale-onward {
+  margin-top: 1.25rem;
+}
+
+.sale-nickname {
+  padding: 0 .9rem .25rem 2.6rem;
+}
+
+.sale-group-title {
+  font-size: .85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: $movee-muted;
+  margin: 1.5rem 0 .6rem;
+}
+
+// Chosen vendor / property / buyer on the last step
+.sale-summary {
+  display: grid;
+  gap: .75rem;
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.25rem;
+  border-radius: $border-radius;
+  background: $movee-surface-2;
+
+  @include media-breakpoint-up(md) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  dt {
+    font-size: .8rem;
+    font-weight: 600;
+    color: $movee-muted;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    color: $movee-navy;
+  }
+}
+
+.sale-note {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: $border-radius;
+  background: rgba($movee-lime, .35);
+  color: $movee-navy;
+  margin-bottom: 1.25rem;
+}
+
+.sale-step__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid $movee-border;
+}

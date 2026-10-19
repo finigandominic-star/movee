@@ -1,79 +1,73 @@
-.navbar-lewagon {
-  justify-content: space-between;
-  background: white;
-}
-
-.navbar-lewagon .navbar-collapse {
-  flex-grow: 0;
-}
-
-.navbar-lewagon .navbar-brand img {
-  width: 40px;
-}
-
 // Movee header navbar (app/views/shared/_navbar.html.erb)
-$navbar-movee-bg: #BCFB89;
-$navbar-movee-text: #000000;
-$navbar-movee-avatar: #4750DD;
-$navbar-movee-btn: #212161;
-
 .navbar-movee {
-  background: $navbar-movee-bg;
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
+  background: $movee-navy;
+  padding-block: .75rem;
+  box-shadow: 0 2px 12px rgba($movee-navy, .25);
 
-  .navbar-movee-brand {
-    font-size: 3.5rem;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: $navbar-movee-text;
+  .navbar-movee__brand {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -.03em;
+    color: $movee-lime;
+
+    &:hover { color: $movee-lime; }
+  }
+
+  .navbar-toggler {
+    color: #FFFFFF;
+    border-color: rgba(#FFFFFF, .3);
+    border-radius: 50rem;
   }
 
   .nav-link {
-    font-size: 1.1rem;
-    color: $navbar-movee-text;
-
-    &:hover,
-    &.active {
-      color: $navbar-movee-text;
-      text-decoration: underline;
-      text-underline-offset: 4px;
-    }
-  }
-
-  .navbar-movee-avatar {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: $navbar-movee-avatar;
-    color: white;
-    font-size: 1.75rem;
+    gap: .5rem;
+    padding: .5rem 1rem !important;
+    border-radius: 50rem;
     font-weight: 600;
-    text-decoration: none;
-    overflow: hidden;
+    color: rgba(#FFFFFF, .78);
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
-
-  .navbar-movee-btn {
-    background: $navbar-movee-btn;
-    color: white;
-    font-size: 1.4rem;
-    padding: 0.6rem 1.5rem;
-    border-radius: 6px;
-    border: none;
+    i { font-size: .9em; }
 
     &:hover {
-      background: darken($navbar-movee-btn, 8%);
-      color: white;
+      color: #FFFFFF;
+      background: rgba(#FFFFFF, .08);
     }
+
+    &.active {
+      color: $movee-navy;
+      background: $movee-lime;
+    }
+  }
+
+  .navbar-movee__user {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .25rem .75rem .25rem .25rem;
+    border: 1px solid rgba(#FFFFFF, .2);
+    border-radius: 50rem;
+    background: transparent;
+    color: #FFFFFF;
+    font-weight: 600;
+
+    &:hover { background: rgba(#FFFFFF, .08); }
+  }
+
+  .navbar-movee__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 50%;
+    background: $movee-indigo;
+    color: #FFFFFF;
+    font-weight: 700;
+  }
+
+  .dropdown-menu form {
+    margin: 0;
   }
 }

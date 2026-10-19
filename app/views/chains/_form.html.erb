@@ -1,7 +1,7 @@
-<%= form_with model: chain, class: "needs-validation" do |f| %>
+<%= form_with model: chain do |f| %>
   <% if chain.errors.any? %>
-    <div class="alert alert-danger mb-4">
-      <h6 class="fw-bold mb-2"><i class="fa-solid fa-triangle-exclamation me-1"></i> Please fix the following errors:</h6>
+    <div class="alert alert-danger mb-4" role="alert">
+      <h2 class="h6 fw-bold mb-2">Please fix the following errors:</h2>
       <ul class="mb-0 small ps-3">
         <% chain.errors.full_messages.each do |msg| %>
           <li><%= msg %></li>
@@ -10,18 +10,28 @@
     </div>
   <% end %>
 
-  <div class="mb-4 form-check form-switch p-3 bg-light rounded-3 border">
-    <div class="ms-4">
+  <section class="form-section">
+    <h2 class="form-section__title">Name</h2>
+    <%= f.label :name, class: "form-label" do %>
+      Nickname <span class="text-muted fw-normal">(optional)</span>
+    <% end %>
+    <%= f.text_field :name, class: "form-control", placeholder: "e.g. Henderson chain, Clifton chain", maxlength: 60, autofocus: true, aria: { describedby: "chainNameHint" } %>
+    <div class="form-text" id="chainNameHint">Shown instead of the address everywhere this chain appears. Leave blank to name it after your property in the chain.</div>
+  </section>
+
+  <section class="form-section">
+    <h2 class="form-section__title">Status</h2>
+    <div class="form-check form-switch">
       <%= f.check_box :active, class: "form-check-input", role: "switch", id: "chainActiveSwitch" %>
-      <%= f.label :active, "Active Chain", class: "form-check-label fw-bold text-dark", for: "chainActiveSwitch" %>
-      <div class="form-text text-muted small mt-1">
-        Active chains allow agents to link property transactions and coordinate across multiple parties.
+      <%= f.label :active, "Active chain", class: "form-check-label fw-semibold", for: "chainActiveSwitch" %>
+      <div class="form-text">
+        Active chains let agents link property transactions and coordinate across multiple parties.
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="d-flex gap-2 justify-content-end mt-4">
-    <%= link_to "Cancel", chains_path, class: "btn btn-outline-secondary" %>
-    <%= f.submit submit_label, class: "btn btn-primary shadow-sm" %>
+  <div class="form-actions">
+    <%= link_to "Cancel", chain.persisted? ? chain_path(chain) : chains_path, class: "btn btn-outline-secondary" %>
+    <%= f.submit submit_label, class: "btn btn-primary" %>
   </div>
 <% end %>

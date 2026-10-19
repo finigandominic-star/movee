@@ -1,306 +1,163 @@
-<div class="container py-4">
-  <!-- Breadcrumb Navigation -->
-  <nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><%= link_to "Home", root_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item active" aria-current="page">Involved Parties</li>
-    </ol>
-  </nav>
+<%# Only clients the current agent manages or is associated with are listed %>
+<% parties = @involved_parties.select { |party| current_user&.admin? || party.user == current_user || party.user_associated?(current_user) } %>
 
-  <!-- Page Header & Actions -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
-    <div>
-      <h1 class="h2 fw-bold text-dark mb-1">
-        Involved Parties
-        <span class="badge bg-secondary fs-6 align-middle"><%= @involved_parties.size %></span>
-      </h1>
-      <p class="text-muted mb-0 small">Manage buyers, sellers, and contacts across all active properties and transaction chains.</p>
-    </div>
-    <div class="d-flex gap-2">
-      <%= link_to new_involved_party_path, class: "btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" do %>
-        <i class="fa-solid fa-user-plus"></i>
-        <span>New Party</span>
+<div class="container py-4 py-lg-5">
+  <%= render layout: "shared/page_header", locals: { title: "Clients", subtitle: "#{pluralize(parties.size, 'client')} · buyers and sellers you act for" } do %>
+    <%= link_to new_involved_party_path, class: "btn btn-primary" do %>
+      <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+      <span>Add client</span>
+    <% end %>
+  <% end %>
+
+  <% if parties.empty? %>
+    <%= render layout: "shared/empty_state", locals: { icon: "fa-user-group", title: "No clients yet", text: "Add your buyers and sellers, then link them to properties and transactions." } do %>
+      <%= link_to new_involved_party_path, class: "btn btn-primary" do %>
+        <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+        <span>Add your first client</span>
       <% end %>
-    </div>
-  </div>
-
-  <!-- Summary Metric Cards -->
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-md-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center">
-          <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-            <i class="fa-solid fa-users fa-lg"></i>
-          </div>
-          <div>
-            <div class="text-muted small text-uppercase fw-semibold">Total Parties</div>
-            <div class="h4 fw-bold mb-0"><%= @involved_parties.size %></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center">
-          <div class="rounded-circle bg-info bg-opacity-10 text-info p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-            <i class="fa-solid fa-house-chimney-user fa-lg"></i>
-          </div>
-          <div>
-            <div class="text-muted small text-uppercase fw-semibold">Sellers</div>
-            <div class="h4 fw-bold mb-0"><%= @involved_parties.count(&:seller?) %></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center">
-          <div class="rounded-circle bg-warning bg-opacity-10 text-warning p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-            <i class="fa-solid fa-cart-shopping fa-lg"></i>
-          </div>
-          <div>
-            <div class="text-muted small text-uppercase fw-semibold">Buyers</div>
-            <div class="h4 fw-bold mb-0"><%= @involved_parties.count(&:buyer?) %></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <% if @involved_parties.empty? %>
-    <!-- Empty State -->
-    <div class="card border-0 shadow-sm text-center py-5 my-4">
-      <div class="card-body py-5">
-        <div class="text-secondary opacity-50 mb-3">
-          <i class="fa-solid fa-user-group fa-3x"></i>
-        </div>
-        <h3 class="h4 fw-bold text-dark">No Involved Parties Registered</h3>
-        <p class="text-muted mb-4 mx-auto" style="max-width: 440px;">
-          Add clients, sellers, and buyers to easily assign them to properties and transaction chains.
-        </p>
-        <%= link_to new_involved_party_path, class: "btn btn-primary" do %>
-          <i class="fa-solid fa-user-plus me-1"></i> Register First Party
-        <% end %>
-      </div>
-    </div>
+    <% end %>
   <% else %>
-    <!-- View Switcher Tabs -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <ul class="nav nav-pills" id="partyViewTabs" role="tablist">
+    <div class="page-toolbar">
+      <ul class="nav nav-pills small" id="partyViewTabs" role="tablist" aria-label="Choose list layout">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active btn-sm" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-view" type="button" role="tab" aria-controls="table-view" aria-selected="true">
-            <i class="fa-solid fa-table-list me-1"></i> Table View
+          <button class="nav-link active" id="cards-tab" data-bs-toggle="pill" data-bs-target="#cards-view" type="button" role="tab" aria-controls="cards-view" aria-selected="true">
+            <i class="fa-solid fa-grip me-1" aria-hidden="true"></i> Cards
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link btn-sm" id="cards-tab" data-bs-toggle="pill" data-bs-target="#cards-view" type="button" role="tab" aria-controls="cards-view" aria-selected="false">
-            <i class="fa-solid fa-grip me-1"></i> Cards View
+          <button class="nav-link" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-view" type="button" role="tab" aria-controls="table-view" aria-selected="false">
+            <i class="fa-solid fa-table-list me-1" aria-hidden="true"></i> Table
           </button>
         </li>
       </ul>
-      <span class="text-muted small">Showing <%= pluralize(@involved_parties.size, "party") %></span>
     </div>
 
     <div class="tab-content" id="partyViewTabsContent">
-      <!-- 1. Table View -->
-      <div class="tab-pane fade show active" id="table-view" role="tabpanel" aria-labelledby="table-tab" tabindex="0">
-        <div class="card border-0 shadow-sm overflow-hidden">
-          <div class="table-responsive">
-            <table class="table table-hover table-striped align-middle mb-0">
-              <thead class="table-light text-uppercase small text-muted">
-                <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Contact</th>
-                  <th scope="col" class="text-center">Assigned Properties</th>
-                  <th scope="col" class="text-center">Assigned Transactions</th>
-                  <th scope="col" class="text-end" style="width: 130px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% @involved_parties.each do |party| %>
-                  <% next unless current_user&.admin? || party.user == current_user || party.user_associated?(current_user) %>
-                  <tr>
-                    <td>
-                      <% if policy(party).show_personal_data? %>
-                        <div class="fw-bold text-dark">
-                          <%= link_to party.full_name, involved_party_path(party), class: "text-decoration-none text-dark" %>
-                        </div>
-                      <% else %>
-                        <div class="fw-bold text-muted">
-                          <span class="badge bg-light text-muted border">
-                            <i class="fa-solid fa-lock me-1"></i>Protected Client
-                          </span>
-                        </div>
-                      <% end %>
-                      <small class="text-muted">ID: #<%= party.id %></small>
-                    </td>
-                    <td>
-                      <% if policy(party).show_personal_data? %>
-                        <div>
-                          <a href="mailto:<%= party.email %>" class="text-decoration-none small text-dark d-block">
-                            <i class="fa-solid fa-envelope me-1 text-muted"></i><%= party.email %>
-                          </a>
-                        </div>
-                        <div>
-                          <a href="tel:<%= party.phone %>" class="text-decoration-none small text-muted d-block">
-                            <i class="fa-solid fa-phone me-1"></i><%= party.phone %>
-                          </a>
-                        </div>
-                      <% else %>
-                        <div class="mb-1">
-                          <span class="badge bg-light text-muted border">
-                            <i class="fa-solid fa-lock me-1"></i>Protected
-                          </span>
-                        </div>
-                        <% if party.user.present? %>
-                          <div class="small text-muted" style="font-size: 0.8rem;">
-                            <span class="fw-medium text-dark"><i class="fa-solid fa-user-tie me-1"></i>Agent:</span> <%= party.user.user_name %>
-                            <div>
-                              <a href="mailto:<%= party.user.email %>" class="text-decoration-none text-muted">
-                                <i class="fa-solid fa-envelope me-1"></i><%= party.user.email %>
-                              </a>
-                            </div>
-                            <% if party.user.phone.present? %>
-                              <div>
-                                <a href="tel:<%= party.user.phone %>" class="text-decoration-none text-muted">
-                                  <i class="fa-solid fa-phone me-1"></i><%= party.user.phone %>
-                                </a>
-                              </div>
-                            <% end %>
-                          </div>
-                        <% end %>
-                      <% end %>
-                    </td>
-                    <td class="text-center">
-                      <span class="badge bg-light text-dark border">
-                        <%= pluralize(party.properties.size, "property") %>
-                      </span>
-                    </td>
-                    <td class="text-center">
-                      <span class="badge bg-light text-dark border">
-                        <%= pluralize(party.transactions.size, "transaction") %>
-                      </span>
-                    </td>
-                    <td class="text-end">
-                      <div class="btn-group btn-group-sm">
-                        <%= link_to involved_party_path(party), class: "btn btn-outline-primary", title: "View details" do %>
-                          <i class="fa-solid fa-eye"></i>
-                        <% end %>
-                        <% if policy(party).update? %>
-                          <%= link_to edit_involved_party_path(party), class: "btn btn-outline-secondary", title: "Edit" do %>
-                            <i class="fa-solid fa-pen"></i>
-                          <% end %>
-                        <% end %>
-                        <% if policy(party).destroy? %>
-                          <%= link_to involved_party_path(party), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this party?" }, class: "btn btn-outline-danger", title: "Delete" do %>
-                            <i class="fa-solid fa-trash-can"></i>
-                          <% end %>
-                        <% end %>
-                      </div>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. Cards View -->
-      <div class="tab-pane fade" id="cards-view" role="tabpanel" aria-labelledby="cards-tab" tabindex="0">
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-          <% @involved_parties.each do |party| %>
-            <% next unless current_user&.admin? || party.user == current_user || party.user_associated?(current_user) %>
+      <div class="tab-pane fade show active" id="cards-view" role="tabpanel" aria-labelledby="cards-tab" tabindex="0">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 card-grid">
+          <% parties.each do |party| %>
+            <% personal = policy(party).show_personal_data? %>
+            <% label = personal ? party.full_name : "client ##{party.id}" %>
             <div class="col">
-              <div class="card h-100 shadow-sm border-0 position-relative">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                  <div class="d-flex align-items-center gap-2">
-                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                      <i class="fa-solid fa-user"></i>
-                    </div>
-                    <% if policy(party).show_personal_data? %>
-                      <h6 class="fw-bold text-dark mb-0"><%= party.full_name %></h6>
-                    <% else %>
-                      <h6 class="fw-bold text-muted mb-0"><i class="fa-solid fa-lock me-1"></i>Protected Client</h6>
+              <div class="card record-card card--party">
+                <div class="card-header">
+                  <div>
+                    <h2 class="record-card__title">
+                      <%= link_to involved_party_path(party) do %>
+                        <% if personal %>
+                          <%= party.full_name %>
+                        <% else %>
+                          <i class="fa-solid fa-lock me-1" aria-hidden="true"></i>Protected Client
+                        <% end %>
+                      <% end %>
+                    </h2>
+                    <% if personal %>
+                      <p class="record-card__subtitle text-truncate"><%= party.email %></p>
                     <% end %>
                   </div>
-                  <span class="badge bg-light text-muted border">#<%= party.id %></span>
+                  <div class="d-flex flex-wrap justify-content-end gap-1"><%= client_role_tags(party) %></div>
                 </div>
 
                 <div class="card-body">
-                  <ul class="list-group list-group-flush small">
-                    <% if policy(party).show_personal_data? %>
-                      <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                        <span class="text-muted"><i class="fa-solid fa-envelope me-1"></i> Email</span>
-                        <a href="mailto:<%= party.email %>" class="text-decoration-none text-truncate" style="max-width: 170px;">
-                          <%= party.email %>
-                        </a>
-                      </li>
-                      <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                        <span class="text-muted"><i class="fa-solid fa-phone me-1"></i> Phone</span>
-                        <a href="tel:<%= party.phone %>" class="text-decoration-none">
-                          <%= party.phone %>
-                        </a>
-                      </li>
-                    <% else %>
-                      <li class="list-group-item px-0 py-2">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                          <span class="text-muted"><i class="fa-solid fa-lock me-1"></i> Contact Info</span>
-                          <span class="badge bg-light text-muted border">Protected</span>
-                        </div>
-                        <% if party.user.present? %>
-                          <div class="p-2 rounded bg-light border mt-2">
-                            <div class="fw-medium text-dark mb-1">
-                              <i class="fa-solid fa-user-tie me-1 text-primary"></i>Managing Agent: <%= party.user.user_name %>
-                              <% if party.user.company.present? %>
-                                <span class="text-muted fw-normal">(<%= party.user.company %>)</span>
-                              <% end %>
-                            </div>
-                            <div class="d-flex flex-column gap-1">
-                              <a href="mailto:<%= party.user.email %>" class="text-decoration-none text-muted text-truncate">
-                                <i class="fa-solid fa-envelope me-1"></i><%= party.user.email %>
-                              </a>
-                              <% if party.user.phone.present? %>
-                                <a href="tel:<%= party.user.phone %>" class="text-decoration-none text-muted">
-                                  <i class="fa-solid fa-phone me-1"></i><%= party.user.phone %>
-                                </a>
-                              <% end %>
-                            </div>
-                          </div>
-                        <% end %>
-                      </li>
-                    <% end %>
-                    <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                      <span class="text-muted"><i class="fa-solid fa-house me-1"></i> Properties</span>
-                      <span class="badge bg-light text-dark border"><%= party.properties.size %></span>
-                    </li>
-                    <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                      <span class="text-muted"><i class="fa-solid fa-file-invoice me-1"></i> Transactions</span>
-                      <span class="badge bg-light text-dark border"><%= party.transactions.size %></span>
-                    </li>
-                  </ul>
+                  <dl class="mb-0 d-flex flex-column gap-2">
+                    <div class="record-meta">
+                      <dt>Properties</dt>
+                      <dd><%= party.properties.size %></dd>
+                    </div>
+                    <div class="record-meta">
+                      <dt>Transactions</dt>
+                      <dd><%= party.transactions.size %></dd>
+                    </div>
+                    <div class="record-meta">
+                      <dt>Managing agent</dt>
+                      <dd><%= party.user&.user_name || "—" %></dd>
+                    </div>
+                  </dl>
                 </div>
 
-                <div class="card-footer bg-transparent border-top d-flex justify-content-between align-items-center py-2 px-3">
-                  <%= link_to involved_party_path(party), class: "btn btn-sm btn-outline-primary" do %>
-                    <i class="fa-solid fa-eye me-1"></i> Details & Assignments
-                  <% end %>
-                  <div class="btn-group btn-group-sm">
+                <% if policy(party).update? || policy(party).destroy? %>
+                  <div class="card-footer">
                     <% if policy(party).update? %>
-                      <%= link_to edit_involved_party_path(party), class: "btn btn-outline-secondary", title: "Edit" do %>
-                        <i class="fa-solid fa-pen"></i>
+                      <%= link_to edit_involved_party_path(party), class: "btn btn-sm btn-outline-secondary btn-icon", aria: { label: "Edit #{label}" } do %>
+                        <i class="fa-solid fa-pen" aria-hidden="true"></i>
                       <% end %>
                     <% end %>
                     <% if policy(party).destroy? %>
-                      <%= link_to involved_party_path(party), data: { turbo_method: :delete, turbo_confirm: "Delete this party?" }, class: "btn btn-outline-danger", title: "Delete" do %>
-                        <i class="fa-solid fa-trash-can"></i>
+                      <%= link_to involved_party_path(party), data: { turbo_method: :delete, turbo_confirm: "Delete this client?" }, class: "btn btn-sm btn-outline-danger btn-icon", aria: { label: "Delete #{label}" } do %>
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
                       <% end %>
                     <% end %>
                   </div>
-                </div>
+                <% end %>
               </div>
             </div>
           <% end %>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="table-view" role="tabpanel" aria-labelledby="table-tab" tabindex="0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <caption class="visually-hidden">Clients</caption>
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Contact</th>
+                <th scope="col" class="text-center">Properties</th>
+                <th scope="col" class="text-center">Transactions</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% parties.each do |party| %>
+                <% personal = policy(party).show_personal_data? %>
+                <% label = personal ? party.full_name : "client ##{party.id}" %>
+                <tr>
+                  <td>
+                    <% if personal %>
+                      <%= link_to party.full_name, involved_party_path(party), class: "fw-semibold text-decoration-none" %>
+                    <% else %>
+                      <span class="badge bg-light"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i>Protected Client</span>
+                    <% end %>
+                  </td>
+                  <td class="small">
+                    <% if personal %>
+                      <a href="mailto:<%= party.email %>" class="d-block text-decoration-none"><%= party.email %></a>
+                      <a href="tel:<%= party.phone %>" class="d-block text-decoration-none text-muted"><%= party.phone %></a>
+                    <% else %>
+                      <span class="badge bg-light mb-1"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i>Protected</span>
+                      <% if party.user.present? %>
+                        <div>Agent: <%= party.user.user_name %></div>
+                        <a href="mailto:<%= party.user.email %>" class="d-block text-decoration-none text-muted"><%= party.user.email %></a>
+                        <% if party.user.phone.present? %>
+                          <a href="tel:<%= party.user.phone %>" class="d-block text-decoration-none text-muted"><%= party.user.phone %></a>
+                        <% end %>
+                      <% end %>
+                    <% end %>
+                  </td>
+                  <td class="text-center"><%= party.properties.size %></td>
+                  <td class="text-center"><%= party.transactions.size %></td>
+                  <td class="text-end">
+                    <div class="d-inline-flex gap-1">
+                      <%= link_to involved_party_path(party), class: "btn btn-sm btn-outline-primary btn-icon", aria: { label: "View #{label}" } do %>
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                      <% end %>
+                      <% if policy(party).update? %>
+                        <%= link_to edit_involved_party_path(party), class: "btn btn-sm btn-outline-secondary btn-icon", aria: { label: "Edit #{label}" } do %>
+                          <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                        <% end %>
+                      <% end %>
+                      <% if policy(party).destroy? %>
+                        <%= link_to involved_party_path(party), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this client?" }, class: "btn btn-sm btn-outline-danger btn-icon", aria: { label: "Delete #{label}" } do %>
+                          <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

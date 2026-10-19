@@ -1,28 +1,97 @@
 // This is where you override default Bootstrap variables
-// 1. Find all Bootstrap variables that you can override at the end of each component's documentation under the `Sass variables` anchor
-// e.g. here are the ones you can override for the navbar https://getbootstrap.com/docs/5.3/components/navbar/#sass-variables
-// 2. These variables are defined with default value (see https://robots.thoughtbot.com/sass-default)
-// 3. You can override them below!
+// Full list: https://getbootstrap.com/docs/5.3/customize/sass/
 
 // General style
 $font-family-sans-serif: $body-font;
 $headings-font-family:   $headers-font;
-$body-bg:                $light-gray;
+$headings-font-weight:   700;
+$headings-color:         $movee-navy;
+$body-bg:                $movee-page-bg;
+$body-color:             $movee-ink;
+$secondary-color:        $movee-muted;
 $font-size-base:         1rem;
+$link-color:             $movee-indigo;
+$link-decoration:        none;
+$link-hover-decoration:  underline;
+$border-color:           $movee-border;
 
-// Colors
-$body-color: $gray;
-$primary:    $blue;
-$success:    $green;
-$info:       $yellow;
-$danger:     $red;
-$warning:    $orange;
+// Theme colours
+$primary:   $movee-indigo;
+$secondary: $movee-teal;
+$success:   $movee-green;
+$info:      $movee-sky;
+$warning:   $movee-amber;
+$danger:    $movee-red;
+$light:     $movee-surface-2;
+$dark:      $movee-navy;
 
-// Buttons & inputs' radius
-$border-radius-sm:            .0625rem;
-$border-radius:               .125rem;
-$border-radius-lg:            .25rem;
-$border-radius-xl:            .5rem;
-$border-radius-xxl:           1rem;
+// Layout: same breakpoints everywhere, a comfortable max width on large screens
+$grid-breakpoints: (xs: 0, sm: 576px, md: 768px, lg: 992px, xl: 1200px, xxl: 1400px);
+$container-max-widths: (sm: 540px, md: 720px, lg: 960px, xl: 1140px, xxl: 1320px);
+$container-padding-x: 2rem;
 
-// Override other variables below!
+// Radius: one value per element type, used consistently
+$border-radius-sm:  .5rem;
+$border-radius:     .75rem;
+$border-radius-lg:  1rem;
+$border-radius-xl:  1.25rem;
+$border-radius-xxl: 1.5rem;
+
+// Shadows
+$box-shadow-sm: 0 1px 2px rgba($movee-navy, .06), 0 1px 3px rgba($movee-navy, .08);
+$box-shadow:    0 4px 16px rgba($movee-navy, .08);
+$box-shadow-lg: 0 12px 32px rgba($movee-navy, .14);
+
+// Buttons: always pills
+$btn-border-radius:     50rem;
+$btn-border-radius-sm:  50rem;
+$btn-border-radius-lg:  50rem;
+$btn-font-weight:       600;
+$btn-padding-x:         1.25rem;
+$btn-padding-x-sm:      .875rem;
+
+// Inputs
+$input-border-radius:    $border-radius-sm;
+$input-border-radius-sm: $border-radius-sm;
+$input-border-radius-lg: $border-radius-sm;
+$input-border-color:     $movee-border;
+$input-focus-border-color: $movee-indigo;
+$input-padding-y:        .6rem;
+$form-label-font-weight: 600;
+$form-label-color:       $movee-navy;
+
+// Cards: rounded, shadowed, borderless; header is a dark segment (see components/_card.scss)
+$card-border-width:      0;
+$card-border-radius:     $border-radius-lg;
+$card-box-shadow:        $box-shadow;
+$card-cap-bg:            $movee-navy;
+$card-cap-color:         #FFFFFF;
+$card-cap-padding-y:     1rem;
+$card-cap-padding-x:     1.25rem;
+$card-spacer-x:          1.25rem;
+
+// Tags / badges: pills
+$badge-border-radius: 50rem;
+$badge-font-weight:   600;
+$badge-padding-y:     .4em;
+$badge-padding-x:     .75em;
+
+// Tables
+$table-cell-padding-y:   .75rem;
+$table-cell-padding-x:   1rem;
+$table-striped-bg:       $movee-surface-2;
+$table-hover-bg:         rgba($movee-sky, .18);
+
+// Navs & pills
+$nav-pills-border-radius: 50rem;
+$nav-pills-link-active-bg: $movee-navy;
+
+// Modals & dropdowns
+$modal-content-border-radius:   $border-radius-lg;
+$dropdown-border-radius:        $border-radius;
+$dropdown-box-shadow:           $box-shadow-lg;
+$dropdown-border-color:         $movee-border;
+
+// Progress
+$progress-border-radius: 50rem;
+$progress-bg:            $movee-border;

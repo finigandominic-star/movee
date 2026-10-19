@@ -1,0 +1,34 @@
+<%# Transaction flow through a chain, bottom (first-time buyer) to top (vendor leaving the market).
+    Each property pill is coloured by its transaction's progress; open ends are dashed. %>
+<% ordered = chain.ordered_transactions %>
+<% limit = local_assigns.fetch(:limit, 5) %>
+<% if ordered.empty? %>
+  <span class="text-muted small fst-italic">No transactions linked yet</span>
+<% else %>
+  <ol class="chain-flow" aria-label="Transaction flow, start to end">
+    <li class="chain-flow__end <%= chain.first_time_buyer_at_start? ? 'chain-flow__end--closed' : 'chain-flow__end--open' %>"
+        title="<%= chain.first_time_buyer_at_start? ? 'Starts with a first-time buyer' : 'Start of chain still open' %>">
+      <i class="fa-solid <%= chain.first_time_buyer_at_start? ? 'fa-flag' : 'fa-ellipsis' %>" aria-hidden="true"></i>
+      <span class="visually-hidden"><%= chain.first_time_buyer_at_start? ? "Start closed" : "Start open" %></span>
+    </li>
+    <% ordered.first(limit).each do |tx| %>
+      <% timing = tx.overall_timing_status[:status] %>
+      <% state = if tx.completed? then "done" elsif %i[behind overdue].include?(timing) then "late" else "active" end %>
+      <li class="chain-flow__step chain-flow__step--<%= state %>">
+        <%= link_to transaction_path(tx), class: "chain-flow__pill", title: "#{tx.property&.short_address} · #{tx.legal_stage_short_title}" do %>
+          <span class="chain-flow__dot" aria-hidden="true"></span>
+          <span class="chain-flow__label"><%= tx.property&.short_address.presence || "No property" %></span>
+          <span class="visually-hidden">(<%= { "done" => "completed", "late" => "behind schedule", "active" => "in progress" }[state] %>)</span>
+        <% end %>
+      </li>
+    <% end %>
+    <% if ordered.size > limit %>
+      <li class="chain-flow__step"><span class="chain-flow__pill chain-flow__pill--more">+<%= ordered.size - limit %></span></li>
+    <% end %>
+    <li class="chain-flow__end <%= chain.leaving_market_at_end? ? 'chain-flow__end--closed' : 'chain-flow__end--open' %>"
+        title="<%= chain.leaving_market_at_end? ? 'Ends with a vendor leaving the market' : 'End of chain still open' %>">
+      <i class="fa-solid <%= chain.leaving_market_at_end? ? 'fa-flag-checkered' : 'fa-ellipsis' %>" aria-hidden="true"></i>
+      <span class="visually-hidden"><%= chain.leaving_market_at_end? ? "End closed" : "End open" %></span>
+    </li>
+  </ol>
+<% end %>
