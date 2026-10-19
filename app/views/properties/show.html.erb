@@ -4,9 +4,10 @@
 <% next_step = if party.nil? && policy(@property).update? then :assign_vendor elsif party && @property.transactions.empty? then :start_transaction end %>
 <% status_tag = @property.sold? ? tag.span("Sold", class: "badge bg-secondary ms-1") : tag.span("For sale", class: "badge bg-success ms-1") %>
 
-<% if @property.photos.present? %>
+<!-- Hero Image -->
+<% if @property.photo.attached? %>
   <div class="property-hero">
-    <img src="<%= @property.photos %>" alt="<%= @property.short_address %>">
+    <%= image_tag @property.photo, alt: @property.short_address %>
   </div>
 <% else %>
   <div class="property-hero property-hero--empty" aria-hidden="true">
@@ -206,6 +207,21 @@
               <p class="small text-muted mb-0">
                 Confidential client — personal contact details are protected. Contact the listing agent below.
               </p>
+              <% if @property.user %>
+                <div class="small text-muted bg-white p-2 rounded border mt-2">
+                  <span class="fw-semibold text-dark d-block mb-1">Managing Agent:</span>
+                  <div class="d-flex align-items-center gap-2">
+                    <%= agent_avatar(@property.user, size: 32) %>
+                    <div><%= @property.user.user_name %> <% if @property.user.company.present? %>(<%= @property.user.company %>)<% end %></div>
+                  </div>
+                  <div class="mt-1">
+                    <a href="mailto:<%= @property.user.email %>" class="text-decoration-none d-block"><i class="fa-solid fa-envelope me-1"></i><%= @property.user.email %></a>
+                    <% if @property.user.phone.present? %>
+                      <a href="tel:<%= @property.user.phone %>" class="text-decoration-none d-block"><i class="fa-solid fa-phone me-1"></i><%= @property.user.phone %></a>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
             <% end %>
 
             <% if policy(@property).update? %>
@@ -226,7 +242,7 @@
         </div>
         <div class="card-body">
           <% if agent %>
-            <p class="fw-semibold mb-0"><%= agent.user_name.presence || agent.email %></p>
+            <p class="mb-1"><%= agent_with_avatar(agent, size: 40, name_class: "fw-semibold") %></p>
             <% if agent.company.present? %>
               <p class="small text-muted mb-1"><%= agent.company %></p>
             <% end %>

@@ -10,4 +10,16 @@ module PropertiesHelper
       { name: "Sold", info: "Mark the property as sold once the sale goes through", done: property.sold? }
     ]
   end
+
+  # square thumbnail of the property's uploaded photo, or a house icon if it has none
+  def property_thumbnail(property, size: 56)
+    if property.photo.attached?
+      image_tag property.photo, alt: property.short_address, class: "rounded object-fit-cover flex-shrink-0", width: size, height: size
+    else
+      tag.div class: "rounded bg-light text-secondary d-flex align-items-center justify-content-center flex-shrink-0",
+              style: "width: #{size}px; height: #{size}px;" do
+        tag.i class: "fa-solid fa-house opacity-50"
+      end
+    end
+  end
 end

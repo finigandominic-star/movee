@@ -2,6 +2,8 @@
 # development, test). The code here should be idempotent so that it can be executed at any point in every environment.
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
 
+require "open-uri"
+
 puts "Cleaning database..."
 User.destroy_all
 Chain.destroy_all
@@ -22,6 +24,21 @@ mark = User.create!(user_name: "Mark McBride", email: "mcbride.mark@thistleandth
 emily = User.create!(user_name: "Emily Song", email: "e.song@belgravesterling.co.uk", phone: "+44 20 7946 0104", password: "eSong789", company: "Belgrave & Sterling Estates")
 john = User.create!(user_name: "John Akachi", email: "john.akachi@oakhavenfinch.co.uk", phone: "+44 20 7946 0105", password: "ImGreat1", company: "Oakhaven & Finch Estates")
 puts "Created 8 users (3 admins, 5 agents from 5 different UK estate agencies)."
+
+puts "Attaching agent avatars..."
+# Admins are left without avatars so they can upload their own.
+{
+  sarah => "https://randomuser.me/api/portraits/women/44.jpg",
+  toni => "https://randomuser.me/api/portraits/women/68.jpg",
+  mark => "https://randomuser.me/api/portraits/men/32.jpg",
+  emily => "https://randomuser.me/api/portraits/women/90.jpg",
+  john => "https://randomuser.me/api/portraits/men/75.jpg"
+}.each do |user, url|
+  file = URI.parse(url).open
+  user.avatar.attach(io: file, filename: "#{user.user_name.parameterize}.jpg", content_type: "image/jpeg")
+rescue StandardError => e
+  puts "  Skipped avatar for #{user.user_name}: #{e.message}"
+end
 
 puts "Creating Involved Parties..."
 # 1. First-Time Buyers (FTB: buyer only, no home to sell) -> Closed Bottom
@@ -102,11 +119,10 @@ property_configs = [
 properties = []
 property_configs.each_with_index do |cfg, index|
   cfg[:seller].update!(user: cfg[:user]) if cfg[:seller].user.nil? || cfg[:seller].user != cfg[:user]
-  photo_path = "/images/properties/property_#{(index % 20) + 1}.jpg"
-  p = Property.create!(
+  photo_path = Rails.root.join("public/images/properties/property_#{(index % 20) + 1}.jpg")
+  p = Property.new(
     user: cfg[:user],
     involved_party: cfg[:seller],
-    photos: photo_path,
     house_number: cfg[:num],
     street: cfg[:street],
     second_line_of_address: cfg[:second],
@@ -114,6 +130,8 @@ property_configs.each_with_index do |cfg, index|
     post_code: cfg[:post_code],
     sold: cfg[:sold]
   )
+  p.photo.attach(io: File.open(photo_path), filename: photo_path.basename.to_s, content_type: "image/jpeg")
+  p.save!
   properties << p
 end
 puts "Created #{properties.size} Properties (#{properties.count(&:sold)} sold, #{properties.count { |p| !p.sold }} active)."

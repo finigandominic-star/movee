@@ -85,4 +85,4 @@ gem "kramdown-parser-gfm"
 gem "pundit"
 gem "ruby-vips", "~> 2.3"
 gem "mission_control-jobs"
-
+gem "cloudinary"

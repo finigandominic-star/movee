@@ -221,7 +221,7 @@
               </div>
               <div class="record-meta">
                 <dt>Managing agent</dt>
-                <dd><%= party.user&.user_name || "—" %></dd>
+                <dd><%= party.user ? agent_with_avatar(party.user) : "—" %></dd>
               </div>
               <% if party.contact_info.present? %>
                 <div>

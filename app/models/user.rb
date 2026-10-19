@@ -10,6 +10,8 @@ class User < ApplicationRecord
   has_many :involved_parties, dependent: :nullify
   has_many :chats, dependent: :destroy
 
+  has_one_attached :avatar
+
   validates :user_name, presence: true
   validates :password, format: { with: /\A(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}\z/, message: "must be at least 8 characters and include at least one letter and one number" }, if: :password_required?
 

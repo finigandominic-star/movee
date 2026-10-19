@@ -1,7 +1,7 @@
 // Property show page: hero image, conveyancing progress, transactions list, vendor/agent side cards
 
 .property-hero {
-  height: 260px;
+  height: clamp(280px, 42vw, 520px); // the photo is the page's headline, so let it grow on wide screens
   overflow: hidden;
   background-color: rgba($movee-sky, .35);
   margin-top: -1rem; // sit flush under the navbar's bottom margin
@@ -10,10 +10,10 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: saturate(.85);
   }
 
   &--empty {
+    height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;

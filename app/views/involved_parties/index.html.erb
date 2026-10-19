@@ -70,7 +70,7 @@
                     </div>
                     <div class="record-meta">
                       <dt>Managing agent</dt>
-                      <dd><%= party.user&.user_name || "—" %></dd>
+                      <dd><%= party.user ? agent_with_avatar(party.user) : "—" %></dd>
                     </div>
                   </dl>
                 </div>
@@ -127,7 +127,7 @@
                     <% else %>
                       <span class="badge bg-light mb-1"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i>Protected</span>
                       <% if party.user.present? %>
-                        <div>Agent: <%= party.user.user_name %></div>
+                        <div class="mb-1"><%= agent_with_avatar(party.user) %></div>
                         <a href="mailto:<%= party.user.email %>" class="d-block text-decoration-none text-muted"><%= party.user.email %></a>
                         <% if party.user.phone.present? %>
                           <a href="tel:<%= party.user.phone %>" class="d-block text-decoration-none text-muted"><%= party.user.phone %></a>

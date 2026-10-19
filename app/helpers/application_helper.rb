@@ -38,4 +38,23 @@ module ApplicationHelper
   def icon_label(icon, label)
     safe_join([tag.i(class: "fa-solid #{icon}", aria: { hidden: true }), tag.span(label, class: "visually-hidden")])
   end
+
+  # round avatar for an agent: their uploaded photo, or a user-tie icon if they have none
+  def agent_avatar(user, size: 48)
+    if user.avatar.attached?
+      image_tag user.avatar, alt: user.user_name, class: "rounded-circle object-fit-cover flex-shrink-0", width: size, height: size
+    else
+      tag.span class: "rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0",
+               style: "width: #{size}px; height: #{size}px;" do
+        tag.i class: "fa-solid fa-user-tie"
+      end
+    end
+  end
+
+  # agent's avatar next to their name, for anywhere an agent is listed
+  def agent_with_avatar(user, size: 24, name_class: nil)
+    tag.span class: "d-inline-flex align-items-center gap-2" do
+      safe_join([agent_avatar(user, size: size), tag.span(user.user_name.presence || user.email, class: name_class)])
+    end
+  end
 end

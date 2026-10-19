@@ -44,12 +44,12 @@
         <div class="card-body p-4">
           <% if property %>
             <div class="row g-3 align-items-center">
-              <% if property.photos.present? %>
+              <% if property.photo.attached? %>
                 <div class="col-12 col-md-4">
-                  <img src="<%= property.photos %>" class="img-fluid rounded object-fit-cover w-100 transaction-property__photo" alt="<%= property.short_address %>">
+                  <%= image_tag property.photo, class: "img-fluid rounded object-fit-cover w-100 transaction-property__photo", alt: property.short_address %>
                 </div>
               <% end %>
-              <div class="col-12 <%= 'col-md-8' if property.photos.present? %>">
+              <div class="col-12 <%= 'col-md-8' if property.photo.attached? %>">
                 <p class="fw-bold mb-1"><%= property.short_address %></p>
                 <% if property.second_line_of_address.present? %>
                   <p class="text-muted small mb-1"><%= property.second_line_of_address %></p>
@@ -89,7 +89,7 @@
                     <span class="text-muted">· #<%= other_tx.id %></span>
                     <% if other_agent %>
                       <div class="text-muted mt-1">
-                        Agent: <strong><%= other_agent.user_name %></strong><%= " (#{other_agent.company})" if other_agent.company.present? %>
+                        <%= agent_with_avatar(other_agent, name_class: "fw-bold text-body") %><%= " (#{other_agent.company})" if other_agent.company.present? %>
                         <div>
                           <a href="mailto:<%= other_agent.email %>" class="text-decoration-none me-2"><%= other_agent.email %></a>
                           <% if other_agent.phone.present? %>
@@ -117,8 +117,13 @@
         </div>
         <div class="card-body p-4">
           <% if agent %>
-            <p class="fw-bold mb-0"><%= agent.user_name %></p>
-            <p class="text-muted small mb-3"><%= agent.company.presence || "Estate agent" %></p>
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <%= agent_avatar(agent) %>
+              <div>
+                <p class="fw-bold mb-0"><%= agent.user_name %></p>
+                <p class="text-muted small mb-0"><%= agent.company.presence || "Estate agent" %></p>
+              </div>
+            </div>
             <dl class="mb-0 d-flex flex-column gap-2">
               <div class="record-meta">
                 <dt>Email</dt>
