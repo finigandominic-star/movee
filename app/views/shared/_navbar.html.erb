@@ -1,48 +1,69 @@
-<nav class="navbar navbar-expand-lg navbar-movee">
-  <div class="container-fluid px-4">
-    <%= link_to "Moveee", root_path, class: "navbar-brand navbar-movee-brand" %>
+<nav class="navbar navbar-expand-lg navbar-movee sticky-top" aria-label="Main navigation">
+  <div class="container">
+    <%= link_to "Movee", root_path, class: "navbar-brand navbar-movee__brand", aria: { label: "Movee home" } %>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMovee" aria-controls="navbarMovee" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
+      <i class="fa-solid fa-bars" aria-hidden="true"></i>
     </button>
 
-    <div class="collapse navbar-collapse justify-content-end" id="navbarMovee">
-      <ul class="navbar-nav align-items-lg-center gap-lg-2">
-        <% if user_signed_in? %>
-          <li class="nav-item">
-            <%= link_to "Properties", properties_path, class: "nav-link #{'active' if controller_name == 'properties'}" %>
-          </li>
-          <li class="nav-item">
-            <%= link_to "Transactions", transactions_path, class: "nav-link #{'active' if controller_name == 'transactions'}" %>
-          </li>
-          <li class="nav-item">
-            <%= link_to "Chains", chains_path, class: "nav-link #{'active' if controller_name == 'chains'}" %>
-          </li>
-          <li class="nav-item">
-            <%= link_to "Involved Parties", involved_parties_path, class: "nav-link #{'active' if controller_name == 'involved_parties'}" %>
-          </li>
-          <li class="nav-item ms-lg-2 my-2 my-lg-0">
-            <% display_name = current_user.user_name.presence || current_user.email %>
-            <%= link_to edit_user_registration_path, class: "navbar-movee-avatar", title: [display_name, current_user.company.presence].compact.join(" · ") do %>
-              <% if current_user.avatar.attached? %>
-                <%= image_tag current_user.avatar, alt: display_name %>
-              <% else %>
-                <%= display_name.first.upcase %>
+    <div class="collapse navbar-collapse" id="navbarMovee">
+      <% if user_signed_in? %>
+        <%# Ordered to follow the agent workflow: client → property → transaction → chain %>
+        <ul class="navbar-nav mx-lg-auto gap-lg-1">
+          <% [
+               ["Dashboard", dashboard_path, "dashboards", "fa-gauge-high"],
+               ["Clients", involved_parties_path, "involved_parties", "fa-user-group"],
+               ["Properties", properties_path, "properties", "fa-house"],
+               ["Transactions", transactions_path, "transactions", "fa-handshake"],
+               ["Chains", chains_path, "chains", "fa-link"]
+             ].each do |label, path, controller, icon| %>
+            <% active = controller_name == controller %>
+            <li class="nav-item">
+              <%= link_to path, class: "nav-link#{' active' if active}", aria: { current: (active ? "page" : nil) } do %>
+                <i class="fa-solid <%= icon %>" aria-hidden="true"></i><span><%= label %></span>
               <% end %>
-            <% end %>
-          </li>
-          <li class="nav-item ms-lg-2">
-            <%= button_to "Log Out", destroy_user_session_path, method: :delete, class: "btn navbar-movee-btn" %>
-          </li>
-        <% else %>
-          <li class="nav-item">
-            <%= link_to "Log In", new_user_session_path, class: "nav-link" %>
-          </li>
-          <li class="nav-item ms-lg-2">
-            <%= link_to "Sign Up", new_user_registration_path, class: "btn navbar-movee-btn" %>
-          </li>
+            </li>
+          <% end %>
+        </ul>
+
+        <%= link_to new_sale_path, class: "btn btn-accent btn-sm ms-lg-2 my-2 my-lg-0" do %>
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>New sale
         <% end %>
-      </ul>
+
+        <% display_name = current_user.user_name.presence || current_user.email %>
+        <div class="dropdown ms-lg-3 my-2 my-lg-0">
+          <button class="navbar-movee__user" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu for <%= display_name %>" title="<%= [display_name, current_user.company.presence].compact.join(" · ") %>">
+            <span class="navbar-movee__avatar" aria-hidden="true"><%= display_name.first.upcase %></span>
+            <span class="d-lg-none d-xl-inline"><%= display_name %></span>
+            <i class="fa-solid fa-chevron-down small" aria-hidden="true"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <% if current_user.company.present? %>
+              <li><span class="dropdown-item-text small text-muted"><%= current_user.company %></span></li>
+              <li><hr class="dropdown-divider"></li>
+            <% end %>
+            <li>
+              <%= link_to edit_user_registration_path, class: "dropdown-item" do %>
+                <i class="fa-solid fa-user-pen me-2" aria-hidden="true"></i>Profile
+              <% end %>
+            </li>
+            <li>
+              <%= button_to destroy_user_session_path, method: :delete, class: "dropdown-item" do %>
+                <i class="fa-solid fa-arrow-right-from-bracket me-2" aria-hidden="true"></i>Log out
+              <% end %>
+            </li>
+          </ul>
+        </div>
+      <% else %>
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
+          <li class="nav-item">
+            <%= link_to "Log in", new_user_session_path, class: "nav-link" %>
+          </li>
+          <li class="nav-item">
+            <%= link_to "Sign up", new_user_registration_path, class: "btn btn-primary" %>
+          </li>
+        </ul>
+      <% end %>
     </div>
   </div>
 </nav>

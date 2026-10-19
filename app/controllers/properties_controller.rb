@@ -3,7 +3,7 @@ class PropertiesController < ApplicationController
   before_action :set_property, only: %i[show edit update destroy remove_involved_party]
 
   def index
-    @properties = policy_scope(Property).includes(:user, :involved_party).all
+    @properties = policy_scope(Property).includes(:user, :involved_party, :transactions).all
   end
 
   def show
@@ -51,7 +51,7 @@ class PropertiesController < ApplicationController
   def remove_involved_party
     authorize @property
     @property.update(involved_party_id: nil)
-    redirect_back fallback_location: @property, notice: "Involved party was unassigned from this property."
+    redirect_back fallback_location: @property, notice: "Vendor was removed from this property."
   end
 
   private

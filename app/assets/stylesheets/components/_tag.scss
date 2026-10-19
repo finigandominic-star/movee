@@ -1,0 +1,63 @@
+// Tags (badges): pills, outlined, light tints so many of them on a page stay calm.
+.badge {
+  border: 1px solid transparent;
+  letter-spacing: .01em;
+}
+
+@each $name, $color in $theme-colors {
+  .badge.bg-#{$name},
+  .badge.bg-#{$name}-subtle,
+  .badge.text-bg-#{$name} {
+    background-color: rgba($color, .16) !important;
+    border-color: rgba($color, .6) !important;
+    color: darken($color, 22%) !important;
+  }
+}
+
+// Navy/teal are already dark, lighten text instead of darkening it
+.badge.bg-dark, .badge.bg-dark-subtle, .badge.bg-secondary, .badge.bg-secondary-subtle {
+  color: $movee-navy !important;
+}
+
+.badge.bg-light, .badge.bg-white {
+  background-color: $movee-surface !important;
+  border-color: $movee-border !important;
+  color: $movee-muted !important;
+}
+
+// Brand highlight tag, e.g. "Next step"
+.tag-accent {
+  background: $movee-lime;
+  color: $movee-navy;
+  border-radius: 50rem;
+  padding: .35em .8em;
+  font-weight: 700;
+  font-size: .8rem;
+}
+
+// On dark surfaces (card headers) tints disappear, so status tags become solid pills.
+.card-header {
+  .badge {
+    background-color: rgba(#FFFFFF, .14) !important;
+    border-color: rgba(#FFFFFF, .4) !important;
+    color: #FFFFFF !important;
+  }
+
+  @each $name, $color in $theme-colors {
+    .badge.bg-#{$name},
+    .badge.bg-#{$name}-subtle,
+    .badge.text-bg-#{$name} {
+      background-color: $color !important;
+      border-color: $color !important;
+      color: color-contrast($color) !important;
+    }
+  }
+
+  .badge.bg-success, .badge.bg-info, .badge.bg-warning { color: $movee-navy !important; }
+  .badge.bg-danger { color: #FFFFFF !important; }
+  .badge.bg-secondary, .badge.bg-dark, .badge.bg-light, .badge.bg-white {
+    background-color: #FFFFFF !important;
+    border-color: #FFFFFF !important;
+    color: $movee-navy !important;
+  }
+}

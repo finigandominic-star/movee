@@ -1,55 +1,11 @@
-<div class="container my-4" style="max-width: 600px;">
-  <div class="card shadow-sm border">
-    <div class="card-header bg-white py-3">
-      <h1 class="h4 fw-bold mb-0">Edit Chain #<%= @chain.id %></h1>
+<div class="container py-4 py-lg-5">
+  <div class="card card--chain form-shell">
+    <div class="card-header py-3">
+      <h1 class="h4 fw-bold mb-1">Edit chain</h1>
+      <p class="small text-muted mb-0"><%= chain_name(@chain) %> · Chain #<%= @chain.id %></p>
     </div>
-    <div class="card-body">
-      <%= form_with(model: @chain, local: true) do |form| %>
-        <% if @chain.errors.any? %>
-          <div class="alert alert-danger">
-            <ul class="mb-0">
-              <% @chain.errors.full_messages.each do |message| %>
-                <li><%= message %></li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
-
-        <div class="mb-3 form-check">
-          <%= form.checkbox :active, class: "form-check-input" %>
-          <%= form.label :active, "Active Chain", class: "form-check-label fw-medium" %>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center">
-          <%= link_to "Cancel", chain_path(@chain), class: "btn btn-outline-secondary btn-sm" %>
-          <%= form.submit "Update Chain", class: "btn btn-primary btn-sm" %>
-        </div>
-      <% end %>
-<div class="container py-4">
-  <nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><%= link_to "Home", root_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item"><%= link_to "Chains", chains_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item"><%= link_to "Chain ##{@chain.id}", chain_path(@chain), class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item active" aria-current="page">Edit</li>
-    </ol>
-  </nav>
-
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-8 col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
-          <h1 class="h4 fw-bold text-dark mb-0">
-            <i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Chain #<%= @chain.id %>
-          </h1>
-          <%= link_to chain_path(@chain), class: "btn btn-sm btn-outline-secondary" do %>
-            <i class="fa-solid fa-arrow-left me-1"></i> Back
-          <% end %>
-        </div>
-        <div class="card-body p-4">
-          <%= render "form", chain: @chain, submit_label: "Update Chain" %>
-        </div>
-      </div>
+    <div class="card-body p-4">
+      <%= render "form", chain: @chain, submit_label: "Update chain" %>
     </div>
   </div>
 </div>

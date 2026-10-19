@@ -1,0 +1,4 @@
+// Client form: onward-purchase question only applies to sellers
+.client-role:has(#involvedPartySellerSwitch:not(:checked)) .onward-plans {
+  display: none;
+}

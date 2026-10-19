@@ -20,7 +20,7 @@ class UserRegistrationTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to root_path
+    assert_redirected_to dashboard_path
     follow_redirect!
     assert_response :success
 
@@ -31,7 +31,7 @@ class UserRegistrationTest < ActionDispatch::IntegrationTest
     assert_equal "+44 20 7946 0999", user.phone
 
     # Verify navbar avatar shows user name and company
-    assert_select ".navbar-movee-avatar[title=?]", "alex_miller · Nexus Real Estate"
+    assert_select ".navbar-movee__user[title=?]", "alex_miller · Nexus Real Estate"
   end
 
   test "user can update profile, company name, and phone" do

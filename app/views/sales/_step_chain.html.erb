@@ -1,0 +1,87 @@
+<% chosen = params[:chain_id].presence || "new" %>
+<section class="card card--chain sale-step" aria-labelledby="saleStepTitle">
+  <div class="card-header">
+    <h2 class="h5 mb-1" id="saleStepTitle">Which chain does this sale belong to?</h2>
+    <p class="small text-muted mb-0">Start a new chain, or link it to a chain you already know about.</p>
+  </div>
+  <div class="card-body p-4">
+    <%= render "sales/choice_error" %>
+
+    <dl class="sale-summary">
+      <div class="sale-summary__item">
+        <dt>Vendor</dt>
+        <dd><%= @vendor.full_name %></dd>
+      </div>
+      <div class="sale-summary__item">
+        <dt>Property</dt>
+        <dd><%= @property.full_address %></dd>
+      </div>
+      <div class="sale-summary__item">
+        <dt>Buyer</dt>
+        <dd><%= @buyer ? @buyer.full_name : tag.span("No buyer yet", class: "text-muted") %></dd>
+      </div>
+    </dl>
+
+    <% if @vendor.onward_purchase == "buying" %>
+      <p class="sale-note"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+        <%= @vendor.full_name %> is buying onward, so the chain continues above them. Add their purchase when it's agreed.</p>
+    <% elsif @vendor.onward_purchase == "leaving_market" %>
+      <p class="sale-note"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+        <%= @vendor.full_name %> isn't buying another property, so they close the top of the chain.</p>
+    <% end %>
+
+    <%= form_with url: sale_path, method: :post, local: true do %>
+      <%= render "sales/carry" %>
+      <fieldset>
+        <legend class="sale-option__title">Chain</legend>
+        <div class="choice-list choice-list--open">
+          <div class="choice choice--new">
+            <%= radio_button_tag :chain_id, "new", chosen == "new", id: "chain_new", class: "form-check-input choice__input", autofocus: true %>
+            <label class="choice__label" for="chain_new">
+              <span class="choice__title">Start a new chain</span>
+              <span class="choice__meta">This sale becomes the first link. You can connect other sales later.</span>
+            </label>
+          </div>
+          <div class="sale-nickname">
+            <%= label_tag :chain_name, class: "form-label" do %>
+              Chain nickname <span class="text-muted fw-normal">(optional, new chains only)</span>
+            <% end %>
+            <%= text_field_tag :chain_name, params[:chain_name], class: "form-control", placeholder: "e.g. Smith family move", maxlength: 120 %>
+          </div>
+        </div>
+
+        <% if @suggested_chains.any? %>
+          <h3 class="sale-group-title" id="suggested-chains-title">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Suggested
+          </h3>
+          <div class="choice-list choice-list--open" id="suggested-chains" aria-labelledby="suggested-chains-title" role="group">
+            <% @suggested_chains.each do |chain, reason| %>
+              <%= render "sales/choice", name: "chain_id", value: chain.id, id: "chain_#{chain.id}",
+                    checked: chosen == chain.id.to_s,
+                    title: chain.name.presence || chain_name(chain),
+                    meta: safe_join([chain_summary(chain), tag.span(reason, class: "choice__reason")], tag.br) %>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if @other_chains.any? %>
+          <h3 class="sale-group-title" id="other-chains-title">Your other chains</h3>
+          <div class="choice-list" aria-labelledby="other-chains-title" role="group">
+            <% @other_chains.each do |chain| %>
+              <%= render "sales/choice", name: "chain_id", value: chain.id, id: "chain_#{chain.id}",
+                    checked: chosen == chain.id.to_s,
+                    title: chain.name.presence || chain_name(chain),
+                    meta: chain_summary(chain) %>
+            <% end %>
+          </div>
+        <% end %>
+      </fieldset>
+
+      <%= render layout: "sales/step_footer" do %>
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-check" aria-hidden="true"></i> Create sale
+        </button>
+      <% end %>
+    <% end %>
+  </div>
+</section>

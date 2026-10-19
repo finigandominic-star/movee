@@ -1,0 +1,13 @@
+<%# One selectable row in a choice list. Locals: name, value, id, title, checked, meta (optional), tags (optional), autofocus (optional) %>
+<div class="choice">
+  <%= radio_button_tag name, value, checked, id: id, class: "form-check-input choice__input", autofocus: local_assigns[:autofocus] %>
+  <label class="choice__label" for="<%= id %>">
+    <span class="choice__title"><%= title %></span>
+    <% if local_assigns[:meta].present? %>
+      <span class="choice__meta"><%= meta %></span>
+    <% end %>
+  </label>
+  <% if local_assigns[:tags].present? %>
+    <span class="choice__tags"><%= tags %></span>
+  <% end %>
+</div>

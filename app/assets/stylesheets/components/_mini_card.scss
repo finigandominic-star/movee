@@ -1,0 +1,41 @@
+// Mini cards: compact pills/tiles used inside larger views (e.g. transaction links in a chain).
+// Colours alternate left to right.
+.mini-card-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.mini-card {
+  position: relative;
+  border-radius: $border-radius-lg;
+  box-shadow: $box-shadow;
+  padding: 1.25rem 1.35rem;
+  background: $movee-surface;
+  border-top: 5px solid $movee-indigo;
+  font-size: 1rem;
+
+  &:nth-child(even) {
+    border-top-color: $movee-teal;
+    background: $movee-surface-2;
+  }
+
+  &:nth-child(3n) {
+    border-top-color: $movee-sky;
+  }
+
+  .mini-card__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $movee-navy;
+    margin: 0;
+  }
+
+  .mini-card__label {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: $movee-muted;
+  }
+}

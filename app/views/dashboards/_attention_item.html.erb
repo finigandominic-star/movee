@@ -1,0 +1,9 @@
+<%# One "Needs attention" row. Locals: icon, tone, title, path, reason, action_label, action_path %>
+<li class="list-group-item attention-item">
+  <span class="attention-item__icon attention-item__icon--<%= tone %>" aria-hidden="true"><i class="fa-solid <%= icon %>"></i></span>
+  <div class="attention-item__text">
+    <%= link_to title, path, class: "attention-item__title" %>
+    <small class="attention-item__reason"><%= reason %></small>
+  </div>
+  <%= link_to action_label, action_path, class: "btn btn-sm btn-outline-primary text-nowrap" %>
+</li>

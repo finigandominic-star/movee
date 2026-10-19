@@ -1,257 +1,170 @@
-<div class="container py-4">
-  <!-- Breadcrumb Navigation -->
-  <nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><%= link_to "Home", root_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item"><%= link_to "Chains", chains_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item active" aria-current="page">Chain #<%= @chain.id %></li>
-    </ol>
-  </nav>
+<% ordered_txs = @chain.ordered_transactions %>
+<% completed_count = ordered_txs.count(&:completed?) %>
+<% subtitle = [chain_summary(@chain), "created #{@chain.created_at&.strftime('%-d %B %Y') || 'recently'}"] %>
+<% subtitle << "initiated by #{@chain.user.user_name}#{" (#{@chain.user.company})" if @chain.user.company.present?}" if @chain.user %>
 
-  <!-- Page Header & Action Bar -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
-    <div>
-      <div class="d-flex align-items-center gap-2 mb-1">
-        <h1 class="h2 fw-bold text-dark mb-0">Chain #<%= @chain.id %></h1>
-        <% if @chain.chain_completed? %>
-          <span class="badge bg-success fs-6">
-            <i class="fa-solid fa-circle-check me-1"></i> Completed Chain
-          </span>
-        <% else %>
-          <span class="badge bg-primary fs-6">
-            <i class="fa-solid fa-link me-1"></i> Open Chain (<%= @chain.both_ends_closed? ? "In Progress" : "Ends Open" %>)
-          </span>
-        <% end %>
-      </div>
-      <p class="text-muted mb-0 small">
-        Created on <%= @chain.created_at&.strftime("%B %d, %Y") || "Recently" %>
-        <% if @chain.user %>
-          • Initiated by <strong><%= @chain.user.user_name %></strong>
-          <% if @chain.user.company.present? %>
-            (<%= @chain.user.company %>)
-          <% end %>
-        <% end %>
-      </p>
-    </div>
-
-    <!-- Actions -->
-    <div class="d-flex gap-2 flex-wrap">
-      <%= link_to chains_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm" do %>
-        <i class="fa-solid fa-arrow-left"></i>
-        <span>Back to Chains</span>
+<div class="container-fluid px-3 px-lg-5 py-4 py-lg-5">
+  <div class="page-wide">
+    <%= render layout: "shared/page_header", locals: { title: chain_name(@chain), subtitle: subtitle.join(" · ") } do %>
+      <% if @chain.chain_completed? %>
+        <span class="badge bg-success align-self-center">Completed</span>
+      <% else %>
+        <span class="badge bg-warning align-self-center">Open</span>
       <% end %>
-
+      <%= link_to chains_path, class: "btn btn-outline-secondary" do %>
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All chains
+      <% end %>
       <% if policy(@chain).update? %>
-        <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#connectPropertyModal">
-          <i class="fa-solid fa-house-circle-check"></i>
-          <span>Connect Property</span>
+        <button type="button" class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#connectPropertyModal">
+          <i class="fa-solid fa-house-circle-check" aria-hidden="true"></i> Connect property
         </button>
-
-        <%= link_to edit_chain_path(@chain), class: "btn btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm" do %>
-          <i class="fa-solid fa-pen"></i>
-          <span>Edit</span>
+        <%= link_to edit_chain_path(@chain), class: "btn btn-outline-secondary" do %>
+          <i class="fa-solid fa-pen" aria-hidden="true"></i> Edit
         <% end %>
       <% end %>
-
       <% if policy(@chain).destroy? %>
-        <%= link_to chain_path(@chain), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete Chain ##{@chain.id}?" }, class: "btn btn-outline-danger d-inline-flex align-items-center shadow-sm", title: "Delete Chain" do %>
-          <i class="fa-solid fa-trash-can"></i>
+        <%= link_to chain_path(@chain), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete Chain ##{@chain.id}?" }, class: "btn btn-outline-danger btn-icon", aria: { label: "Delete chain" } do %>
+          <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
         <% end %>
       <% end %>
-    </div>
-  </div>
+    <% end %>
 
-  <!-- Summary Stats -->
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-sm-3">
-      <div class="card border-0 shadow-sm p-3 h-100">
-        <span class="text-muted small text-uppercase fw-semibold d-block">Total Links</span>
-        <span class="fs-4 fw-bold text-dark"><%= pluralize(@chain.transactions.size, "transaction") %></span>
-      </div>
-    </div>
-    <div class="col-12 col-sm-3">
-      <div class="card border-0 shadow-sm p-3 h-100">
-        <span class="text-muted small text-uppercase fw-semibold d-block">Completed Links</span>
-        <span class="fs-4 fw-bold text-success"><%= @chain.transactions.completed.size %></span>
-      </div>
-    </div>
-    <div class="col-12 col-sm-3">
-      <div class="card border-0 shadow-sm p-3 h-100">
-        <span class="text-muted small text-uppercase fw-semibold d-block">In Progress Links</span>
-        <span class="fs-4 fw-bold text-warning-emphasis"><%= @chain.transactions.pending.size %></span>
-      </div>
-    </div>
-    <div class="col-12 col-sm-3">
-      <div class="card border-0 shadow-sm p-3 h-100">
-        <span class="text-muted small text-uppercase fw-semibold d-block">Overall State</span>
-        <span class="fs-5 fw-bold <%= @chain.chain_completed? ? 'text-success' : 'text-primary' %>">
-          <%= @chain.chain_completed? ? "Completed" : "Open" %>
-        </span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Chain Boundaries (Start & End Rules for UK Property Chains) -->
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <div>
-        <h5 class="card-title fw-bold text-dark mb-0">
-          <i class="fa-solid fa-arrows-left-right text-primary me-2"></i> Chain Boundary Analysis
-        </h5>
-        <p class="text-muted small mb-0 mt-1">
-          A chain is open until both ends are closed (First-Time Buyer at bottom, vendor leaving property market at top) and all transactions are completed.
+    <section class="card card--chain mb-4 mb-lg-5" aria-labelledby="chainBoundaryTitle">
+      <div class="card-header py-3">
+        <h5 class="mb-1" id="chainBoundaryTitle">Chain Boundary Analysis</h5>
+        <p class="small text-muted mb-0">
+          A chain is open until both ends are closed (first-time buyer at the bottom, vendor leaving the market at the top) and every transaction has completed.
         </p>
       </div>
-    </div>
-    <div class="card-body p-4">
-      <div class="row g-3">
-        <!-- Start Boundary (Bottom) -->
-        <div class="col-12 col-md-6">
+      <div class="card-body p-3 p-lg-4">
+        <div class="chain-ends">
           <% start_info = @chain.start_node_status %>
-          <div class="border rounded p-3 h-100 <%= start_info[:closed] ? 'bg-success bg-opacity-10 border-success' : 'bg-warning bg-opacity-10 border-warning' %> d-flex flex-column justify-content-between">
-            <div>
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="small text-uppercase fw-bold text-secondary">
-                  <i class="fa-solid fa-arrow-down-short-wide me-1"></i> Start of Chain (Bottom)
-                </span>
-                <span class="badge <%= start_info[:badge_class] %>"><%= start_info[:label] %></span>
-              </div>
-              <h6 class="fw-bold text-dark mb-1">
-                <%= start_info[:party_name] %>
-              </h6>
-              <p class="small text-muted mb-2">
-                <%= start_info[:description] %>
-              </p>
+          <div class="chain-end <%= 'is-closed' if start_info[:closed] %>">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <span class="chain-end__label">
+                <i class="fa-solid fa-arrow-down-short-wide me-1" aria-hidden="true"></i> Start of Chain (bottom)
+              </span>
+              <span class="badge <%= start_info[:closed] ? 'bg-success' : 'bg-warning' %>"><%= start_info[:label] %></span>
             </div>
-            <% unless start_info[:closed] || policy(@chain).update? == false %>
-              <div class="pt-2 border-top">
-                <button type="button" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#connectPropertyModal" data-position="bottom">
-                  <i class="fa-solid fa-magnifying-glass"></i>
-                  <span>Find Buyer's Property Being Sold</span>
-                </button>
-              </div>
+            <h6><%= start_info[:party_name] %></h6>
+            <p class="small"><%= start_info[:description] %></p>
+            <% if !start_info[:closed] && policy(@chain).update? %>
+              <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#connectPropertyModal" data-position="bottom">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Find buyer's property being sold
+              </button>
             <% end %>
           </div>
-        </div>
 
-        <!-- End Boundary (Top) -->
-        <div class="col-12 col-md-6">
+          <div class="chain-ends__middle">
+            <div>
+              <div class="mb-2">
+                <%= pluralize(ordered_txs.size, "link") %> · <%= completed_count %> completed · <%= ordered_txs.size - completed_count %> in progress
+              </div>
+              <div class="progress chain-progress" role="progressbar" aria-label="Completed links" aria-valuenow="<%= completed_count %>" aria-valuemin="0" aria-valuemax="<%= ordered_txs.size %>">
+                <div class="progress-bar" style="width: <%= ordered_txs.any? ? (completed_count * 100.0 / ordered_txs.size).round : 0 %>%"></div>
+              </div>
+            </div>
+          </div>
+
           <% end_info = @chain.end_node_status %>
-          <div class="border rounded p-3 h-100 <%= end_info[:closed] ? 'bg-success bg-opacity-10 border-success' : 'bg-warning bg-opacity-10 border-warning' %> d-flex flex-column justify-content-between">
-            <div>
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="small text-uppercase fw-bold text-secondary">
-                  <i class="fa-solid fa-arrow-up-wide-short me-1"></i> End of Chain (Top)
-                </span>
-                <span class="badge <%= end_info[:badge_class] %>"><%= end_info[:label] %></span>
-              </div>
-              <h6 class="fw-bold text-dark mb-1">
-                <%= end_info[:party_name] %>
-              </h6>
-              <p class="small text-muted mb-2">
-                <%= end_info[:description] %>
-              </p>
+          <div class="chain-end <%= 'is-closed' if end_info[:closed] %>">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <span class="chain-end__label">
+                <i class="fa-solid fa-arrow-up-wide-short me-1" aria-hidden="true"></i> End of Chain (top)
+              </span>
+              <span class="badge <%= end_info[:closed] ? 'bg-success' : 'bg-warning' %>"><%= end_info[:label] %></span>
             </div>
-            <% unless end_info[:closed] || policy(@chain).update? == false %>
-              <div class="pt-2 border-top">
-                <button type="button" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#connectPropertyModal" data-position="top">
-                  <i class="fa-solid fa-magnifying-glass"></i>
-                  <span>Find Vendor's Onward Property</span>
-                </button>
-              </div>
+            <h6><%= end_info[:party_name] %></h6>
+            <p class="small"><%= end_info[:description] %></p>
+            <% if !end_info[:closed] && policy(@chain).update? %>
+              <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#connectPropertyModal" data-position="top">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Find vendor's onward property
+              </button>
             <% end %>
           </div>
         </div>
-      </div>
 
-      <!-- Chain Status Explainer Alert -->
-      <div class="mt-3">
-        <% if @chain.chain_completed? %>
-          <div class="alert alert-success d-flex align-items-center gap-2 mb-0 py-2">
-            <i class="fa-solid fa-circle-check fs-5"></i>
-            <span class="small">
-              <strong>Chain Fully Completed:</strong> Both ends are closed (First-Time Buyer at start, vendor leaving property market at end) and all transactions in the chain have completed.
-            </span>
-          </div>
-        <% elsif @chain.both_ends_closed? %>
-          <div class="alert alert-info d-flex align-items-center gap-2 mb-0 py-2">
-            <i class="fa-solid fa-circle-info fs-5"></i>
-            <span class="small">
-              <strong>Both Ends Closed (Chain In Progress):</strong> The start has a First-Time Buyer and the end vendor is leaving the property market. The chain is open while conveyancing proceeds on <%= pluralize(@chain.transactions.pending.size, 'transaction') %>.
-            </span>
-          </div>
-        <% else %>
-          <div class="alert alert-warning d-flex align-items-center gap-2 mb-0 py-2">
-            <i class="fa-solid fa-triangle-exclamation fs-5"></i>
-            <span class="small">
-              <strong>Chain is Open:</strong> The chain boundaries are not yet closed. Connect the onward purchase at the top or the downward sale at the bottom to complete the chain links.
-            </span>
-          </div>
-        <% end %>
-      </div>
-    </div>
-  </div>
-
-  <!-- Chain Sequence & Pipeline -->
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
-      <h5 class="card-title fw-bold text-dark mb-0">
-        <i class="fa-solid fa-arrows-split-up-and-left text-primary me-2"></i> Chain Sequence &amp; Cooperating Agents
-      </h5>
-      <div class="d-flex gap-2">
-        <% if policy(@chain).update? && @connectable_properties.present? && @connectable_properties.any? %>
-          <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#connectPropertyModal">
-            <i class="fa-solid fa-house-circle-check"></i>
-            <span>Connect Property</span>
-          </button>
-        <% end %>
-        <%= link_to new_transaction_path(chain_id: @chain.id), class: "btn btn-sm btn-primary d-inline-flex align-items-center gap-1" do %>
-          <i class="fa-solid fa-plus"></i>
-          <span>Add Transaction Link</span>
-        <% end %>
-      </div>
-    </div>
-
-    <div class="card-body p-4">
-      <% ordered_txs = @chain.ordered_transactions %>
-      <% if ordered_txs.empty? %>
-        <div class="text-center py-4 text-muted">
-          <i class="fa-solid fa-link-slash fa-2x mb-2 text-secondary opacity-50"></i>
-          <p class="small mb-2">No transactions currently linked to this chain.</p>
-          <%= link_to new_transaction_path(chain_id: @chain.id), class: "btn btn-sm btn-primary" do %>
-            <i class="fa-solid fa-plus me-1"></i> Add First Transaction
+        <p class="small text-muted mt-3 mb-0">
+          <% if @chain.chain_completed? %>
+            <i class="fa-solid fa-circle-check text-success me-1" aria-hidden="true"></i>
+            <strong>Chain fully completed:</strong> both ends are closed and every transaction in the chain has completed.
+          <% elsif @chain.both_ends_closed? %>
+            <i class="fa-solid fa-circle-info text-info me-1" aria-hidden="true"></i>
+            <strong>Both ends closed:</strong> the chain stays open while conveyancing proceeds on <%= pluralize(@chain.transactions.pending.size, "transaction") %>.
+          <% else %>
+            <i class="fa-solid fa-triangle-exclamation text-warning me-1" aria-hidden="true"></i>
+            <strong>Chain is open:</strong> connect the onward purchase at the top or the downward sale at the bottom to close its ends.
           <% end %>
-        </div>
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="chainLinksTitle">
+      <div class="page-toolbar">
+        <h2 class="h4 fw-bold mb-0" id="chainLinksTitle">Links in this chain</h2>
+        <%= link_to new_transaction_path(chain_id: @chain.id), class: "btn btn-outline-primary" do %>
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Add transaction
+        <% end %>
+      </div>
+
+      <% if ordered_txs.empty? %>
+        <%= render layout: "shared/empty_state", locals: { icon: "fa-link-slash", title: "No transactions yet", text: "Add a transaction or connect a property to start building this chain." } do %>
+          <%= link_to new_transaction_path(chain_id: @chain.id), class: "btn btn-primary" do %>
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Add first transaction
+          <% end %>
+        <% end %>
       <% else %>
-        <div class="position-relative">
+        <ol class="mini-card-row chain-links list-unstyled mb-0">
           <% ordered_txs.each_with_index do |tx, idx| %>
-            <div class="card border mb-4 shadow-none <%= 'border-success' if tx.completed? %>">
-              <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                  <span class="badge bg-primary rounded-pill px-2 py-1">Step <%= idx + 1 %></span>
-                  <span class="fw-bold text-dark">Transaction #<%= tx.id %></span>
-                  <span class="badge <%= tx.status_badge_class %>"><%= tx.status_label %></span>
-                  <span class="badge <%= tx.legal_stage_badge_class %>"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        data-bs-title="<%= tx.legal_stage_definition[:tooltip] %>">
-                    <i class="fa-solid <%= tx.legal_stage_definition[:icon] %> me-1"></i>
-                    <%= tx.legal_stage_short_title %>
-                  </span>
-                  <span class="badge <%= tx.overall_timing_status[:badge_class] %>" style="font-size: 0.7rem;">
-                    <%= tx.overall_timing_status[:label] %>
-                  </span>
-                </div>
-                <div class="btn-group btn-group-sm">
-                  <%= link_to transaction_path(tx), class: "btn btn-outline-primary" do %>
-                    <i class="fa-solid fa-eye me-1"></i> View Details
+            <% agent = tx.creator_or_listing_user %>
+            <li class="mini-card">
+              <div class="d-flex justify-content-between align-items-center gap-2">
+                <span class="mini-card__label">
+                  Link <%= idx + 1 %><%= " · Start" if idx.zero? && ordered_txs.size > 1 %><%= " · End" if idx == ordered_txs.size - 1 && ordered_txs.size > 1 %>
+                </span>
+                <span class="badge <%= tx.completed? ? 'bg-success' : 'bg-warning' %>"><%= tx.status_label %></span>
+              </div>
+
+              <div>
+                <h3 class="mini-card__title">
+                  <% if tx.property %>
+                    <%= link_to tx.property.short_address, property_path(tx.property) %>
+                  <% else %>
+                    <span class="text-muted fst-italic">No property assigned</span>
                   <% end %>
-                  <% if policy(tx).update? %>
-                    <%= link_to edit_transaction_path(tx), class: "btn btn-outline-secondary" do %>
-                      <i class="fa-solid fa-pen"></i>
-                    <% end %>
+                </h3>
+                <% if tx.property %>
+                  <div class="small text-muted">
+                    <%= [tx.property.city, tx.property.post_code].compact_blank.join(", ") %><%= " · Sold" if tx.property.sold? %>
+                  </div>
+                <% end %>
+              </div>
+
+              <div class="small" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="<%= tx.legal_stage_definition[:tooltip] %>">
+                <i class="fa-solid <%= tx.legal_stage_definition[:icon] %> text-primary me-1" aria-hidden="true"></i>
+                <strong><%= tx.legal_stage_short_title %></strong>
+                <span class="text-muted">· <%= tx.overall_timing_status[:label] %></span>
+              </div>
+
+              <div>
+                <div class="mini-card__label mb-1">Buyer</div>
+                <% if tx.involved_party %>
+                  <% if policy(tx.involved_party).show_personal_data? %>
+                    <h6><%= link_to tx.involved_party.full_name, involved_party_path(tx.involved_party), class: "text-decoration-none text-reset" %></h6>
+                    <div class="chain-link__contact small">
+                      <a href="mailto:<%= tx.involved_party.email %>"><i class="fa-solid fa-envelope me-1" aria-hidden="true"></i><%= tx.involved_party.email %></a>
+                      <a href="tel:<%= tx.involved_party.phone %>"><i class="fa-solid fa-phone me-1" aria-hidden="true"></i><%= tx.involved_party.phone %></a>
+                    </div>
+                  <% else %>
+                    <div class="client-confidential">
+                      <i class="fa-solid fa-user-shield me-1" aria-hidden="true"></i>
+                      <span class="fw-semibold">Client Confidential</span>
+                      <div class="small">Coordinate via <strong><%= agent&.user_name || "the managing agent" %></strong>.</div>
+                    </div>
                   <% end %>
-                </div>
+                <% else %>
+                  <span class="text-muted fst-italic small">No buyer assigned</span>
+                <% end %>
               </div>
 
               <div class="card-body p-3">
@@ -343,50 +256,51 @@
                   </div>
                 </div>
               </div>
-            </div>
 
-            <% unless idx == ordered_txs.size - 1 %>
-              <div class="text-center my-3 text-muted">
-                <i class="fa-solid fa-arrow-down fa-lg text-primary opacity-75"></i>
+              <div class="chain-link__footer">
+                <%= link_to transaction_path(tx), class: "btn btn-sm btn-outline-primary" do %>
+                  View transaction
+                <% end %>
+                <% if policy(tx).update? %>
+                  <%= link_to edit_transaction_path(tx), class: "btn btn-sm btn-outline-secondary btn-icon", aria: { label: "Edit transaction ##{tx.id}" } do %>
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                  <% end %>
+                <% end %>
               </div>
-            <% end %>
+            </li>
           <% end %>
-        </div>
+        </ol>
       <% end %>
-    </div>
+    </section>
   </div>
 </div>
 
-<!-- Connect Property to Chain Modal -->
 <% if policy(@chain).update? %>
   <div class="modal fade" id="connectPropertyModal" tabindex="-1" aria-labelledby="connectPropertyModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header bg-light">
+      <div class="modal-content border-0">
+        <div class="modal-header">
           <div>
-            <h5 class="modal-title fw-bold text-dark" id="connectPropertyModalLabel">
-              <i class="fa-solid fa-house-circle-check text-primary me-2"></i> Connect Property to Chain
-            </h5>
-            <p class="text-muted small mb-0">Search for the property being purchased or sold to automatically connect or merge chains.</p>
+            <h2 class="modal-title h5 fw-bold" id="connectPropertyModalLabel">Connect property to chain</h2>
+            <p class="text-muted small mb-0">Pick the property being bought or sold; chains are connected or merged automatically.</p>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <%= form_with url: connect_property_chain_path(@chain), method: :post, local: true do |f| %>
           <div class="modal-body p-4">
             <div class="alert alert-info py-2 small mb-4">
-              <i class="fa-solid fa-circle-info me-1"></i>
-              <strong>Automatic Chain Linking:</strong> You only need to select the property. If the property is already part of another chain, Movee will automatically merge both chains under the <strong>lowest ID</strong> without requiring you to look up any chain numbers.
+              <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>
+              <strong>Automatic chain linking:</strong> you only need to select the property. If it is already part of another chain, Movee merges both chains under the <strong>lowest ID</strong>.
             </div>
 
-            <!-- Position in Chain -->
-            <div class="mb-4">
-              <label class="form-label fw-semibold text-secondary small">Connection Position in Chain</label>
+            <fieldset class="mb-4">
+              <legend class="form-label fs-6">Position in chain</legend>
               <div class="row g-2">
                 <div class="col-md-6">
-                  <div class="form-check p-3 border rounded bg-light">
+                  <div class="form-check p-3 border rounded">
                     <input class="form-check-input ms-0 me-2" type="radio" name="position" id="posTop" value="top" checked>
-                    <label class="form-check-label fw-semibold text-dark" for="posTop">
-                      <i class="fa-solid fa-arrow-up-wide-short text-primary me-1"></i> Top of Chain (Onward Purchase)
+                    <label class="form-check-label fw-semibold" for="posTop">
+                      <i class="fa-solid fa-arrow-up-wide-short text-primary me-1" aria-hidden="true"></i> Top of chain (onward purchase)
                     </label>
                     <div class="text-muted small mt-1">
                       End vendor <%= @chain.end_transaction&.property&.involved_party&.full_name || 'at top' %> is buying this property.
@@ -394,10 +308,10 @@
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="form-check p-3 border rounded bg-light">
+                  <div class="form-check p-3 border rounded">
                     <input class="form-check-input ms-0 me-2" type="radio" name="position" id="posBottom" value="bottom">
-                    <label class="form-check-label fw-semibold text-dark" for="posBottom">
-                      <i class="fa-solid fa-arrow-down-short-wide text-primary me-1"></i> Bottom of Chain (Downward Sale)
+                    <label class="form-check-label fw-semibold" for="posBottom">
+                      <i class="fa-solid fa-arrow-down-short-wide text-primary me-1" aria-hidden="true"></i> Bottom of chain (downward sale)
                     </label>
                     <div class="text-muted small mt-1">
                       Bottom purchaser <%= @chain.start_transaction&.involved_party&.full_name || 'at bottom' %> is selling this property.
@@ -405,16 +319,15 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </fieldset>
 
-            <!-- Property Selection / Search -->
             <div class="mb-3">
-              <label for="propertySearchSelect" class="form-label fw-semibold text-secondary small">
-                Select or Search Property <span class="text-danger">*</span>
+              <label for="propertySearchSelect" class="form-label">
+                Property <span class="text-danger">*</span>
               </label>
               <% if @connectable_properties.present? && @connectable_properties.any? %>
                 <select name="property_id" id="propertySearchSelect" class="form-select form-select-lg" required>
-                  <option value="">-- Choose a property to connect --</option>
+                  <option value="">Choose a property to connect</option>
                   <% @connectable_properties.each do |p| %>
                     <% other_c = p.chains.where.not(id: @chain.id).first || p.transactions.where.not(chain_id: @chain.id).first&.chain %>
                     <option value="<%= p.id %>">
@@ -422,28 +335,26 @@
                       <% if other_c %>
                         — [In Chain #<%= other_c.id %> - will merge under Chain #<%= [@chain.id, other_c.id].min %>]
                       <% elsif p.sold? %>
-                        — [Sold Listing]
+                        — [Sold listing]
                       <% else %>
-                        — [Active Listing - Agent: <%= p.user.user_name %>]
+                        — [Active listing - Agent: <%= p.user.user_name %>]
                       <% end %>
                     </option>
                   <% end %>
                 </select>
-                <div class="form-text small">
-                  Select by address, city, postcode, or managing agent.
-                </div>
+                <div class="form-text">Listed by address, city, postcode and managing agent.</div>
               <% else %>
                 <div class="alert alert-warning mb-0 small">
-                  <i class="fa-solid fa-triangle-exclamation me-1"></i> No other properties are currently available to connect. <%= link_to "Create a new property", new_property_path, class: "alert-link" %> first.
+                  <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i> No other properties are available to connect. <%= link_to "Add a property", new_property_path, class: "alert-link" %> first.
                 </div>
               <% end %>
             </div>
           </div>
 
-          <div class="modal-footer bg-light">
+          <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
             <% if @connectable_properties.present? && @connectable_properties.any? %>
-              <%= f.submit "Connect Property", class: "btn btn-primary px-4 shadow-sm" %>
+              <%= f.submit "Connect property", class: "btn btn-primary" %>
             <% end %>
           </div>
         <% end %>

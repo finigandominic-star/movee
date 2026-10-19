@@ -1,0 +1,4 @@
+<%= hidden_field_tag :step, @step, id: nil %>
+<% sale_carry_params(@step).each do |key, value| %>
+  <%= hidden_field_tag key, value, id: nil %>
+<% end %>

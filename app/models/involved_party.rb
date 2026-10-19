@@ -15,6 +15,16 @@ class InvolvedParty < ApplicationRecord
     false
   end
 
+  # A vendor's plans after selling decide whether they close the top of a chain.
+  ONWARD_PURCHASE_OPTIONS = {
+    "undecided" => "Not decided yet",
+    "buying" => "Buying onward",
+    "leaving_market" => "Not buying (leaving the market)"
+  }.freeze
+
+  validates :onward_purchase, inclusion: { in: ONWARD_PURCHASE_OPTIONS.keys }
+  before_validation { self.buyer = true if onward_purchase == "buying" }
+
   validates :first_name, presence: true
   validates :last_name, presence: true
   validates :email, presence: true, uniqueness: true
@@ -22,6 +32,14 @@ class InvolvedParty < ApplicationRecord
 
   def full_name
     "#{first_name} #{last_name}".strip
+  end
+
+  def leaving_market?
+    seller? && onward_purchase == "leaving_market"
+  end
+
+  def onward_purchase_label
+    ONWARD_PURCHASE_OPTIONS[onward_purchase]
   end
 
   def roles_label

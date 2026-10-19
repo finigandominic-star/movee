@@ -1,0 +1,19 @@
+<%# Labelled input with inline error. Locals: f, record, attr, label, type (default :text_field), required, autofocus, placeholder, col %>
+<div class="<%= local_assigns[:col] || "col-12" %>">
+  <%= f.label attr, class: "form-label" do %>
+    <%= label %>
+    <% if local_assigns[:required] %>
+      <span class="text-danger">*</span>
+    <% else %>
+      <span class="text-muted fw-normal">(optional)</span>
+    <% end %>
+  <% end %>
+  <%= f.public_send (local_assigns[:type] || :text_field), attr,
+        class: "form-control #{'is-invalid' if record.errors[attr].any?}",
+        required: local_assigns[:required],
+        autofocus: local_assigns[:autofocus],
+        placeholder: local_assigns[:placeholder] %>
+  <% if record.errors[attr].any? %>
+    <div class="invalid-feedback"><%= record.errors[attr].first %></div>
+  <% end %>
+</div>
