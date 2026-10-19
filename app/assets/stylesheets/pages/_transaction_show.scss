@@ -1,8 +1,22 @@
-// Transaction show page: UK Conveyancing Legal Stages Stepper & Tooltips
-$stage-done-color: #198754;
-$stage-current-color: #0d6efd;
-$stage-pending-color: #dee2e6;
-$stage-pending-text: #6c757d;
+// Transaction show page: conveyancing stepper, active stage card and legal guide modal
+$stage-done-color: $movee-green;
+$stage-current-color: $movee-indigo;
+$stage-pending-color: $movee-border;
+$stage-pending-text: $movee-muted;
+
+// Overall progress bar
+.conveyancing-progress {
+  height: 8px;
+  background-color: $movee-surface-2;
+
+  .progress-bar {
+    background-color: $movee-indigo;
+  }
+
+  .conveyancing-progress__bar--done {
+    background-color: $movee-green;
+  }
+}
 
 .conveyancing-pipeline {
   position: relative;
@@ -15,9 +29,8 @@ $stage-pending-text: #6c757d;
     justify-content: space-between;
     align-items: flex-start;
     position: relative;
-    padding: 0 0.5rem;
+    padding: 0 0.5rem 0.75rem;
     overflow-x: auto;
-    padding-bottom: 0.75rem;
 
     // Connecting line behind steps
     &::before {
@@ -32,17 +45,6 @@ $stage-pending-text: #6c757d;
     }
   }
 
-  // Active progress fill line
-  &__progress-line {
-    position: absolute;
-    top: 22px;
-    left: 35px;
-    height: 4px;
-    background: linear-gradient(90deg, #198754, #0d6efd);
-    z-index: 2;
-    transition: width 0.4s ease;
-  }
-
   // Individual stage node
   &__step {
     position: relative;
@@ -53,22 +55,7 @@ $stage-pending-text: #6c757d;
     min-width: 90px;
     max-width: 120px;
     text-align: center;
-    background: transparent;
-    border: none;
-    padding: 0;
     cursor: default;
-  }
-
-  &__timing {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.15rem;
-  }
-
-  &__date {
-    font-size: 0.65rem;
-    color: #8c98a4;
   }
 
   &__circle {
@@ -80,55 +67,55 @@ $stage-pending-text: #6c757d;
     justify-content: center;
     font-size: 0.85rem;
     font-weight: 700;
-    background-color: #fff;
+    background-color: $movee-surface;
     border: 3px solid $stage-pending-color;
     color: $stage-pending-text;
     transition: all 0.25s ease-in-out;
     margin-bottom: 0.5rem;
-    position: relative;
   }
 
   &__label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #495057;
+    color: $movee-ink;
     line-height: 1.25;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
   }
 
-  &__time {
+  &__date {
     font-size: 0.68rem;
-    color: #8c98a4;
+    color: $movee-muted;
   }
 
-  // Step states
   &__step--completed {
     .conveyancing-pipeline__circle {
       background-color: $stage-done-color;
       border-color: $stage-done-color;
-      color: #fff;
-    }
-    .conveyancing-pipeline__label {
-      color: #198754;
+      color: $movee-surface;
     }
   }
 
   &__step--current {
     .conveyancing-pipeline__circle {
-      background-color: #fff;
+      background-color: $movee-lime;
       border-color: $stage-current-color;
-      color: $stage-current-color;
-      box-shadow: 0 0 0 5px rgba(13, 110, 253, 0.25);
+      color: $movee-navy;
       animation: pulse-ring 2s infinite;
     }
+
     .conveyancing-pipeline__label {
       color: $stage-current-color;
       font-weight: 700;
+    }
+
+    .conveyancing-pipeline__date {
+      font-weight: 600;
     }
   }
 
   &__step--pending {
     opacity: 0.75;
+
     &:hover {
       opacity: 1;
     }
@@ -137,54 +124,153 @@ $stage-pending-text: #6c757d;
 
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4);
+    box-shadow: 0 0 0 0 rgba($movee-indigo, 0.4);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(13, 110, 253, 0);
+    box-shadow: 0 0 0 8px rgba($movee-indigo, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+    box-shadow: 0 0 0 0 rgba($movee-indigo, 0);
   }
 }
 
-// Stage Command Card
+// Current stage card inside the tracker
 .active-stage-card {
-  border-left: 5px solid #0d6efd !important;
+  box-shadow: none;
+  border: 1px solid $movee-border;
+  border-left: 5px solid $movee-indigo;
+
+  > .card-body {
+    background: $movee-surface-2;
+  }
 
   &--completed {
-    border-left-color: #198754 !important;
+    border-left-color: $movee-green;
   }
 
-  &__context-box {
-    background-color: #f8f9fa;
-    border-left: 3px solid #6c757d;
-    padding: 0.75rem 1rem;
-    border-radius: 0 0.375rem 0.375rem 0;
+  &__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $movee-indigo;
   }
 
-  &__action-box {
-    background-color: #e8f4fd;
-    border: 1px solid #b6d4fe;
-    padding: 0.85rem 1.15rem;
-    border-radius: 0.375rem;
+  &__dates {
+    background: $movee-surface;
+    border: 1px solid $movee-border;
+    border-radius: $border-radius;
+    padding: 0.75rem 0.5rem;
+    margin-inline: 0;
+
+    dt {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: $movee-muted;
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 700;
+      color: $movee-navy;
+    }
   }
 }
 
-// Legal Guide Accordion
+.transaction-property__photo {
+  max-height: 160px;
+}
+
+// Legal guide modal
+.legal-guide {
+  &__header {
+    background: $movee-navy;
+    color: #FFFFFF;
+    border-bottom: 0;
+  }
+
+  &__subtitle {
+    color: rgba(#FFFFFF, 0.72);
+  }
+
+  &__current {
+    background: rgba($movee-sky, 0.18);
+    border: 1px solid rgba($movee-sky, 0.6);
+    border-radius: $border-radius-lg;
+    padding: 1.25rem;
+
+    dt {
+      font-weight: 600;
+      color: $movee-muted;
+    }
+
+    dd {
+      margin: 0;
+      color: $movee-navy;
+    }
+  }
+
+  &__box {
+    background: $movee-surface;
+    border: 1px solid $movee-border;
+    border-radius: $border-radius;
+    padding: 0.85rem 1rem;
+
+    &--action {
+      background: rgba($movee-lime, 0.25);
+      border-color: rgba($movee-green, 0.35);
+    }
+  }
+
+  &__box-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $movee-navy;
+    margin-bottom: 0.5rem;
+  }
+
+  &__step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: $movee-surface-2;
+    border: 1px solid $movee-border;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $movee-navy;
+  }
+}
+
 .legal-guide-card {
+  .accordion-item {
+    border-color: $movee-border;
+  }
+
   .accordion-button {
     font-size: 0.9rem;
     font-weight: 600;
+    color: $movee-navy;
+
     &:not(.collapsed) {
-      background-color: #f0f7ff;
-      color: #0d6efd;
+      background-color: rgba($movee-sky, 0.18);
+      color: $movee-navy;
+      box-shadow: none;
+
+      .legal-guide__step-number {
+        background: $movee-lime;
+        border-color: $movee-lime;
+      }
     }
   }
 
-  .stage-guide-item {
-    transition: background-color 0.15s ease;
-    &:hover {
-      background-color: #f8fafc;
-    }
+  .accordion-body {
+    background: $movee-surface-2;
   }
 }

@@ -1,0 +1,119 @@
+// Dashboard: count tiles, "Needs attention" list and recent transactions.
+
+// Calm count tile with an entity-coloured accent strip
+.dashboard-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem 1.25rem;
+  background: $movee-surface;
+  color: $movee-navy;
+  text-decoration: none;
+  border-left: 5px solid $movee-indigo;
+  transition: transform .15s ease, box-shadow .15s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: $movee-navy;
+    transform: translateY(-2px);
+    box-shadow: $box-shadow-lg;
+  }
+}
+
+.dashboard-tile__icon {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  color: $movee-muted;
+  opacity: .6;
+}
+
+.dashboard-tile__count {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+
+.dashboard-tile__label {
+  font-size: .85rem;
+  font-weight: 500;
+  color: $movee-muted;
+}
+
+@each $entity, $tones in $entity-colors {
+  .dashboard-tile--#{$entity} {
+    border-left-color: nth($tones, 1);
+
+    .dashboard-tile__icon {
+      color: nth($tones, 1);
+    }
+  }
+}
+
+// Needs attention rows: icon, link + reason, action
+.attention-item,
+.recent-list__item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem 1.25rem;
+}
+
+.attention-item__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-size: .9rem;
+
+  &--danger  { background: rgba($movee-red, .12);   color: $movee-red; }
+  &--warning { background: rgba($movee-amber, .18); color: darken($movee-amber, 22%); }
+  &--info    { background: rgba($movee-sky, .3);    color: $movee-navy; }
+}
+
+.attention-item__text,
+.recent-list__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.attention-item__title,
+.recent-list__title {
+  display: block;
+  font-weight: 600;
+  color: $movee-navy;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.attention-item__reason {
+  color: $movee-muted;
+}
+
+.recent-list__item .badge {
+  flex-shrink: 0;
+}
+
+// Friendly empty state when nothing needs doing
+.dashboard-all-clear {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.dashboard-all-clear__icon {
+  display: inline-block;
+  font-size: 2.5rem;
+  color: $movee-green;
+  margin-bottom: .5rem;
+}

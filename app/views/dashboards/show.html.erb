@@ -1,0 +1,105 @@
+<% hour = Time.current.hour %>
+<% greeting = hour < 12 ? "Good morning" : (hour < 18 ? "Good afternoon" : "Good evening") %>
+<% attention_count = @overdue_transactions.size + @open_end_chains.size + @unfinished_properties.size %>
+
+<div class="container py-4 py-lg-5" data-controller="tooltip">
+  <%= render layout: "shared/page_header", locals: { title: "#{greeting}, #{current_user.user_name}", subtitle: "Here's where your sales stand today." } do %>
+    <%= link_to new_sale_path, class: "btn btn-accent btn-lg" do %>
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      <span>Start a new sale</span>
+    <% end %>
+  <% end %>
+
+  <nav class="row row-cols-2 row-cols-lg-4 g-3 mb-4" aria-label="Your records at a glance">
+    <%= render "dashboards/stat_tile", entity: "party", icon: "fa-user-group", count: @clients_count, label: "My clients", path: involved_parties_path %>
+    <%= render "dashboards/stat_tile", entity: "property", icon: "fa-house", count: @properties_count, label: "My properties", path: properties_path %>
+    <%= render "dashboards/stat_tile", entity: "transaction", icon: "fa-file-signature", count: @active_transactions_count, label: "Active transactions", path: transactions_path %>
+    <%= render "dashboards/stat_tile", entity: "chain", icon: "fa-link", count: @open_chains.size, label: "Open chains", path: chains_path %>
+  </nav>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <section class="card card--transaction" id="needs-attention" aria-labelledby="needs-attention-heading">
+        <div class="card-header d-flex justify-content-between align-items-center gap-2">
+          <h2 class="h6 mb-0" id="needs-attention-heading">Needs attention</h2>
+          <% if attention_count.positive? %>
+            <span class="badge bg-warning"><%= attention_count %></span>
+          <% end %>
+        </div>
+
+        <% if attention_count.zero? %>
+          <div class="card-body dashboard-all-clear">
+            <span class="dashboard-all-clear__icon" aria-hidden="true"><i class="fa-solid fa-circle-check"></i></span>
+            <h3 class="h5">All clear</h3>
+            <p class="text-muted mb-0">Nothing is behind schedule and every listing has a vendor and a sale underway.</p>
+          </div>
+        <% else %>
+          <ul class="list-group list-group-flush attention-list">
+            <% @overdue_transactions.each do |tx| %>
+              <% days = [tx.overall_timing_status[:days_over].to_i, 1].max %>
+              <%= render "dashboards/attention_item",
+                         icon: "fa-circle-exclamation", tone: "danger",
+                         title: tx.property&.short_address || "Transaction ##{tx.id}", path: transaction_path(tx),
+                         reason: "#{days}d behind at #{tx.legal_stage_short_title}",
+                         action_label: "Update stage", action_path: transaction_path(tx) %>
+            <% end %>
+
+            <% @open_end_chains.each do |chain| %>
+              <% missing = [] %>
+              <% missing << "no first-time buyer at the start" unless chain.first_time_buyer_at_start? %>
+              <% missing << (chain.end_transaction&.property&.involved_party&.onward_purchase == "undecided" ? "top vendor's onward plans unconfirmed" : "top vendor is buying onward") unless chain.leaving_market_at_end? %>
+              <%= render "dashboards/attention_item",
+                         icon: "fa-link-slash", tone: "warning",
+                         title: chain_name(chain), path: chain_path(chain),
+                         reason: "Open chain: #{missing.to_sentence}",
+                         action_label: "Connect property", action_path: chain_path(chain) %>
+            <% end %>
+
+            <% @unfinished_properties.each do |property| %>
+              <% if property.involved_party_id.nil? %>
+                <%= render "dashboards/attention_item",
+                           icon: "fa-user-plus", tone: "info",
+                           title: property.short_address, path: property_path(property),
+                           reason: property.transactions.empty? ? "No vendor and no transaction" : "No vendor assigned",
+                           action_label: "Assign vendor", action_path: edit_property_path(property) %>
+              <% else %>
+                <%= render "dashboards/attention_item",
+                           icon: "fa-file-circle-plus", tone: "info",
+                           title: property.short_address, path: property_path(property),
+                           reason: "Listed with no transaction",
+                           action_label: "Start transaction", action_path: new_transaction_path(property_id: property.id) %>
+              <% end %>
+            <% end %>
+          </ul>
+        <% end %>
+      </section>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <section class="card card--transaction" id="recent-transactions" aria-labelledby="recent-transactions-heading">
+        <div class="card-header d-flex justify-content-between align-items-center gap-2">
+          <h2 class="h6 mb-0" id="recent-transactions-heading">Recent transactions</h2>
+          <%= link_to "View all", transactions_path, class: "btn btn-sm btn-outline-secondary" %>
+        </div>
+
+        <% if @recent_transactions.empty? %>
+          <div class="card-body">
+            <p class="text-muted small mb-0">No transactions yet. Start a new sale to track it here.</p>
+          </div>
+        <% else %>
+          <ul class="list-group list-group-flush recent-list">
+            <% @recent_transactions.each do |tx| %>
+              <li class="list-group-item recent-list__item">
+                <div class="recent-list__text">
+                  <%= link_to tx.property&.short_address || "Transaction ##{tx.id}", transaction_path(tx), class: "recent-list__title" %>
+                  <small class="text-muted d-block text-truncate"><%= chain_name(tx.chain) %></small>
+                </div>
+                <%= render "transactions/status_tag", tx: tx, stage: true %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </section>
+    </div>
+  </div>
+</div>

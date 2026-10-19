@@ -1,222 +1,84 @@
-<div class="container py-4">
-  <!-- Breadcrumb Navigation -->
-  <nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><%= link_to "Home", root_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item active" aria-current="page">Chains</li>
-    </ol>
-  </nav>
-
-  <!-- Page Header -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
-    <div>
-      <h1 class="h2 fw-bold text-dark mb-1">Transaction Chains</h1>
-      <p class="text-muted mb-0 small">
-        Track property chains across collaborating agents and brokers.
-        <span class="badge bg-primary-subtle text-primary ms-1"><%= @chains.size %> total</span>
-      </p>
-    </div>
-    <div class="d-flex gap-2">
+<div class="container-fluid px-3 px-lg-5 py-4 py-lg-5">
+  <div class="page-wide">
+    <%= render layout: "shared/page_header", locals: { title: "Chains", subtitle: "#{pluralize(@chains.size, 'chain')} · track property chains across collaborating agents" } do %>
       <% if policy(Chain).create? %>
-        <%= link_to new_chain_path, class: "btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm" do %>
-          <i class="fa-solid fa-plus"></i>
-          <span>Create Chain</span>
+        <%= link_to new_chain_path, class: "btn btn-primary" do %>
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> New chain
         <% end %>
       <% end %>
-    </div>
-  </div>
+    <% end %>
 
-  <!-- Metric Summary Cards -->
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-sm-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-            <i class="fa-solid fa-link fa-lg"></i>
-          </div>
-          <div>
-            <span class="text-muted small text-uppercase fw-semibold d-block">Total Chains</span>
-            <span class="fs-4 fw-bold text-dark"><%= @chains.size %></span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-            <i class="fa-solid fa-arrows-spin fa-lg"></i>
-          </div>
-          <div>
-            <span class="text-muted small text-uppercase fw-semibold d-block">Open Chains</span>
-            <span class="fs-4 fw-bold text-primary"><%= @chains.select(&:chain_open?).size %></span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="rounded-circle bg-success bg-opacity-10 text-success p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-            <i class="fa-solid fa-circle-check fa-lg"></i>
-          </div>
-          <div>
-            <span class="text-muted small text-uppercase fw-semibold d-block">Completed Chains</span>
-            <span class="fs-4 fw-bold text-success"><%= @chains.select(&:chain_completed?).size %></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <% if @chains.empty? %>
-    <div class="card border-0 shadow-sm text-center py-5">
-      <div class="card-body">
-        <i class="fa-solid fa-link-slash fa-3x text-muted mb-3 opacity-50"></i>
-        <h5 class="fw-bold text-dark mb-1">No Chains Found</h5>
-        <p class="text-muted small mb-3">There are no property chains created yet.</p>
+    <% if @chains.empty? %>
+      <%= render layout: "shared/empty_state", locals: { icon: "fa-link-slash", title: "No chains yet", text: "Chains appear when transactions are linked together. Start one to track a sale from first-time buyer to market exit." } do %>
         <% if policy(Chain).create? %>
-          <%= link_to new_chain_path, class: "btn btn-primary btn-sm" do %>
-            <i class="fa-solid fa-plus me-1"></i> Create the First Chain
+          <%= link_to new_chain_path, class: "btn btn-primary" do %>
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Create the first chain
           <% end %>
         <% end %>
+      <% end %>
+    <% else %>
+      <div class="page-toolbar">
+        <ul class="nav nav-pills small" id="chainViewTab" role="tablist" aria-label="Choose list layout">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-view" type="button" role="tab" aria-controls="table-view" aria-selected="true">
+              <i class="fa-solid fa-table-list me-1" aria-hidden="true"></i> Table
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="cards-tab" data-bs-toggle="pill" data-bs-target="#cards-view" type="button" role="tab" aria-controls="cards-view" aria-selected="false">
+              <i class="fa-solid fa-grip me-1" aria-hidden="true"></i> Cards
+            </button>
+          </li>
+        </ul>
+        <ul class="chain-flow-legend small text-muted" aria-label="Flow legend">
+          <li><span class="chain-flow__dot chain-flow__dot--done" aria-hidden="true"></span>Completed</li>
+          <li><span class="chain-flow__dot chain-flow__dot--active" aria-hidden="true"></span>In progress</li>
+          <li><span class="chain-flow__dot chain-flow__dot--late" aria-hidden="true"></span>Behind</li>
+          <li><i class="fa-solid fa-ellipsis" aria-hidden="true"></i>Open end</li>
+        </ul>
       </div>
-    </div>
-  <% else %>
-    <!-- View Switcher Tabs -->
-    <ul class="nav nav-pills mb-3" id="chainViewTab" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active btn-sm" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-view" type="button" role="tab" aria-controls="table-view" aria-selected="true">
-          <i class="fa-solid fa-table-list me-1"></i> Table View
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link btn-sm" id="cards-tab" data-bs-toggle="pill" data-bs-target="#cards-view" type="button" role="tab" aria-controls="cards-view" aria-selected="false">
-          <i class="fa-solid fa-grip me-1"></i> Cards View
-        </button>
-      </li>
-    </ul>
 
-    <div class="tab-content" id="chainViewTabContent">
-      <!-- 1. Table View -->
-      <div class="tab-pane fade show active" id="table-view" role="tabpanel" aria-labelledby="table-tab" tabindex="0">
-        <div class="card border-0 shadow-sm">
+      <div class="tab-content" id="chainViewTabContent">
+        <div class="tab-pane fade show active" id="table-view" role="tabpanel" aria-labelledby="table-tab" tabindex="0">
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light text-uppercase small text-muted">
+            <table class="table table-hover align-middle chain-table">
+              <caption class="visually-hidden">Chains</caption>
+              <thead>
                 <tr>
-                  <th scope="col" style="width: 120px;">Chain</th>
-                  <th scope="col" style="width: 170px;">Status &amp; Boundaries</th>
-                  <th scope="col">Properties &amp; Managing Agents</th>
-                  <th scope="col" style="width: 180px;">Created By</th>
-                  <th scope="col" class="text-end" style="width: 130px;">Actions</th>
+                  <th scope="col">Chain</th>
+                  <th scope="col">Flow (start → end)</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Created by</th>
+                  <th scope="col" class="text-end">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <% @chains.each do |chain| %>
                   <tr>
-                    <td>
-                      <div class="fw-bold text-dark">
-                        <%= link_to "Chain ##{chain.id}", chain_path(chain), class: "text-decoration-none text-dark" %>
-                      </div>
-                      <small class="text-muted"><%= pluralize(chain.transactions.size, "transaction") %></small>
+                    <td class="chain-table__name">
+                      <%= link_to chain_name(chain), chain_path(chain), class: "fw-bold text-decoration-none" %>
+                      <div class="small text-muted"><%= chain_summary(chain) %></div>
                     </td>
+                    <td><%= render "chains/flow", chain: chain %></td>
                     <td>
-                      <div>
-                        <% if chain.chain_completed? %>
-                          <span class="badge bg-success">Completed</span>
-                        <% elsif chain.both_ends_closed? %>
-                          <span class="badge bg-primary">Open (In Progress)</span>
-                        <% else %>
-                          <span class="badge bg-warning text-dark">Open</span>
-                        <% end %>
-                      </div>
-                      <div class="d-flex flex-column gap-1 mt-1" style="font-size: 0.72rem;">
-                        <% if chain.first_time_buyer_at_start? %>
-                          <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i>FTB at start</span>
-                        <% else %>
-                          <span class="text-warning-emphasis"><i class="fa-solid fa-circle-xmark me-1"></i>FTB missing</span>
-                        <% end %>
-                        <% if chain.leaving_market_at_end? %>
-                          <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i>Market exit end</span>
-                        <% else %>
-                          <span class="text-warning-emphasis"><i class="fa-solid fa-circle-xmark me-1"></i>Onward purchase</span>
-                        <% end %>
-                      </div>
-                    </td>
-                    <td>
-                      <% ordered = chain.ordered_transactions %>
-                      <% if ordered.any? %>
-                        <div class="d-flex flex-wrap gap-2 align-items-center">
-                          <% ordered.each_with_index do |tx, idx| %>
-                            <div class="border rounded p-2 bg-light small" style="min-width: 180px;">
-                              <div class="d-flex justify-content-between align-items-center gap-1 mb-1">
-                                <span class="fw-semibold text-primary">#<%= idx + 1 %> TX #<%= tx.id %></span>
-                                <span class="badge <%= tx.status_badge_class %>" style="font-size: 0.65rem;"><%= tx.status_label %></span>
-                              </div>
-                              <div class="text-truncate fw-medium text-dark" style="max-width: 170px;" title="<%= tx.property&.short_address %>">
-                                <i class="fa-solid fa-house me-1 text-secondary"></i><%= tx.property&.short_address || "No Property" %>
-                              </div>
-                              <% agent = tx.creator_or_listing_user %>
-                              <% if agent %>
-                                <div class="text-muted small text-truncate" style="max-width: 170px;">
-                                  <i class="fa-solid fa-user-tie me-1 text-primary"></i>
-                                  <span>Agent: <%= agent.user_name %></span>
-                                </div>
-                              <% end %>
-                              <% if tx.involved_party %>
-                                <% if policy(tx.involved_party).show_personal_data? %>
-                                  <div class="text-success small text-truncate" style="max-width: 170px;">
-                                    <i class="fa-solid fa-user me-1"></i><%= tx.involved_party.full_name %>
-                                  </div>
-                                <% else %>
-                                  <div class="text-muted small fst-italic" style="font-size: 0.72rem;">
-                                    <i class="fa-solid fa-shield-halved me-1 text-secondary"></i>Client Confidential
-                                  </div>
-                                <% end %>
-                              <% end %>
-                            </div>
-                            <% unless idx == ordered.size - 1 %>
-                              <i class="fa-solid fa-arrow-right text-muted small"></i>
-                            <% end %>
-                          <% end %>
-                        </div>
+                      <% if chain.chain_completed? %>
+                        <span class="badge bg-success">Completed</span>
                       <% else %>
-                        <span class="text-muted fst-italic small">No transactions linked yet.</span>
+                        <span class="badge bg-warning">Open</span>
                       <% end %>
                     </td>
                     <td>
                       <% if chain.user %>
-                        <div class="fw-medium text-dark"><%= chain.user.user_name %></div>
+                        <div class="fw-medium"><%= chain.user.user_name %></div>
                         <% if chain.user.company.present? %>
-                          <small class="text-muted d-block"><%= chain.user.company %></small>
+                          <small class="text-muted"><%= chain.user.company %></small>
                         <% end %>
-                        <div class="small text-muted">
-                          <a href="mailto:<%= chain.user.email %>" class="text-decoration-none d-block"><i class="fa-solid fa-envelope me-1"></i><%= chain.user.email %></a>
-                          <% if chain.user.phone.present? %>
-                            <a href="tel:<%= chain.user.phone %>" class="text-decoration-none d-block"><i class="fa-solid fa-phone me-1"></i><%= chain.user.phone %></a>
-                          <% end %>
-                        </div>
                       <% else %>
                         <span class="text-muted">—</span>
                       <% end %>
                     </td>
                     <td class="text-end">
-                      <div class="btn-group btn-group-sm">
-                        <%= link_to chain_path(chain), class: "btn btn-outline-primary", title: "View details" do %>
-                          <i class="fa-solid fa-eye"></i>
-                        <% end %>
-                        <% if policy(chain).update? %>
-                          <%= link_to edit_chain_path(chain), class: "btn btn-outline-secondary", title: "Edit" do %>
-                            <i class="fa-solid fa-pen"></i>
-                          <% end %>
-                        <% end %>
-                        <% if policy(chain).destroy? %>
-                          <%= link_to chain_path(chain), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete Chain ##{chain.id}?" }, class: "btn btn-outline-danger", title: "Delete" do %>
-                            <i class="fa-solid fa-trash-can"></i>
-                          <% end %>
-                        <% end %>
-                      </div>
+                      <div class="chain-actions justify-content-end"><%= render "chains/actions", chain: chain %></div>
                     </td>
                   </tr>
                 <% end %>
@@ -224,106 +86,49 @@
             </table>
           </div>
         </div>
-      </div>
 
-      <!-- 2. Cards View -->
-      <div class="tab-pane fade" id="cards-view" role="tabpanel" aria-labelledby="cards-tab" tabindex="0">
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-          <% @chains.each do |chain| %>
-            <div class="col">
-              <div class="card h-100 shadow-sm border-0 position-relative overflow-hidden">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                  <span class="fw-bold text-dark">Chain #<%= chain.id %></span>
-                  <% if chain.chain_completed? %>
-                    <span class="badge bg-success">Completed</span>
-                  <% elsif chain.both_ends_closed? %>
-                    <span class="badge bg-primary">Open (In Progress)</span>
-                  <% else %>
-                    <span class="badge bg-warning text-dark">Open</span>
-                  <% end %>
-                </div>
-
-                <div class="card-body">
-                  <div class="d-flex justify-content-between text-muted small mb-2">
-                    <span><i class="fa-solid fa-arrows-split-up-and-left me-1"></i> <%= pluralize(chain.transactions.size, "transaction") %></span>
-                    <% if chain.user %>
-                      <span><i class="fa-solid fa-user-pen me-1"></i> <%= chain.user.user_name %></span>
-                    <% end %>
-                  </div>
-
-                  <!-- Boundary pills -->
-                  <div class="d-flex gap-1 mb-3" style="font-size: 0.72rem;">
-                    <span class="badge <%= chain.first_time_buyer_at_start? ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle' %>">
-                      <i class="fa-solid <%= chain.first_time_buyer_at_start? ? 'fa-check' : 'fa-xmark' %> me-1"></i>FTB Start
-                    </span>
-                    <span class="badge <%= chain.leaving_market_at_end? ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle' %>">
-                      <i class="fa-solid <%= chain.leaving_market_at_end? ? 'fa-check' : 'fa-xmark' %> me-1"></i>Market Exit
-                    </span>
-                  </div>
-
-                  <% ordered = chain.ordered_transactions %>
-                  <% if ordered.any? %>
-                    <h6 class="small text-uppercase text-muted fw-semibold mb-2">Chain Links:</h6>
-                    <div class="list-group list-group-flush small">
-                      <% ordered.each_with_index do |tx, idx| %>
-                        <div class="list-group-item px-0 py-2 border-bottom">
-                          <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-bold text-dark">Link <%= idx + 1 %>: TX #<%= tx.id %></span>
-                            <span class="badge <%= tx.status_badge_class %>" style="font-size: 0.65rem;"><%= tx.status_label %></span>
-                          </div>
-                          <div class="text-truncate text-secondary">
-                            <%= tx.property&.short_address || "No Property" %>
-                          </div>
-                          <% agent = tx.creator_or_listing_user %>
-                          <% if agent %>
-                            <div class="text-primary small">
-                              <i class="fa-solid fa-user-tie me-1"></i>Agent: <%= agent.user_name %>
-                              <% if agent.company.present? %>
-                                <span class="text-muted">(<%= agent.company %>)</span>
-                              <% end %>
-                            </div>
-                          <% end %>
-                          <% if tx.involved_party %>
-                            <% if policy(tx.involved_party).show_personal_data? %>
-                              <div class="text-muted small">
-                                <i class="fa-solid fa-user me-1 text-success"></i>Client: <%= tx.involved_party.full_name %>
-                              </div>
-                            <% else %>
-                              <div class="text-muted small fst-italic">
-                                <i class="fa-solid fa-shield-halved me-1"></i>Client Protected
-                              </div>
-                            <% end %>
-                          <% end %>
-                        </div>
-                      <% end %>
+        <div class="tab-pane fade" id="cards-view" role="tabpanel" aria-labelledby="cards-tab" tabindex="0">
+          <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 card-grid">
+            <% @chains.each do |chain| %>
+              <% done = chain.transactions.count(&:completed?) %>
+              <% total = chain.transactions.size %>
+              <div class="col">
+                <div class="card record-card card--chain">
+                  <div class="card-header">
+                    <div>
+                      <h2 class="record-card__title"><%= link_to chain_name(chain), chain_path(chain) %></h2>
+                      <p class="record-card__subtitle"><%= chain_summary(chain) %></p>
                     </div>
-                  <% else %>
-                    <p class="text-muted small fst-italic mb-0">No transactions added yet.</p>
-                  <% end %>
-                </div>
-
-                <div class="card-footer bg-transparent border-top d-flex justify-content-between align-items-center py-2 px-3">
-                  <%= link_to chain_path(chain), class: "btn btn-sm btn-outline-primary" do %>
-                    <i class="fa-solid fa-eye me-1"></i> View Chain
-                  <% end %>
-                  <div class="btn-group btn-group-sm">
-                    <% if policy(chain).update? %>
-                      <%= link_to edit_chain_path(chain), class: "btn btn-outline-secondary", title: "Edit" do %>
-                        <i class="fa-solid fa-pen"></i>
-                      <% end %>
-                    <% end %>
-                    <% if policy(chain).destroy? %>
-                      <%= link_to chain_path(chain), data: { turbo_method: :delete, turbo_confirm: "Delete this chain?" }, class: "btn btn-outline-danger", title: "Delete" do %>
-                        <i class="fa-solid fa-trash-can"></i>
-                      <% end %>
+                    <% if chain.chain_completed? %>
+                      <span class="badge bg-success">Completed</span>
+                    <% else %>
+                      <span class="badge bg-warning">Open</span>
                     <% end %>
                   </div>
+
+                  <div class="card-body">
+                    <div class="position-relative z-2"><%= render "chains/flow", chain: chain, limit: 4 %></div>
+
+                    <% if total.positive? %>
+                      <div class="mt-auto">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                          <span>Completed</span>
+                          <span class="fw-semibold"><%= done %> / <%= total %></span>
+                        </div>
+                        <div class="progress chain-progress" role="progressbar" aria-label="Completed links" aria-valuenow="<%= done %>" aria-valuemin="0" aria-valuemax="<%= total %>">
+                          <div class="progress-bar" style="width: <%= (done * 100.0 / total).round %>%"></div>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+
+                  <div class="card-footer chain-actions"><%= render "chains/actions", chain: chain %></div>
                 </div>
               </div>
-            </div>
-          <% end %>
+            <% end %>
+          </div>
         </div>
       </div>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
 </div>

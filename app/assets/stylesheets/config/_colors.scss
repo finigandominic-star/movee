@@ -1,10 +1,37 @@
-// Define variables for your color scheme
+// Movee brand palette
+$movee-lime:   #BCFB89; // brand accent, highlights, "next step" call-outs (always with navy text)
+$movee-green:  #05C274; // success / completed (fills & icons, not body text)
+$movee-teal:   #094542; // secondary actions, chain links
+$movee-sky:    #85D5F6; // info / in progress fills
+$movee-indigo: #4750DD; // primary actions
+$movee-navy:   #212161; // text, headings, dark surfaces
 
-// For example:
-$red: #FD1015;
-$blue: #0D6EFD;
-$yellow: #FFC65A;
-$orange: #E67E22;
-$green: #1EDD88;
-$gray: #0E0000;
-$light-gray: #F4F4F4;
+// Neutrals
+$movee-ink:        #1B1B3A;
+$movee-muted:      #5E6178;
+$movee-border:     #DDE3EE;
+$movee-surface:    #FFFFFF;
+$movee-surface-2:  #F6F9FC; // alternating rows, card bodies
+$movee-page-bg:    #EEF5FA; // light blue page background
+
+// Status (kept soft so tags don't shout)
+$movee-amber: #E9A23B;
+$movee-red:   #C53030; // dark enough for white text (5.6:1)
+
+// Entity accents: each record type gets its own header colour so pages are recognisable at a glance.
+// Two tones per entity let grids of cards alternate.
+$entity-colors: (
+  "party":       ($movee-indigo, $movee-navy),
+  "property":    ($movee-teal, #0E5E5A),
+  "transaction": ($movee-navy, #2E2E86),
+  "chain":       ($movee-teal, $movee-navy),
+);
+
+// Legacy template names kept so existing partials still compile
+$red: $movee-red;
+$blue: $movee-indigo;
+$yellow: $movee-amber;
+$orange: $movee-amber;
+$green: $movee-green;
+$gray: $movee-ink;
+$light-gray: $movee-page-bg;

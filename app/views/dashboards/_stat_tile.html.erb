@@ -1,0 +1,8 @@
+<%# Clickable count tile. Locals: entity, icon, count, label, path %>
+<div class="col">
+  <%= link_to path, class: "card dashboard-tile dashboard-tile--#{entity}" do %>
+    <span class="dashboard-tile__icon" aria-hidden="true"><i class="fa-solid <%= icon %>"></i></span>
+    <span class="dashboard-tile__count"><%= count %></span>
+    <span class="dashboard-tile__label"><%= label %></span>
+  <% end %>
+</div>

@@ -1,63 +1,36 @@
 // Movee footer (app/views/shared/_footer.html.erb)
-$footer-movee-bg: #F7F7F7;
-$footer-movee-text: #000000;
-$footer-movee-muted: #555555;
-$footer-movee-icon: #828282;
-$footer-movee-divider: #4750DD;
-
 .footer-movee {
-  background: $footer-movee-bg;
-  padding-bottom: 2rem;
-  margin-top: 3rem;
+  flex-shrink: 0;
+  background: $movee-surface;
+  border-top: 1px solid $movee-border;
+  padding-block: 1.25rem;
+  font-size: .875rem;
+  color: $movee-muted;
 
-  .footer-movee-divider {
-    height: 1px;
-    background: $footer-movee-divider;
-    margin: 0 0 2.5rem;
-  }
-
-  .footer-movee-brand {
-    font-size: 1.6rem;
-    color: $footer-movee-text;
-    text-decoration: none;
-  }
-
-  .footer-movee-social {
+  .footer-movee__inner {
     display: flex;
-    gap: 1.75rem;
-    margin-top: 3rem;
-
-    a {
-      color: $footer-movee-icon;
-      font-size: 1.4rem;
-
-      &:hover {
-        color: $footer-movee-text;
-      }
-    }
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
   }
 
-  .footer-movee-links {
+  .footer-movee__brand {
+    font-weight: 800;
+    color: $movee-navy;
+  }
+
+  .footer-movee__links {
+    display: flex;
+    gap: 1.25rem;
     list-style: none;
-    padding: 0;
     margin: 0;
-    font-size: 0.8rem;
-    line-height: 1.4;
+    padding: 0;
 
     a {
-      color: $footer-movee-muted;
-      text-decoration: none;
+      color: $movee-muted;
 
-      &:hover {
-        color: $footer-movee-text;
-        text-decoration: underline;
-      }
-    }
-  }
-
-  @media (min-width: 768px) {
-    .footer-movee-links {
-      text-align: right;
+      &:hover { color: $movee-navy; }
     }
   }
 }

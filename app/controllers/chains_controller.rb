@@ -88,6 +88,6 @@ class ChainsController < ApplicationController
   end
 
   def chain_params
-    params.require(:chain).permit(:active)
+    params.require(:chain).permit(:name, :active)
   end
 end

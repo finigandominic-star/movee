@@ -2,7 +2,7 @@ class TransactionsController < ApplicationController
   before_action :set_transaction, only: %i[show edit update destroy remove_involved_party update_stage]
 
   def index
-    @transactions = policy_scope(Transaction).includes(:property, :chain, :involved_party, :user).order(created_at: :desc)
+    @transactions = policy_scope(Transaction).includes(:property, :involved_party, :user, chain: { transactions: :property }).order(created_at: :desc)
   end
 
   def show
@@ -51,7 +51,7 @@ class TransactionsController < ApplicationController
   def remove_involved_party
     authorize @transaction, :update?
     @transaction.update(involved_party_id: nil)
-    redirect_back fallback_location: @transaction, notice: "Involved party was unassigned from this transaction."
+    redirect_back fallback_location: @transaction, notice: "Buyer was removed from this transaction."
   end
 
   def update_stage

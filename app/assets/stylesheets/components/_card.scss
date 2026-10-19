@@ -1,0 +1,179 @@
+// Cards: rounded, drop shadow, dark header segment, light body segment.
+.card {
+  box-shadow: $card-box-shadow;
+  overflow: hidden;
+
+  > .card-body {
+    background: $movee-surface;
+  }
+}
+
+// Dark header segment. Bootstrap utilities used inside legacy headers are re-coloured for contrast.
+.card-header {
+  border-bottom: 0;
+
+  h1, h2, h3, h4, h5, h6, .card-title, .text-dark, .text-body {
+    color: #FFFFFF !important;
+  }
+
+  .text-muted, .text-secondary, .text-body-secondary {
+    color: rgba(#FFFFFF, .72) !important;
+  }
+
+  .text-primary, .text-success, .text-info {
+    color: $movee-lime !important;
+  }
+
+  .btn-outline-primary, .btn-outline-secondary, .btn-outline-dark, .btn-light {
+    --bs-btn-color: #FFFFFF;
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: rgba(255, 255, 255, .5);
+    --bs-btn-hover-color: #{$movee-navy};
+    --bs-btn-hover-bg: #{$movee-lime};
+    --bs-btn-hover-border-color: #{$movee-lime};
+    --bs-btn-active-color: #{$movee-navy};
+    --bs-btn-active-bg: #{$movee-lime};
+  }
+
+  .btn-primary {
+    --bs-btn-color: #{$movee-navy};
+    --bs-btn-bg: #{$movee-lime};
+    --bs-btn-border-color: #{$movee-lime};
+    --bs-btn-hover-color: #{$movee-navy};
+    --bs-btn-hover-bg: #{darken($movee-lime, 8%)};
+    --bs-btn-hover-border-color: #{darken($movee-lime, 8%)};
+  }
+}
+
+// Entity colour variants: .card--party, .card--property, .card--transaction, .card--chain
+@each $entity, $tones in $entity-colors {
+  .card--#{$entity} .card-header {
+    background: nth($tones, 1);
+  }
+
+  // Alternate the header tone across a grid of cards
+  .card-grid > .col:nth-child(even) .card--#{$entity} .card-header {
+    background: nth($tones, 2);
+  }
+}
+
+// Clickable record card in index grids
+.record-card {
+  height: 100%;
+  transition: transform .15s ease, box-shadow .15s ease;
+
+  &:hover,
+  &:focus-within {
+    transform: translateY(-2px);
+    box-shadow: $box-shadow-lg;
+  }
+
+  // Fixed height so every header in a grid lines up regardless of text length
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem;
+    height: 6.25rem;
+
+    > :first-child {
+      min-width: 0;
+    }
+
+    .badge {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+  }
+
+  .record-card__title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0;
+    color: #FFFFFF;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+
+    a {
+      color: inherit;
+      text-decoration: none;
+
+      // Whole card is the link target
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+      }
+    }
+  }
+
+  .record-card__subtitle {
+    font-size: .85rem;
+    color: rgba(#FFFFFF, .72);
+    margin: .15rem 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    background: $movee-surface-2;
+  }
+
+  .card-footer {
+    position: relative;
+    z-index: 2; // keep action buttons above the stretched link
+    background: $movee-surface;
+    border-top: 1px solid $movee-border;
+    display: flex;
+    justify-content: flex-end;
+    gap: .5rem;
+  }
+
+  .record-card__image {
+    height: 160px;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .record-card__image--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba($movee-sky, .25);
+    color: rgba($movee-navy, .35);
+    font-size: 2.5rem;
+  }
+}
+
+// Label / value line inside a record card
+.record-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .75rem;
+  font-size: .9rem;
+
+  dt {
+    font-weight: 500;
+    color: $movee-muted;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    color: $movee-navy;
+    text-align: right;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

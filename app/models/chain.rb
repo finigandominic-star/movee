@@ -1,6 +1,9 @@
 class Chain < ApplicationRecord
   belongs_to :user, optional: true
   has_many :transactions, dependent: :destroy
+
+  normalizes :name, with: ->(name) { name.strip.presence }
+  validates :name, length: { maximum: 60 }
   has_many :properties, through: :transactions
   has_many :involved_parties, through: :transactions
 
@@ -89,7 +92,7 @@ class Chain < ApplicationRecord
     return false if end_tx.nil?
 
     seller_party = end_tx.property&.involved_party
-    seller_party.present? && seller_party.seller? && !seller_party.buyer?
+    seller_party.present? && seller_party.leaving_market?
   end
 
   # A chain's ends are closed when both start (FTB) and end (leaving market) boundaries are satisfied.
@@ -250,6 +253,14 @@ class Chain < ApplicationRecord
         badge_class: "bg-success text-white",
         party_name: end_transaction.property.involved_party.full_name,
         description: "#{end_transaction.property.involved_party.full_name} has no onward purchase (leaving market / no onward chain)."
+      }
+    elsif end_transaction&.property&.involved_party&.onward_purchase == "undecided"
+      {
+        closed: false,
+        label: "Open (Onward plans unknown)",
+        badge_class: "bg-warning text-dark",
+        party_name: end_transaction.property.involved_party.full_name,
+        description: "Confirm whether #{end_transaction.property.involved_party.full_name} is buying onward or leaving the market."
       }
     elsif end_transaction&.property&.involved_party.present?
       {

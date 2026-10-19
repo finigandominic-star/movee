@@ -1,0 +1,10 @@
+<div class="sale-step__footer">
+  <% if (prev = previous_sale_step) %>
+    <%= link_to new_sale_path(sale_step_params(prev)), class: "btn btn-outline-secondary" do %>
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back
+    <% end %>
+  <% else %>
+    <span></span>
+  <% end %>
+  <%= yield %>
+</div>

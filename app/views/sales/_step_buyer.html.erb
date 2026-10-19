@@ -1,0 +1,61 @@
+<% focus_new = @new_party.errors.any? || @clients.empty? %>
+<% chosen_id = params[:existing_id].presence&.to_i || @buyer&.id %>
+<section class="card card--party sale-step" aria-labelledby="saleStepTitle">
+  <div class="card-header">
+    <h2 class="h5 mb-1" id="saleStepTitle">Who is buying <%= @property.short_address %>?</h2>
+    <p class="small text-muted mb-0">Pick the buyer from your clients, add them now, or skip if there's no buyer yet.</p>
+  </div>
+  <div class="card-body p-4">
+    <%= render "sales/choice_error" %>
+    <div class="sale-options">
+      <div class="sale-option">
+        <h3 class="sale-option__title">Choose an existing client</h3>
+        <% if @clients.any? %>
+          <%= form_with url: sale_path, method: :post, local: true do %>
+            <%= render "sales/carry" %>
+            <fieldset>
+              <legend class="visually-hidden">Your clients</legend>
+              <div class="choice-list">
+                <% @clients.each_with_index do |client, index| %>
+                  <% checked = chosen_id == client.id %>
+                  <%= render "sales/choice", name: "existing_id", value: client.id, id: "buyer_#{client.id}",
+                        checked: checked,
+                        autofocus: !focus_new && (checked || (chosen_id.nil? && index.zero?)),
+                        title: client.full_name,
+                        meta: (client.email if policy(client).show_personal_data?),
+                        tags: client_role_tags(client) %>
+                <% end %>
+              </div>
+            </fieldset>
+            <div class="sale-option__actions">
+              <button type="submit" class="btn btn-primary">Continue <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+            </div>
+          <% end %>
+        <% else %>
+          <p class="text-muted small mb-0">No other clients yet. Add the buyer using the form, or skip for now.</p>
+        <% end %>
+      </div>
+
+      <div class="sale-or" role="separator"><span>or</span></div>
+
+      <div class="sale-option">
+        <h3 class="sale-option__title">Add a new client</h3>
+        <%= form_with model: @new_party, scope: :involved_party, url: sale_path, method: :post, local: true do |f| %>
+          <%= render "sales/carry" %>
+          <div class="row g-3">
+            <%= render "sales/field", f: f, record: @new_party, attr: :first_name, label: "First name", required: true, autofocus: focus_new, col: "col-12 col-sm-6" %>
+            <%= render "sales/field", f: f, record: @new_party, attr: :last_name, label: "Last name", required: true, col: "col-12 col-sm-6" %>
+            <%= render "sales/field", f: f, record: @new_party, attr: :email, label: "Email address", type: :email_field, required: true, placeholder: "name@example.com" %>
+            <%= render "sales/field", f: f, record: @new_party, attr: :phone, label: "Phone number", type: :telephone_field, required: true, placeholder: "+44 7123 456789" %>
+          </div>
+          <div class="sale-option__actions">
+            <button type="submit" class="btn btn-secondary">Create and continue</button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <%= render layout: "sales/step_footer" do %>
+      <%= link_to "Skip — no buyer yet", new_sale_path(step: "chain", vendor_id: @vendor.id, property_id: @property.id), class: "btn btn-outline-primary" %>
+    <% end %>
+  </div>
+</section>

@@ -1,26 +1,12 @@
-<footer class="footer-movee">
-  <div class="container-fluid px-5">
-    <div class="footer-movee-divider"></div>
-
-    <div class="d-flex flex-column flex-md-row justify-content-between gap-4">
-      <div>
-        <%= link_to "Movee", root_path, class: "footer-movee-brand" %>
-
-        <div class="footer-movee-social">
-          <%= link_to "#", aria: { label: "Facebook" } do %><i class="fa-brands fa-facebook"></i><% end %>
-          <%= link_to "#", aria: { label: "LinkedIn" } do %><i class="fa-brands fa-linkedin"></i><% end %>
-          <%= link_to "#", aria: { label: "YouTube" } do %><i class="fa-brands fa-youtube"></i><% end %>
-          <%= link_to "#", aria: { label: "Instagram" } do %><i class="fa-brands fa-instagram"></i><% end %>
-        </div>
-      </div>
-
-      <ul class="footer-movee-links">
-        <li><%= link_to "Privacy Policy", "#" %></li>
-        <li><%= link_to "About Us", "#" %></li>
-        <li><%= link_to "Frequently Asked Questions", "#" %></li>
-        <li><%= link_to "Cookie Policy", "#" %></li>
-        <li><%= link_to "Terms of Use", "#" %></li>
+<footer class="footer-movee" aria-label="Site footer">
+  <div class="container footer-movee__inner">
+    <span>&copy; <%= Date.current.year %> <%= link_to "Movee", root_path, class: "footer-movee__brand" %></span>
+    <nav aria-label="Legal">
+      <ul class="footer-movee__links">
+        <li><%= link_to "Privacy", "#" %></li>
+        <li><%= link_to "Terms", "#" %></li>
+        <li><%= link_to "Cookies", "#" %></li>
       </ul>
-    </div>
+    </nav>
   </div>
 </footer>

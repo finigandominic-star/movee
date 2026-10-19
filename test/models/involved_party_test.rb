@@ -58,4 +58,27 @@ class InvolvedPartyTest < ActiveSupport::TestCase
     contact = InvolvedParty.new(buyer: false, seller: false)
     assert_equal "Contact", contact.roles_label
   end
+
+  test "a new seller's onward plans default to undecided and do not close a chain" do
+    party = InvolvedParty.new(seller: true)
+    assert_equal "undecided", party.onward_purchase
+    assert_not party.leaving_market?
+  end
+
+  test "only an explicit leaving_market seller is leaving the market" do
+    assert InvolvedParty.new(seller: true, onward_purchase: "leaving_market").leaving_market?
+    assert_not InvolvedParty.new(seller: false, onward_purchase: "leaving_market").leaving_market?
+  end
+
+  test "buying onward marks the client as a buyer" do
+    party = InvolvedParty.new(first_name: "A", last_name: "B", email: "ab@example.com", phone: "+44 7700 900999", seller: true, onward_purchase: "buying")
+    party.valid?
+    assert party.buyer?
+  end
+
+  test "rejects unknown onward plans" do
+    party = InvolvedParty.new(onward_purchase: "maybe")
+    party.valid?
+    assert party.errors[:onward_purchase].any?
+  end
 end

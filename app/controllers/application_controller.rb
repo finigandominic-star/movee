@@ -16,13 +16,17 @@ class ApplicationController < ActionController::Base
 
   protected
 
+  def after_sign_in_path_for(resource)
+    stored_location_for(resource) || dashboard_path
+  end
+
   def configure_permitted_parameters
     devise_parameter_sanitizer.permit(:sign_up, keys: [:user_name, :company, :phone])
     devise_parameter_sanitizer.permit(:account_update, keys: [:user_name, :company, :phone])
   end
 
   def skip_pundit?
-    devise_controller? || params[:controller] =~ /(^(rails_)?admin)|(^pages$)|(^chats$)|(^messages$)/
+    devise_controller? || params[:controller] =~ /(^(rails_)?admin)|(^pages$)|(^chats$)|(^messages$)|(^dashboards$)/
   end
 
   private

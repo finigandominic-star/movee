@@ -1,0 +1,30 @@
+// Tables: dark header row, two alternating light row colours, wrapped in a rounded card-like shell.
+.table-responsive {
+  border-radius: $border-radius-lg;
+  box-shadow: $box-shadow-sm;
+  background: $movee-surface;
+}
+
+.table {
+  margin-bottom: 0;
+  --bs-table-bg: #{$movee-surface};
+
+  > thead > tr > th {
+    background: $movee-navy;
+    color: #FFFFFF;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    border-bottom: 0;
+    white-space: nowrap;
+  }
+
+  > tbody > tr:nth-of-type(even) > * {
+    --bs-table-bg-type: #{$movee-surface-2};
+  }
+
+  > tbody > tr:last-child > * {
+    border-bottom: 0;
+  }
+}

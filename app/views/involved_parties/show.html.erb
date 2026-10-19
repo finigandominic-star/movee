@@ -1,106 +1,70 @@
-<div class="container py-4">
-  <!-- Breadcrumb Navigation -->
-  <nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><%= link_to "Home", root_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item"><%= link_to "Involved Parties", involved_parties_path, class: "text-decoration-none" %></li>
-      <li class="breadcrumb-item active" aria-current="page"><%= @involved_party.full_name %></li>
-    </ol>
-  </nav>
+<% party = @involved_party %>
+<% can_update = policy(party).update? %>
+<% added_on = party.created_at&.strftime("%d %b %Y") %>
 
-  <!-- Page Header & Action Bar -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
-    <div>
-      <div class="d-flex align-items-center gap-2 mb-1">
-        <h1 class="h2 fw-bold text-dark mb-0"><%= @involved_party.full_name %></h1>
-        <div>
-          <% if @involved_party.seller? %>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-6">Seller</span>
-          <% end %>
-          <% if @involved_party.buyer? %>
-            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-6">Buyer</span>
-          <% end %>
-          <% unless @involved_party.seller? || @involved_party.buyer? %>
-            <span class="badge bg-light text-muted border fs-6">General Contact</span>
-          <% end %>
-        </div>
-      </div>
-      <p class="text-muted mb-0 small">
-        Client ID #<%= @involved_party.id %> • Registered on <%= @involved_party.created_at.strftime("%B %d, %Y") %>
-      </p>
-    </div>
-
-    <!-- Actions -->
-    <div class="d-flex gap-2">
-      <%= link_to involved_parties_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm" do %>
-        <i class="fa-solid fa-arrow-left"></i>
-        <span>Back to List</span>
+<div class="container py-4 py-lg-5">
+  <%= render layout: "shared/page_header", locals: { title: party.full_name, subtitle: safe_join([client_role_tags(party), (" · #{party.onward_purchase_label}" if party.seller?), (" · Client since #{added_on}" if added_on)].compact) } do %>
+    <% if can_update && party.seller? %>
+      <%= link_to new_property_path(involved_party_id: party.id), class: "btn btn-accent" do %>
+        <i class="fa-solid fa-house-circle-check" aria-hidden="true"></i>
+        <span>Add property for this client</span>
       <% end %>
-
-      <% if policy(@involved_party).update? %>
-        <%= link_to edit_involved_party_path(@involved_party), class: "btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" do %>
-          <i class="fa-solid fa-pen"></i>
-          <span>Edit Party</span>
-        <% end %>
+    <% end %>
+    <% if can_update && party.buyer? %>
+      <%= link_to new_transaction_path(involved_party_id: party.id), class: "btn btn-accent" do %>
+        <i class="fa-solid fa-handshake" aria-hidden="true"></i>
+        <span>Start transaction as buyer</span>
       <% end %>
-
-      <% if policy(@involved_party).destroy? %>
-        <%= link_to involved_party_path(@involved_party), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete #{@involved_party.full_name}?" }, class: "btn btn-outline-danger d-inline-flex align-items-center shadow-sm", title: "Delete Party" do %>
-          <i class="fa-solid fa-trash-can"></i>
-        <% end %>
+    <% end %>
+    <% if can_update %>
+      <%= link_to edit_involved_party_path(party), class: "btn btn-outline-primary" do %>
+        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+        <span>Edit</span>
       <% end %>
-    </div>
-  </div>
+    <% end %>
+    <% if policy(party).destroy? %>
+      <%= link_to involved_party_path(party), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete #{party.full_name}?" }, class: "btn btn-outline-danger btn-icon", aria: { label: "Delete client" } do %>
+        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+      <% end %>
+    <% end %>
+  <% end %>
 
   <div class="row g-4">
-    <!-- Left Column: Assigned Properties & Transactions Management -->
-    <div class="col-12 col-lg-8">
-      <!-- 1. Assigned Properties Section -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
-          <div class="d-flex align-items-center gap-2">
-            <h5 class="card-title fw-bold text-dark mb-0">
-              <i class="fa-solid fa-house text-primary me-2"></i> Assigned Properties
-            </h5>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
-              <%= @involved_party.properties.size %> Assigned
-            </span>
-          </div>
-
-          <%= link_to new_property_path(involved_party_id: @involved_party.id), class: "btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" do %>
-            <i class="fa-solid fa-plus"></i>
-            <span>New Property for this Client</span>
+    <div class="col-12 col-lg-8 d-flex flex-column gap-4">
+      <div class="card card--property">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <h2 class="h5 mb-0">Properties (as vendor) <span class="badge ms-1"><%= party.properties.size %></span></h2>
+          <% unless can_update && party.seller? %>
+            <%= link_to new_property_path(involved_party_id: party.id), class: "btn btn-sm btn-outline-secondary" do %>
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              <span>Add property</span>
+            <% end %>
           <% end %>
         </div>
 
-        <div class="card-body p-4">
-          <!-- Table of Assigned Properties -->
-          <% if @involved_party.properties.any? %>
-            <div class="table-responsive mb-4">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light small text-uppercase text-muted">
+        <div class="card-body">
+          <% if party.properties.any? %>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <caption class="visually-hidden">Properties this client is selling</caption>
+                <thead>
                   <tr>
-                    <th>Address</th>
-                    <th>City & Postcode</th>
-                    <th>Status</th>
-                    <th class="text-end">Actions</th>
+                    <th scope="col">Address</th>
+                    <th scope="col">Post code</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <% @involved_party.properties.each do |property| %>
+                  <% party.properties.each do |property| %>
                     <tr>
                       <td>
-                        <div class="fw-bold text-dark">
-                          <%= link_to property.short_address, property_path(property), class: "text-decoration-none text-dark" %>
-                        </div>
-                        <% if property.second_line_of_address.present? %>
-                          <small class="text-muted"><%= property.second_line_of_address %></small>
+                        <%= link_to property.short_address, property_path(property), class: "fw-semibold text-decoration-none" %>
+                        <% if property.city.present? %>
+                          <div class="small text-muted"><%= property.city %></div>
                         <% end %>
                       </td>
-                      <td>
-                        <span><%= property.city %></span>
-                        <span class="badge bg-light text-dark border ms-1"><%= property.post_code %></span>
-                      </td>
+                      <td><%= property.post_code %></td>
                       <td>
                         <% if property.sold? %>
                           <span class="badge bg-secondary">Sold</span>
@@ -110,13 +74,13 @@
                       </td>
                       <td class="text-end">
                         <div class="d-inline-flex gap-1">
-                          <%= link_to property_path(property), class: "btn btn-sm btn-outline-primary", title: "View Property" do %>
-                            <i class="fa-solid fa-eye"></i>
+                          <%= link_to property_path(property), class: "btn btn-sm btn-outline-primary btn-icon", aria: { label: "View #{property.short_address}" } do %>
+                            <i class="fa-solid fa-eye" aria-hidden="true"></i>
                           <% end %>
-                          <!-- Remove / Unassign Property -->
-                          <%= button_to unassign_property_involved_party_path(@involved_party, property.id), method: :delete, data: { turbo_confirm: "Remove #{property.short_address} from #{@involved_party.full_name}?" }, class: "btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1", title: "Unassign property from client" do %>
-                            <i class="fa-solid fa-link-slash"></i>
-                            <span class="d-none d-sm-inline">Remove</span>
+                          <% if can_update %>
+                            <%= button_to unassign_property_involved_party_path(party, property.id), method: :delete, data: { turbo_confirm: "Remove #{property.short_address} from #{party.full_name}?" }, class: "btn btn-sm btn-outline-danger btn-icon", aria: { label: "Unlink #{property.short_address} from client" } do %>
+                              <i class="fa-solid fa-link-slash" aria-hidden="true"></i>
+                            <% end %>
                           <% end %>
                         </div>
                       </td>
@@ -126,107 +90,84 @@
               </table>
             </div>
           <% else %>
-            <div class="p-3 text-center text-muted bg-light rounded-3 mb-4">
-              <i class="fa-solid fa-house-chimney-crack fa-2x text-secondary opacity-50 mb-2 d-block"></i>
-              No properties are currently assigned to this party.
-            </div>
+            <p class="text-muted mb-0">No properties linked to this client yet.</p>
           <% end %>
 
-          <!-- Assign Existing Property Form -->
-          <div class="p-3 bg-light rounded-3 border">
-            <h6 class="fw-bold text-dark mb-2 small text-uppercase">
-              <i class="fa-solid fa-link me-1 text-primary"></i> Assign Existing Property
-            </h6>
-            <% if @available_properties.any? %>
-              <%= form_with url: assign_property_involved_party_path(@involved_party), method: :post, class: "row g-2 align-items-center" do |f| %>
-                <div class="col-12 col-sm-8">
+          <% if can_update %>
+            <details class="mt-3 small">
+              <summary class="text-muted">Link an existing property</summary>
+              <% if @available_properties.any? %>
+                <%= form_with url: assign_property_involved_party_path(party), method: :post, class: "d-flex flex-wrap gap-2 mt-2" do |f| %>
+                  <%= f.label :property_id, "Property", class: "visually-hidden" %>
                   <%= f.collection_select :property_id,
                       @available_properties,
                       :id,
                       ->(p) { "#{p.short_address}, #{p.city} (#{p.post_code})" },
-                      { prompt: "-- Select Unassigned Property --" },
-                      { class: "form-select form-select-sm", required: true } %>
-                </div>
-                <div class="col-12 col-sm-4">
-                  <%= f.button class: "btn btn-sm btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-1" do %>
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Assign Property</span>
-                  <% end %>
-                </div>
+                      { prompt: "Select an unlinked property" },
+                      { class: "form-select form-select-sm flex-grow-1 w-auto", required: true } %>
+                  <%= f.button "Link property", class: "btn btn-sm btn-outline-primary" %>
+                <% end %>
+              <% else %>
+                <p class="text-muted mt-2 mb-0">Every property already has a vendor.</p>
               <% end %>
-            <% else %>
-              <p class="small text-muted mb-0">All existing properties currently have assigned clients. You can create a new property or reassign from another record.</p>
-            <% end %>
-          </div>
+            </details>
+          <% end %>
         </div>
       </div>
 
-      <!-- 2. Assigned Transactions Section -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
-          <div class="d-flex align-items-center gap-2">
-            <h5 class="card-title fw-bold text-dark mb-0">
-              <i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i> Deal Transactions
-            </h5>
-            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
-              <%= @involved_party.transactions.size %> Associated
-            </span>
-          </div>
-
-          <%= link_to new_transaction_path(involved_party_id: @involved_party.id), class: "btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" do %>
-            <i class="fa-solid fa-plus"></i>
-            <span>Record Transaction for this Client</span>
+      <div class="card card--transaction">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <h2 class="h5 mb-0">Transactions (as buyer) <span class="badge ms-1"><%= party.transactions.size %></span></h2>
+          <% unless can_update && party.buyer? %>
+            <%= link_to new_transaction_path(involved_party_id: party.id), class: "btn btn-sm btn-outline-secondary" do %>
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              <span>Add transaction</span>
+            <% end %>
           <% end %>
         </div>
 
-        <div class="card-body p-4">
-          <!-- Table of Assigned Transactions -->
-          <% if @involved_party.transactions.any? %>
-            <div class="table-responsive mb-4">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light small text-uppercase text-muted">
+        <div class="card-body">
+          <% if party.transactions.any? %>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <caption class="visually-hidden">Transactions where this client is the buyer</caption>
+                <thead>
                   <tr>
-                    <th>Transaction</th>
-                    <th>Property</th>
-                    <th>Chain</th>
-                    <th>Status</th>
-                    <th class="text-end">Actions</th>
+                    <th scope="col">Property</th>
+                    <th scope="col">Chain</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <% @involved_party.transactions.each do |tx| %>
+                  <% party.transactions.each do |tx| %>
                     <tr>
-                      <td class="fw-semibold">
-                        <%= link_to "##{tx.id}", transaction_path(tx), class: "text-decoration-none fw-bold" %>
-                      </td>
                       <td>
                         <% if tx.property %>
-                          <%= link_to tx.property.short_address, property_path(tx.property), class: "text-decoration-none text-dark fw-medium" %>
+                          <%= link_to tx.property.short_address, transaction_path(tx), class: "fw-semibold text-decoration-none" %>
                         <% else %>
-                          <span class="text-muted">—</span>
+                          <%= link_to "Transaction ##{tx.id}", transaction_path(tx), class: "fw-semibold text-decoration-none" %>
                         <% end %>
+                        <div class="small text-muted">Transaction #<%= tx.id %></div>
                       </td>
                       <td>
                         <% if tx.chain %>
-                          <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
-                            Chain #<%= tx.chain.id %>
-                          </span>
+                          <%= link_to chain_name(tx.chain), chain_path(tx.chain), class: "text-decoration-none" %>
+                          <div class="small text-muted">Chain #<%= tx.chain.id %></div>
                         <% else %>
                           <span class="text-muted">—</span>
                         <% end %>
                       </td>
-                      <td>
-                        <span class="badge <%= tx.status_badge_class %>"><%= tx.status_label %></span>
-                      </td>
+                      <td><span class="badge <%= tx.status_badge_class %>"><%= tx.status_label %></span></td>
                       <td class="text-end">
                         <div class="d-inline-flex gap-1">
-                          <%= link_to transaction_path(tx), class: "btn btn-sm btn-outline-primary", title: "View Transaction" do %>
-                            <i class="fa-solid fa-eye"></i>
+                          <%= link_to transaction_path(tx), class: "btn btn-sm btn-outline-primary btn-icon", aria: { label: "View transaction ##{tx.id}" } do %>
+                            <i class="fa-solid fa-eye" aria-hidden="true"></i>
                           <% end %>
-                          <!-- Remove / Unassign Transaction -->
-                          <%= button_to unassign_transaction_involved_party_path(@involved_party, tx.id), method: :delete, data: { turbo_confirm: "Remove Transaction ##{tx.id} from #{@involved_party.full_name}?" }, class: "btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1", title: "Unassign transaction from client" do %>
-                            <i class="fa-solid fa-link-slash"></i>
-                            <span class="d-none d-sm-inline">Remove</span>
+                          <% if can_update %>
+                            <%= button_to unassign_transaction_involved_party_path(party, tx.id), method: :delete, data: { turbo_confirm: "Remove Transaction ##{tx.id} from #{party.full_name}?" }, class: "btn btn-sm btn-outline-danger btn-icon", aria: { label: "Unlink transaction ##{tx.id} from client" } do %>
+                              <i class="fa-solid fa-link-slash" aria-hidden="true"></i>
+                            <% end %>
                           <% end %>
                         </div>
                       </td>
@@ -236,127 +177,80 @@
               </table>
             </div>
           <% else %>
-            <div class="p-3 text-center text-muted bg-light rounded-3 mb-4">
-              <i class="fa-solid fa-file-circle-xmark fa-2x text-secondary opacity-50 mb-2 d-block"></i>
-              No transactions currently assigned to this party.
-            </div>
+            <p class="text-muted mb-0">No transactions linked to this client yet.</p>
           <% end %>
 
-          <!-- Assign Existing Transaction Form -->
-          <div class="p-3 bg-light rounded-3 border">
-            <h6 class="fw-bold text-dark mb-2 small text-uppercase">
-              <i class="fa-solid fa-link me-1 text-primary"></i> Assign Existing Transaction
-            </h6>
-            <% if @available_transactions.any? %>
-              <%= form_with url: assign_transaction_involved_party_path(@involved_party), method: :post, class: "row g-2 align-items-center" do |f| %>
-                <div class="col-12 col-sm-8">
+          <% if can_update %>
+            <details class="mt-3 small">
+              <summary class="text-muted">Link an existing transaction</summary>
+              <% if @available_transactions.any? %>
+                <%= form_with url: assign_transaction_involved_party_path(party), method: :post, class: "d-flex flex-wrap gap-2 mt-2" do |f| %>
+                  <%= f.label :transaction_id, "Transaction", class: "visually-hidden" %>
                   <%= f.collection_select :transaction_id,
                       @available_transactions,
                       :id,
-                      ->(tx) { "Transaction ##{tx.id} — #{tx.property&.short_address || 'No Property'} (#{tx.status_label})" },
-                      { prompt: "-- Select Unassigned Transaction --" },
-                      { class: "form-select form-select-sm", required: true } %>
-                </div>
-                <div class="col-12 col-sm-4">
-                  <%= f.button class: "btn btn-sm btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-1" do %>
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Assign Transaction</span>
-                  <% end %>
-                </div>
+                      ->(tx) { "Transaction ##{tx.id} — #{tx.property&.short_address || 'No property'} (#{tx.status_label})" },
+                      { prompt: "Select a transaction without a buyer" },
+                      { class: "form-select form-select-sm flex-grow-1 w-auto", required: true } %>
+                  <%= f.button "Link transaction", class: "btn btn-sm btn-outline-primary" %>
+                <% end %>
+              <% else %>
+                <p class="text-muted mt-2 mb-0">Every transaction already has a buyer.</p>
               <% end %>
-            <% else %>
-              <p class="small text-muted mb-0">No unassigned transactions available to link.</p>
-            <% end %>
-          </div>
+            </details>
+          <% end %>
         </div>
       </div>
     </div>
 
-    <!-- Right Column: Profile & Contact Summary -->
     <div class="col-12 col-lg-4">
-      <!-- Contact Details Card -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 border-bottom">
-          <h6 class="card-title fw-bold text-dark mb-0">
-            <i class="fa-solid fa-address-card text-primary me-2"></i> Contact Details
-          </h6>
+      <div class="card card--party">
+        <div class="card-header">
+          <h2 class="h5 mb-0">Contact details</h2>
         </div>
-        <div class="card-body p-3">
-          <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
-            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-              <i class="fa-solid fa-user fa-xl"></i>
-            </div>
-            <div>
-              <h5 class="fw-bold text-dark mb-0"><%= @involved_party.full_name %></h5>
-              <span class="text-muted small"><%= @involved_party.roles_label %></span>
-            </div>
-          </div>
-
-          <% if policy(@involved_party).show_personal_data? %>
-            <ul class="list-group list-group-flush small">
-              <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                <span class="text-muted"><i class="fa-solid fa-envelope me-1"></i> Email</span>
-                <a href="mailto:<%= @involved_party.email %>" class="text-decoration-none fw-medium text-truncate" style="max-width: 180px;">
-                  <%= @involved_party.email %>
-                </a>
-              </li>
-              <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                <span class="text-muted"><i class="fa-solid fa-phone me-1"></i> Phone</span>
-                <a href="tel:<%= @involved_party.phone %>" class="text-decoration-none fw-medium">
-                  <%= @involved_party.phone %>
-                </a>
-              </li>
-              <% if @involved_party.contact_info.present? %>
-                <li class="list-group-item px-0 py-2">
-                  <span class="text-muted d-block mb-1"><i class="fa-solid fa-circle-info me-1"></i> Notes</span>
-                  <p class="text-dark mb-0 small bg-light p-2 rounded"><%= @involved_party.contact_info %></p>
-                </li>
-              <% end %>
-              <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center text-muted">
-                <span><i class="fa-regular fa-calendar me-1"></i> Added</span>
-                <span><%= @involved_party.created_at&.strftime("%d %b %Y") || "—" %></span>
-              </li>
-            </ul>
-          <% else %>
-            <div class="alert alert-warning py-3 px-3 small mb-0 border-0">
-              <div class="d-flex align-items-center gap-2 mb-1">
-                <i class="fa-solid fa-lock text-warning"></i>
-                <span class="fw-semibold text-dark">Personal Contact Details Protected</span>
+        <div class="card-body">
+          <% if policy(party).show_personal_data? %>
+            <dl class="mb-0 d-flex flex-column gap-2">
+              <div class="record-meta">
+                <dt>Email</dt>
+                <dd><a href="mailto:<%= party.email %>" class="text-decoration-none"><%= party.email %></a></dd>
               </div>
-              <p class="mb-2 text-muted">
-                Direct contact information is restricted to the associated agent
-                <% if @involved_party.user %>
-                  (<strong><%= @involved_party.user.user_name %></strong><% if @involved_party.user.company.present? %> — <%= @involved_party.user.company %><% end %>)
-                <% end %>.
-              </p>
-              <% if @involved_party.user %>
-                <div class="mt-2 pt-2 border-top border-warning-subtle">
-                  <div class="fw-medium text-dark mb-1"><i class="fa-solid fa-user-tie me-1"></i>Contact Managing Agent:</div>
-                  <div class="d-flex flex-column gap-1">
-                    <a href="mailto:<%= @involved_party.user.email %>" class="text-decoration-none text-dark">
-                      <i class="fa-solid fa-envelope me-1 text-muted"></i><%= @involved_party.user.email %>
-                    </a>
-                    <% if @involved_party.user.phone.present? %>
-                      <a href="tel:<%= @involved_party.user.phone %>" class="text-decoration-none text-dark">
-                        <i class="fa-solid fa-phone me-1 text-muted"></i><%= @involved_party.user.phone %>
-                      </a>
-                    <% end %>
-                  </div>
+              <div class="record-meta">
+                <dt>Phone</dt>
+                <dd><a href="tel:<%= party.phone %>" class="text-decoration-none"><%= party.phone %></a></dd>
+              </div>
+              <div class="record-meta">
+                <dt>Managing agent</dt>
+                <dd><%= party.user&.user_name || "—" %></dd>
+              </div>
+              <% if party.contact_info.present? %>
+                <div>
+                  <dt class="small text-muted fw-medium mb-1">Notes</dt>
+                  <dd class="mb-0 small"><%= party.contact_info %></dd>
                 </div>
               <% end %>
-            </div>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="card border-0 shadow-sm">
-        <div class="card-body p-3 d-grid gap-2">
-          <%= link_to edit_involved_party_path(@involved_party), class: "btn btn-outline-primary d-flex align-items-center justify-content-center gap-1" do %>
-            <i class="fa-solid fa-pen"></i> Edit Party Profile
-          <% end %>
-          <%= link_to involved_parties_path, class: "btn btn-outline-secondary d-flex align-items-center justify-content-center gap-1" do %>
-            <i class="fa-solid fa-list"></i> All Involved Parties
+            </dl>
+          <% else %>
+            <p class="mb-2">
+              <span class="badge bg-light"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i>Confidential client</span>
+            </p>
+            <p class="small text-muted">
+              Direct contact details are only visible to the managing agent<% if party.user %>
+                (<strong><%= party.user.user_name %></strong><% if party.user.company.present? %>, <%= party.user.company %><% end %>)<% end %>.
+            </p>
+            <% if party.user %>
+              <div class="small">
+                <div class="fw-semibold mb-1">Contact the managing agent</div>
+                <a href="mailto:<%= party.user.email %>" class="d-block text-decoration-none">
+                  <i class="fa-solid fa-envelope me-1" aria-hidden="true"></i><%= party.user.email %>
+                </a>
+                <% if party.user.phone.present? %>
+                  <a href="tel:<%= party.user.phone %>" class="d-block text-decoration-none">
+                    <i class="fa-solid fa-phone me-1" aria-hidden="true"></i><%= party.user.phone %>
+                  </a>
+                <% end %>
+              </div>
+            <% end %>
           <% end %>
         </div>
       </div>
