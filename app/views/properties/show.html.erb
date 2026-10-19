@@ -242,7 +242,7 @@
         </div>
         <div class="card-body">
           <% if agent %>
-            <p class="fw-semibold mb-0"><%= agent.user_name.presence || agent.email %></p>
+            <p class="mb-1"><%= agent_with_avatar(agent, size: 40, name_class: "fw-semibold") %></p>
             <% if agent.company.present? %>
               <p class="small text-muted mb-1"><%= agent.company %></p>
             <% end %>

@@ -69,7 +69,7 @@
                     </td>
                     <td>
                       <% if chain.user %>
-                        <div class="fw-medium"><%= chain.user.user_name %></div>
+                        <div class="fw-medium"><%= agent_with_avatar(chain.user) %></div>
                         <% if chain.user.company.present? %>
                           <small class="text-muted"><%= chain.user.company %></small>
                         <% end %>

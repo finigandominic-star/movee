@@ -33,7 +33,13 @@
         <% display_name = current_user.user_name.presence || current_user.email %>
         <div class="dropdown ms-lg-3 my-2 my-lg-0">
           <button class="navbar-movee__user" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu for <%= display_name %>" title="<%= [display_name, current_user.company.presence].compact.join(" · ") %>">
-            <span class="navbar-movee__avatar" aria-hidden="true"><%= display_name.first.upcase %></span>
+            <span class="navbar-movee__avatar" aria-hidden="true">
+              <% if current_user.avatar.attached? %>
+                <%= image_tag current_user.avatar, alt: "" %>
+              <% else %>
+                <%= display_name.first.upcase %>
+              <% end %>
+            </span>
             <span class="d-lg-none d-xl-inline"><%= display_name %></span>
             <i class="fa-solid fa-chevron-down small" aria-hidden="true"></i>
           </button>

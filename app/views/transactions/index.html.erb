@@ -37,6 +37,13 @@
             <% agent = tx.creator_or_listing_user %>
             <div class="col">
               <div class="card record-card card--transaction">
+                <% if tx.property&.photo&.attached? %>
+                  <%= image_tag tx.property.photo, class: "record-card__image", alt: tx.property.short_address %>
+                <% else %>
+                  <div class="record-card__image record-card__image--empty" aria-hidden="true">
+                    <i class="fa-solid fa-house"></i>
+                  </div>
+                <% end %>
                 <div class="card-header">
                   <div>
                     <h2 class="record-card__title">
@@ -48,31 +55,14 @@
                 </div>
 
                 <div class="card-body">
-                  <div class="mb-3">
-                    <span class="text-muted small text-uppercase fw-semibold d-block">Property</span>
-                    <% if tx.property %>
-                      <div class="d-flex align-items-center gap-2 mt-1">
-                        <%= link_to property_thumbnail(tx.property), property_path(tx.property) %>
-                        <div>
-                          <h6 class="fw-bold text-dark mb-1">
-                            <%= link_to tx.property.short_address, property_path(tx.property), class: "text-decoration-none text-dark" %>
-                          </h6>
-                          <small class="text-muted"><%= tx.property.city %>, <%= tx.property.post_code %></small>
-                        </div>
-                      </div>
-                    <% else %>
-                      <span class="text-muted fst-italic">None</span>
-                    <% end %>
-                  </div>
-
-                  <ul class="list-group list-group-flush small border-top pt-2">
-                    <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                      <span class="text-muted"><i class="fa-solid fa-user-tie me-1"></i> Party</span>
-                      <% if tx.involved_party %>
-                        <% if policy(tx.involved_party).show_personal_data? %>
-                          <span class="fw-medium text-dark text-truncate" style="max-width: 180px;">
-                            <%= tx.involved_party.first_name %> <%= tx.involved_party.last_name %>
-                          </span>
+                  <dl class="mb-0 d-flex flex-column gap-2">
+                    <div class="record-meta">
+                      <dt>Buyer</dt>
+                      <dd>
+                        <% if party.nil? %>
+                          <span class="text-muted">Not assigned</span>
+                        <% elsif policy(party).show_personal_data? %>
+                          <%= party.full_name %>
                         <% else %>
                           <span class="badge bg-light"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i>Protected Client</span>
                         <% end %>
@@ -89,7 +79,7 @@
                     <% if agent %>
                       <div class="record-meta">
                         <dt>Agent</dt>
-                        <dd title="<%= agent.email %>"><%= agent.user_name %></dd>
+                        <dd title="<%= agent.email %>"><%= agent_with_avatar(agent) %></dd>
                       </div>
                     <% end %>
                   </dl>
@@ -146,7 +136,7 @@
                   </td>
                   <td>
                     <% if agent %>
-                      <%= agent.user_name %>
+                      <%= agent_with_avatar(agent, name_class: "fw-medium") %>
                       <small class="d-block">
                         <a href="mailto:<%= agent.email %>" class="text-decoration-none"><%= agent.email %></a>
                         <% if agent.phone.present? %>

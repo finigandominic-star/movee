@@ -36,23 +36,9 @@
             <% party = property.involved_party %>
             <% agent = property.user %>
             <div class="col">
-              <div class="card h-100 shadow-sm border-0 position-relative overflow-hidden">
-                <!-- Status Badge Overlay -->
-                <div class="position-absolute top-0 end-0 m-3" style="z-index: 2;">
-                  <% if property.sold? %>
-                    <span class="badge bg-secondary shadow-sm">
-                      <i class="fa-solid fa-check me-1"></i> Sold
-                    </span>
-                  <% else %>
-                    <span class="badge bg-success shadow-sm">
-                      <i class="fa-solid fa-house-chimney me-1"></i> For Sale
-                    </span>
-                  <% end %>
-                </div>
-
-                <!-- Property Image / Placeholder Header -->
+              <article class="card record-card card--property">
                 <% if property.photo.attached? %>
-                  <%= image_tag property.photo, class: "card-img-top object-fit-cover", alt: property.short_address, style: "height: 200px;" %>
+                  <%= image_tag property.photo, class: "record-card__image", alt: property.short_address %>
                 <% else %>
                   <div class="record-card__image record-card__image--empty" aria-hidden="true">
                     <i class="fa-solid fa-house"></i>
@@ -91,7 +77,7 @@
                       <dt>Agent</dt>
                       <dd>
                         <% if agent %>
-                          <%= agent.user_name.presence || agent.email %>
+                          <%= agent_with_avatar(agent) %>
                           <% if party && !policy(property).show_involved_party? %>
                             <a href="mailto:<%= agent.email %>" class="position-relative z-2 ms-1" aria-label="Email <%= agent.user_name %>"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
                             <% if agent.phone.present? %>
@@ -169,7 +155,7 @@
                   </td>
                   <td>
                     <% if agent %>
-                      <div class="fw-medium"><%= agent.user_name.presence || agent.email %></div>
+                      <div class="fw-medium mb-1"><%= agent_with_avatar(agent) %></div>
                       <small class="d-flex flex-wrap gap-2">
                         <a href="mailto:<%= agent.email %>" class="text-decoration-none"><i class="fa-solid fa-envelope me-1" aria-hidden="true"></i><%= agent.email %></a>
                         <% if agent.phone.present? %>
