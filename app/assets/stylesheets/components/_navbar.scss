@@ -10,3 +10,70 @@
 .navbar-lewagon .navbar-brand img {
   width: 40px;
 }
+
+// Movee header navbar (app/views/shared/_navbar.html.erb)
+$navbar-movee-bg: #BCFB89;
+$navbar-movee-text: #000000;
+$navbar-movee-avatar: #4750DD;
+$navbar-movee-btn: #212161;
+
+.navbar-movee {
+  background: $navbar-movee-bg;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+
+  .navbar-movee-brand {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: $navbar-movee-text;
+  }
+
+  .nav-link {
+    font-size: 1.1rem;
+    color: $navbar-movee-text;
+
+    &:hover,
+    &.active {
+      color: $navbar-movee-text;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+  }
+
+  .navbar-movee-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: $navbar-movee-avatar;
+    color: white;
+    font-size: 1.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .navbar-movee-btn {
+    background: $navbar-movee-btn;
+    color: white;
+    font-size: 1.4rem;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    border: none;
+
+    &:hover {
+      background: darken($navbar-movee-btn, 8%);
+      color: white;
+    }
+  }
+}
