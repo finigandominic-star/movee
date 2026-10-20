@@ -18,11 +18,11 @@ joao = User.create!(user_name: "Joao", email: "joao@moveee.me", phone: "+44 20 7
 sophia = User.create!(user_name: "Sophia", email: "sophia@moveee.me", phone: "+44 20 7946 0003", password: "MoveeeAdmin123", company: "Moveee", admin: true)
 
 # 5 Cooperating Estate Agents from 5 distinct UK agencies
-sarah = User.create!(user_name: "Sarah Rizzoli", email: "sarah.rizzoli@harbourandheath.co.uk", phone: "+44 20 7946 0101", password: "SaRi1234", company: "Harbour & Heath Properties")
-toni = User.create!(user_name: "Toni Martine", email: "t.martine@crownstoneestates.co.uk", phone: "+44 20 7946 0102", password: "Ton1Crown", company: "Crownstone Estates")
+sarah = User.create!(user_name: "Sarah Rizzoli", email: "sarah.rizzoli@harbourandheath.co.uk", phone: "+44 20 7946 0312", password: "SaRi1234", company: "Harbour & Heath Properties")
+toni = User.create!(user_name: "Toni Martine", email: "t.martine@crownstoneestates.co.uk", phone: "+44 20 7118 4407", password: "Ton1Crown", company: "Crownstone Estates")
 mark = User.create!(user_name: "Mark McBride", email: "mcbride.mark@thistleandthatch.co.uk", phone: "+44 20 7946 0103", password: "123Bride", company: "Thistle & Thatch Residential")
-emily = User.create!(user_name: "Emily Song", email: "e.song@belgravesterling.co.uk", phone: "+44 20 7946 0104", password: "eSong789", company: "Belgrave & Sterling Estates")
-john = User.create!(user_name: "John Akachi", email: "john.akachi@oakhavenfinch.co.uk", phone: "+44 20 7946 0105", password: "ImGreat1", company: "Oakhaven & Finch Estates")
+emily = User.create!(user_name: "Emily Song", email: "e.song@belgravesterling.co.uk", phone: "+44 20 7932 5580", password: "eSong789", company: "Belgrave & Sterling Estates")
+john = User.create!(user_name: "John Akachi", email: "john.akachi@oakhavenfinch.co.uk", phone: "+44 1892 447 130", password: "ImGreat1", company: "Oakhaven & Finch Estates")
 puts "Created 8 users (3 admins, 5 agents from 5 different UK estate agencies)."
 
 puts "Attaching agent avatars..."
