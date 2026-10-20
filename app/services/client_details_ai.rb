@@ -27,6 +27,13 @@ class ClientDetailsAi
     - Particles such as van, van der, de, da, von and le are part of the last name
       (e.g. "Anna van der Berg" → first_name "Anna", last_name "van der Berg").
       If written entirely in capitals, write the particles in small letters.
+    - The address is the client's current home address. Split it into:
+      house_number: the number or name of the house, e.g. "14" or "Rose Cottage".
+      street: the street name, e.g. "Maple Grove".
+      second_line_of_address: everything between the street and the city, such as a flat number or a district,
+        e.g. "Flat 4" or "Ealing". Use null only if there is nothing there.
+      city: the town or city, e.g. "London".
+      post_code: the post code, e.g. "W5 3PL".
     - selling: true if they are selling a property, false if clearly not, null if unclear.
     - buying: true if they are buying a property, false if clearly not, null if unclear.
     - onward_purchase: "buying" if they sell and also buy another home,
@@ -61,9 +68,10 @@ class ClientDetailsAi
   }.freeze
 
   # we're asking the LLM to do something, so we need to 'chat' with it even without a chat function for the user
-  # Only for the tests. In the app, nobody passes it, so it uses the default RubyLLM.chat and talks to OpenAI
+  # Only the llm argument is for the tests. In the app, nobody passes it,
+  # so it uses the default RubyLLM.chat and talks to OpenAI.
   def self.call(text, llm: RubyLLM.chat)
-    new(text, llm: chat).call # short for ClientDetailsAi.new(text).call
+    new(text, llm: llm).call # short for ClientDetailsAi.new(text).call
   end
 
   def initialize(text, llm: RubyLLM.chat)
