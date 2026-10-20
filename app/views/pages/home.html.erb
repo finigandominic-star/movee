@@ -1,3 +1,19 @@
+<%# Structured data so search engines understand what Moveee is %>
+<% content_for :head do %>
+  <script type="application/ld+json">
+    <%= raw({
+      "@context" => "https://schema.org",
+      "@type" => "SoftwareApplication",
+      "name" => "Moveee",
+      "applicationCategory" => "BusinessApplication",
+      "operatingSystem" => "Web",
+      "url" => root_url,
+      "description" => "Moveee gives UK estate agents full visibility of every property chain, flags blind spots early and helps drive sales from offer to completion.",
+      "audience" => { "@type" => "BusinessAudience", "audienceType" => "UK estate agents" }
+    }.to_json) %>
+  </script>
+<% end %>
+
 <%# Hero: lead with the problem, then the promise %>
 <section class="landing-hero">
   <div class="container">

@@ -167,7 +167,7 @@
                     </div>
                     <div class="d-flex align-items-center gap-1 flex-shrink-0">
                       <% if chain %>
-                        <span class="badge <%= chain.chain_completed? ? 'bg-success' : 'bg-warning' %>"><%= chain.chain_completed? ? "Chain completed" : "Chain open" %></span>
+                        <span class="badge <%= chain.chain_completed? ? 'bg-success' : 'status-open' %>"><%= chain.chain_completed? ? "Chain completed" : "Chain open" %></span>
                       <% end %>
                       <span class="badge <%= transaction.legal_stage_badge_class %>"
                             data-bs-toggle="tooltip"

@@ -65,9 +65,9 @@
   gap: .5rem;
   padding: 1.25rem 1.35rem;
   border-radius: $border-radius-lg;
-  // Open end: vibrant yellow, matching the open markers on the chains index
-  background: rgba($movee-yellow, .18);
-  border: 2px solid $movee-yellow;
+  // Open end: soft yellow box
+  background: #FFF8E1;
+  border: 2px solid #FFF5D6;
   border-left-width: 6px;
   font-size: 1rem;
 
@@ -97,6 +97,12 @@
   }
 
   .btn { align-self: flex-start; margin-top: auto; }
+
+  // Open pill inside the box uses the soft yellow to match it
+  .badge.status-open {
+    background-color: #FFF5D6 !important;
+    border-color: #FFF8E1 !important;
+  }
 }
 
 // Middle of the diagram: a connector line carrying the progress summary
@@ -360,4 +366,26 @@
   gap: .5rem;
   max-width: 24rem;
   margin-top: .5rem;
+}
+
+// Open pill beside the chain title: same soft yellow as the open boundary boxes
+.page-title-row .badge.status-open {
+  background-color: #FFF5D6 !important;
+  border-color: #FFF8E1 !important;
+}
+
+// Chains index and the property page's transactions card: open pills and open-end markers
+// use the same soft yellows as the chain page
+.chains-index,
+.property-transactions {
+  .badge.status-open {
+    background-color: #FFF5D6 !important;
+    border-color: #FFF8E1 !important;
+  }
+
+  .chain-flow__end--open {
+    background: #FFF8E1;
+    border-color: #FFF5D6;
+    box-shadow: none;
+  }
 }

@@ -46,6 +46,22 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{new_user_registration_path}']"
   end
 
+  test "public home page has SEO meta tags and is indexable" do
+    get root_path
+    assert_select "title", text: /Moveee/
+    assert_select "meta[name='description'][content]"
+    assert_select "meta[name='robots'][content='index, follow']"
+    assert_select "link[rel='canonical'][href='#{root_url}']"
+    assert_select "meta[property='og:title']"
+    assert_select "script[type='application/ld+json']"
+  end
+
+  test "signed-in app pages are not indexable" do
+    sign_in @user
+    get properties_path
+    assert_select "meta[name='robots'][content='noindex, nofollow']"
+  end
+
   test "signed-in user visiting home is redirected to the dashboard" do
     sign_in @user
     get root_path
