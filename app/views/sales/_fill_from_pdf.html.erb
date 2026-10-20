@@ -1,7 +1,13 @@
 <%# "Fill from PDF": upload a client PDF, then show what happened with it. Uses @client_document (may be nil). %>
 <div class="fill-from-pdf border rounded-3 p-3 mb-4 bg-light">
-  <% if @client_document&.processing? %>
-    <p class="mb-0" role="status">
+   <% if @client_document&.stuck? %>
+    <div class="alert alert-warning mb-0" role="alert">
+      <i class="fa-solid fa-hourglass-half me-2" aria-hidden="true"></i>
+        Reading <strong><%= @client_document.filename %></strong> is taking longer than expected.
+        Please fill in the form by hand, or <%= link_to "check again", request.fullpath %> later.
+    </div>
+  <% elsif @client_document&.processing? %>
+    <p class="mb-0" role="status" data-controller="auto-reload">
       <i class="fa-solid fa-spinner fa-spin me-2" aria-hidden="true"></i>
       Reading <strong><%= @client_document.filename %></strong>… This takes a few seconds.
       <%= link_to "Check again", request.fullpath, class: "ms-2" %>

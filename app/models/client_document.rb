@@ -5,6 +5,8 @@ class ClientDocument < ApplicationRecord
   # allowed values, used by the validations
   STATUSES = %w[processing done failed].freeze
   STEPS = %w[vendor buyer].freeze
+  # Still processing after 2 minutes: the background job is probably not running
+  STUCK_AFTER = 2.minutes
 
   belongs_to :user
 
@@ -16,4 +18,8 @@ class ClientDocument < ApplicationRecord
   def processing? = status == "processing"
   def done? = status == "done"
   def failed? = status == "failed"
+
+  # informing user that the AI fill-form process is stuck
+  def stuck? = processing? && created_at < STUCK_AFTER.ago
+
 end

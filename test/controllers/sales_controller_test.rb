@@ -233,4 +233,23 @@ class SalesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[name='involved_party[first_name]'][value=?]", "Secret", count: 0
   end
+
+  test "the vendor step keeps checking while a client PDF is being read" do
+    document = @user.client_documents.create!(step: "vendor", filename: "client.pdf")
+
+    get new_sale_url(client_document_id: document.id)
+
+    assert_select "[data-controller=auto-reload]", text: /Reading client.pdf/
+  end
+
+  test "the vendor step stops checking when reading a client PDF takes too long" do
+    document = @user.client_documents.create!(step: "vendor", filename: "client.pdf")
+
+    travel 3.minutes do
+      get new_sale_url(client_document_id: document.id)
+    end
+
+    assert_select ".alert-warning", text: /taking longer than expected/
+    assert_select "[data-controller=auto-reload]", count: 0
+  end
 end

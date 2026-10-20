@@ -39,4 +39,24 @@ class ClientDocumentTest < ActiveSupport::TestCase
     # read the row back from the database proving the Hash was really stored in the jsonb column
     assert_equal "Tunde", document.reload.extracted_data["first_name"]
   end
+
+  test "is stuck when still processing after a while" do
+    document = build_document
+    document.save!
+
+    travel 3.minutes do
+      assert document.stuck?
+    end
+  end
+
+  test "is not stuck when new or finished" do
+    document = build_document
+    document.save!
+
+    assert_not document.stuck?
+    document.update!(status: "done")
+    travel 3.minutes do
+      assert_not document.stuck?
+    end
+  end
 end
