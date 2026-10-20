@@ -121,6 +121,38 @@
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     gap: 2rem;
   }
+
+  // One option above the other at every width
+  &--stacked {
+    @include media-breakpoint-up(lg) {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.5rem;
+    }
+
+    .sale-or {
+      flex-direction: row;
+
+      &::before,
+      &::after {
+        width: auto;
+        height: 1px;
+      }
+    }
+  }
+}
+
+// Lower-key alternative beneath the main option
+.sale-option--secondary {
+  padding: 1rem 1.25rem;
+  border-radius: $border-radius;
+  background: rgba($movee-navy, .03);
+
+  .sale-option__title {
+    font-size: .9rem;
+    font-weight: 600;
+    color: $movee-muted;
+    margin-bottom: .75rem;
+  }
 }
 
 .sale-option__title {

@@ -46,7 +46,7 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
     get chain_url(@chain)
     assert_response :success
     assert_select "h1", text: /Wallaby Way/
-    assert_select ".page-subtitle", text: /Chain ##{@chain.id}/
+    assert_select ".page-title-row .status-pill", text: /Open|Completed/
   end
 
   test "should get new" do
@@ -65,9 +65,17 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @user, created_chain.user
   end
 
-  test "should get edit for creator" do
+  test "edit sends the creator to the chain page, where renaming happens inline" do
     get edit_chain_url(@chain)
-    assert_response :success
+    assert_redirected_to chain_url(@chain)
+    follow_redirect!
+    assert_select ".chain-rename input[name='chain[name]']"
+  end
+
+  test "renaming a chain from the chain page" do
+    patch chain_url(@chain), params: { chain: { name: "Henderson chain" } }
+    assert_redirected_to chain_url(@chain)
+    assert_equal "Henderson chain", @chain.reload.name
   end
 
   test "should update chain for creator" do
@@ -140,7 +148,7 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
     sign_in admin
 
     get edit_chain_url(@chain)
-    assert_response :success
+    assert_redirected_to chain_url(@chain)
 
     patch chain_url(@chain), params: { chain: { active: false } }
     assert_redirected_to chain_url(@chain)
@@ -164,9 +172,7 @@ class ChainsControllerTest < ActionDispatch::IntegrationTest
     get chain_url(@chain)
     assert_response :success
     # The managing agent is visible:
-    assert_select "h6", text: @user.user_name
-    assert_select "a[href='mailto:#{@user.email}']"
-    assert_select "a[href='tel:#{@user.phone}']"
+    assert_select "h6 a[href=?]", user_path(@user), text: @user.user_name
     # The client personal data is protected:
     assert_select "span", text: /Client Confidential/
     assert_no_match @party.email, response.body

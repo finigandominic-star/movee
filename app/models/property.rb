@@ -12,6 +12,18 @@ class Property < ApplicationRecord
 
   has_one_attached :photo
 
+  # Sold (sold subject to contract) once a transaction has a buyer or has moved into conveyancing;
+  # for sale while it has no transaction, or only one with no buyer still at "Offer accepted".
+  def sale_agreed?
+    transactions.reload.any? { |tx| tx.involved_party_id.present? || tx.legal_stage != "offer_accepted" }
+  end
+
+  # Keeps the stored `sold` flag (used for filtering) in line with the transactions
+  def refresh_sold_status!
+    agreed = sale_agreed?
+    update_column(:sold, agreed) unless sold == agreed
+  end
+
   def full_address
     [short_address, second_line_of_address, city, post_code].compact_blank.join(", ")
   end

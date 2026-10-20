@@ -39,3 +39,35 @@
     color: $movee-muted;
   }
 }
+
+// Call-to-action tile at the end of a row, e.g. "Add transaction to this chain"
+.mini-card.mini-card--add {
+  display: flex;
+  padding: 0;
+  background: $movee-indigo;
+  border-top-color: $movee-indigo;
+  transition: background-color .15s ease;
+
+  &:hover,
+  &:focus-within {
+    background: darken($movee-indigo, 8%);
+  }
+
+  .mini-card__add-link {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    min-height: 12rem;
+    padding: 1.25rem;
+    color: $movee-lime;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: center;
+    text-decoration: none;
+
+    i { font-size: 2.5rem; }
+  }
+}

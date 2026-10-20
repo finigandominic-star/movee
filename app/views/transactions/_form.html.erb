@@ -50,7 +50,6 @@
         <% if transaction.errors[:involved_party].any? %>
           <div class="invalid-feedback"><%= transaction.errors[:involved_party].first %></div>
         <% end %>
-        <div class="form-text">The client buying this property. Optional — you can add one later.</div>
       <% else %>
         <div class="alert alert-light border mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2" role="alert">
           <span class="text-muted small">No clients registered yet. You can record this transaction now and add the buyer later.</span>
@@ -67,7 +66,6 @@
           ->(c) { "#{chain_name(c)} (Chain ##{c.id})" },
           { include_blank: "Start a new chain" },
           { class: "form-select" } %>
-      <div class="form-text">Join an existing chain, or leave as "Start a new chain" to create one automatically.</div>
     </div>
   </section>
 
@@ -88,15 +86,17 @@
       <% if transaction.errors[:legal_stage].any? %>
         <div class="invalid-feedback"><%= transaction.errors[:legal_stage].first %></div>
       <% end %>
-      <div class="form-text">
-        Current stage under England &amp; Wales conveyancing. Choosing "Completion" marks the transaction as completed automatically; any earlier stage marks it in progress.
-      </div>
+      <% if transaction.persisted? %>
+        <button type="button" class="btn btn-link btn-sm px-0 mt-1" data-bs-toggle="modal" data-bs-target="#legalExplainerModal">
+          <i class="fa-solid fa-book-open me-1" aria-hidden="true"></i>Open the conveyancing guide
+        </button>
+      <% end %>
     </div>
 
     <div class="mb-3">
       <%= f.label :estimated_completion_date, "Target completion date", class: "form-label" %>
       <%= f.date_field :estimated_completion_date, class: "form-control" %>
-      <div class="form-text">Optional — defaults to 12 weeks from creation. Stage deadlines are worked out from this date.</div>
+      <div class="form-text">Optional — defaults to 12 weeks from creation.</div>
     </div>
   </section>
 

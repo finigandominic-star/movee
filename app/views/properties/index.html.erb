@@ -78,12 +78,6 @@
                       <dd>
                         <% if agent %>
                           <%= agent_with_avatar(agent) %>
-                          <% if party && !policy(property).show_involved_party? %>
-                            <a href="mailto:<%= agent.email %>" class="position-relative z-2 ms-1" aria-label="Email <%= agent.user_name %>"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
-                            <% if agent.phone.present? %>
-                              <a href="tel:<%= agent.phone %>" class="position-relative z-2 ms-1" aria-label="Call <%= agent.user_name %>"><i class="fa-solid fa-phone" aria-hidden="true"></i></a>
-                            <% end %>
-                          <% end %>
                         <% else %>
                           —
                         <% end %>
@@ -155,13 +149,7 @@
                   </td>
                   <td>
                     <% if agent %>
-                      <div class="fw-medium mb-1"><%= agent_with_avatar(agent) %></div>
-                      <small class="d-flex flex-wrap gap-2">
-                        <a href="mailto:<%= agent.email %>" class="text-decoration-none"><i class="fa-solid fa-envelope me-1" aria-hidden="true"></i><%= agent.email %></a>
-                        <% if agent.phone.present? %>
-                          <a href="tel:<%= agent.phone %>" class="text-decoration-none"><i class="fa-solid fa-phone me-1" aria-hidden="true"></i><%= agent.phone %></a>
-                        <% end %>
-                      </small>
+                      <div class="fw-medium"><%= agent_with_avatar(agent) %></div>
                     <% else %>
                       <span class="text-muted">—</span>
                     <% end %>

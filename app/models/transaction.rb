@@ -161,6 +161,8 @@ class Transaction < ApplicationRecord
   after_save :sync_chain_status
   after_create :auto_merge_chains_sharing_property
   after_destroy :cleanup_empty_chain_and_sync
+  after_save :refresh_property_sold_status
+  after_destroy :refresh_property_sold_status
 
   scope :completed, -> { where(completed: true) }
   scope :pending, -> { where(completed: [false, nil]) }
@@ -516,6 +518,13 @@ class Transaction < ApplicationRecord
     if new_id.present?
       Chain.find_by(id: new_id)&.sync_status!
     end
+  end
+
+  # The property's sold status follows its transactions (buyer attached / conveyancing started)
+  def refresh_property_sold_status
+    property&.refresh_sold_status!
+    old_property_id = saved_change_to_property_id? ? property_id_before_last_save : nil
+    Property.find_by(id: old_property_id)&.refresh_sold_status! if old_property_id
   end
 
   def sync_chain_status
