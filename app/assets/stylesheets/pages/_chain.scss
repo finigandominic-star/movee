@@ -65,13 +65,15 @@
   gap: .5rem;
   padding: 1.25rem 1.35rem;
   border-radius: $border-radius-lg;
-  background: rgba($movee-amber, .08);
-  border: 1px solid rgba($movee-amber, .45);
+  // Open end: vibrant yellow, matching the open markers on the chains index
+  background: rgba($movee-yellow, .18);
+  border: 2px solid $movee-yellow;
+  border-left-width: 6px;
   font-size: 1rem;
 
   &.is-closed {
     background: rgba($movee-green, .08);
-    border-color: rgba($movee-green, .45);
+    border: 1px solid rgba($movee-green, .45);
   }
 
   .chain-end__label {
@@ -275,12 +277,23 @@
   color: $movee-lime;
 }
 
+// Open end: vibrant yellow so unfinished chains stand out at a glance
 .chain-flow__end--open {
-  border: 2px dashed $movee-amber;
-  color: $movee-amber;
+  background: $movee-yellow;
+  border: 2px dashed darken($movee-yellow, 28%);
+  color: $movee-navy;
+  box-shadow: 0 0 0 3px rgba($movee-yellow, .35);
 }
 
-.chain-flow__end:last-child {
+// Smaller copy of the marker for the legend above the list
+.chain-flow__end--legend {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: .6rem;
+  box-shadow: none;
+}
+
+.chain-flow__end:last-child:not(.chain-flow__end--legend) {
   margin-left: .3rem;
 }
 

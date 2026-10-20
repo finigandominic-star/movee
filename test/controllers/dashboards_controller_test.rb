@@ -33,7 +33,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     get dashboard_url
     assert_response :success
     assert_select "h1", text: /dash_tester/
-    assert_select "a.btn-accent[href='#{new_sale_path}']", text: /Start a new sale/
+    assert_select "a.new-sale-cta[href='#{new_sale_path}']", text: /Start a new sale/
   end
 
   test "lists an overdue transaction under needs attention" do

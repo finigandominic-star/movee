@@ -1,5 +1,5 @@
 <div class="container py-4 py-lg-5">
-  <%= render layout: "shared/page_header", locals: { title: "Properties", subtitle: "#{pluralize(@properties.size, 'property')} listed" } do %>
+  <%= render layout: "shared/page_header", locals: { title: "Properties" } do %>
     <%= link_to new_property_path, class: "btn btn-primary" do %>
       <i class="fa-solid fa-plus" aria-hidden="true"></i>
       <span>Add property</span>

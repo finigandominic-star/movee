@@ -179,8 +179,10 @@ $stage-pending-text: $movee-muted;
   }
 }
 
+// Tall photo beside the address in the property card
 .transaction-property__photo {
-  max-height: 160px;
+  display: block;
+  height: 180px;
 }
 
 // Legal guide modal

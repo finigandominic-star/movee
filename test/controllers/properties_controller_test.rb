@@ -46,6 +46,12 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{new_user_registration_path}']"
   end
 
+  test "signed-in user visiting home is redirected to the dashboard" do
+    sign_in @user
+    get root_path
+    assert_redirected_to dashboard_path
+  end
+
   test "unauthenticated visitor is redirected to login from properties" do
     get properties_url
     assert_redirected_to new_user_session_url
@@ -163,8 +169,8 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     get properties_url
     assert_response :success
 
-    # No stat cards: the count appears once, in the page subtitle
-    assert_select ".page-subtitle", text: /\d+ propert(y|ies)/
+    # No stat cards and no count subtitle under the title
+    assert_select ".page-subtitle", count: 0
     assert_select ".card", text: /Total Properties/, count: 0
     assert_select ".card", text: /Available \/ For Sale/, count: 0
     assert_select ".card", text: /Sold/, count: 0

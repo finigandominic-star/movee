@@ -28,8 +28,8 @@ module ApplicationHelper
   # Buyer / Seller pills for a client
   def client_role_tags(party)
     tags = []
-    tags << tag.span("Seller", class: "badge bg-primary") if party.seller?
-    tags << tag.span("Buyer", class: "badge bg-info") if party.buyer?
+    tags << tag.span("Seller", class: "badge bg-primary role-tag") if party.seller?
+    tags << tag.span("Buyer", class: "badge bg-info role-tag") if party.buyer?
     tags << tag.span("Contact", class: "badge bg-light") if tags.empty?
     safe_join(tags, " ")
   end

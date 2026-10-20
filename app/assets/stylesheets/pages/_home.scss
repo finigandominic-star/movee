@@ -1,1 +1,123 @@
-// Specific CSS for your home-page
+// Public landing page (signed-out home)
+
+// The hero is full-bleed and stretches down to the footer, so drop the shell's bottom gap
+.page-main:has(.landing-hero) {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+// Hero
+.landing-hero {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 4rem 0;
+  background:
+    radial-gradient(circle at 85% 15%, rgba($movee-indigo, .55), transparent 45%),
+    radial-gradient(circle at 10% 90%, rgba($movee-teal, .7), transparent 40%),
+    $movee-navy;
+  color: rgba(#fff, .85);
+
+  @include media-breakpoint-up(lg) {
+    padding: 6rem 0;
+  }
+
+  > .container {
+    width: 100%;
+  }
+}
+
+.landing-hero__title {
+  color: #fff;
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+  margin-bottom: 1.5rem;
+
+  @include media-breakpoint-up(lg) {
+    font-size: 3.6rem;
+  }
+}
+
+.landing-hero__stat {
+  display: block;
+  color: $movee-lime;
+  font-size: 1.6em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.landing-hero__stat--white {
+  color: #fff;
+}
+
+.landing-hero__lead {
+  max-width: 34rem;
+  margin-bottom: 2rem;
+  font-size: 1.2rem;
+  line-height: 1.6;
+
+  .landing-hero__brand {
+    color: $movee-lime;
+  }
+}
+
+// Hero visual: chain cards in the same style as chains#show
+.landing-preview {
+  border: 0;
+  box-shadow: 0 24px 60px rgba(#000, .3);
+}
+
+.landing-preview__links {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  .mini-card {
+    padding: .9rem 1rem;
+  }
+
+  // Arrow connector between links, matching the chain page
+  .mini-card:not(:last-child)::after {
+    content: "\f063"; // fa-arrow-down
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    left: 50%;
+    bottom: -1.5rem;
+    width: 1.5rem;
+    line-height: 1.5rem;
+    text-align: center;
+    transform: translateX(-50%);
+    color: $movee-teal;
+    font-size: .9rem;
+  }
+
+  .mini-card.is-late {
+    box-shadow: 0 0 0 2px rgba($movee-red, .5), $box-shadow;
+    animation: landing-pulse 2s ease-in-out infinite;
+
+    .landing-preview__timing {
+      color: $movee-red;
+      font-weight: 600;
+    }
+  }
+}
+
+.landing-preview__timing {
+  color: $movee-muted;
+}
+
+@keyframes landing-pulse {
+  50% { box-shadow: 0 0 0 5px rgba($movee-red, .25), $box-shadow; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-preview__links .mini-card.is-late {
+    animation: none;
+  }
+}

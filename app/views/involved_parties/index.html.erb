@@ -2,7 +2,7 @@
 <% parties = @involved_parties.select { |party| current_user&.admin? || party.user == current_user || party.user_associated?(current_user) } %>
 
 <div class="container py-4 py-lg-5">
-  <%= render layout: "shared/page_header", locals: { title: "Clients", subtitle: "#{pluralize(parties.size, 'client')} · buyers and sellers you act for" } do %>
+  <%= render layout: "shared/page_header", locals: { title: "Clients" } do %>
     <%= link_to new_involved_party_path, class: "btn btn-primary" do %>
       <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
       <span>Add client</span>
@@ -55,7 +55,7 @@
                       <p class="record-card__subtitle text-truncate"><%= party.email %></p>
                     <% end %>
                   </div>
-                  <div class="d-flex flex-wrap justify-content-end gap-1"><%= client_role_tags(party) %></div>
+                  <div class="d-flex flex-column align-items-end flex-shrink-0 gap-1"><%= client_role_tags(party) %></div>
                 </div>
 
                 <div class="card-body">
