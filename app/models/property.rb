@@ -10,6 +10,12 @@ class Property < ApplicationRecord
   validates :house_number, presence: true
   validates :street, presence: true
 
+  scope :search, ->(query) {
+    return all if query.blank?
+
+    where("house_number ILIKE :q OR street ILIKE :q OR second_line_of_address ILIKE :q OR city ILIKE :q OR post_code ILIKE :q", q: "%#{sanitize_sql_like(query)}%")
+  }
+
   has_one_attached :photo
 
   # Sold (sold subject to contract) once a transaction has a buyer or has moved into conveyancing;

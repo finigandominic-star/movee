@@ -9,7 +9,7 @@
     <% end %>
   <% end %>
 
-  <% if parties.empty? %>
+  <% if parties.empty? && params[:q].blank? %>
     <%= render layout: "shared/empty_state", locals: { icon: "fa-user-group", title: "No clients yet", text: "Add your buyers and sellers, then link them to properties and transactions." } do %>
       <%= link_to new_involved_party_path, class: "btn btn-primary" do %>
         <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
@@ -18,6 +18,13 @@
     <% end %>
   <% else %>
     <div class="page-toolbar">
+      <%= form_with url: involved_parties_path, method: :get, class: "flex-grow-1", data: { turbo_frame: "_top" } do |f| %>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+          <%= f.search_field :q, value: params[:q], placeholder: "Search clients by name, email, or phone", class: "form-control", aria: { label: "Search clients" } %>
+        </div>
+      <% end %>
+
       <ul class="nav nav-pills small" id="partyViewTabs" role="tablist" aria-label="Choose list layout">
         <li class="nav-item" role="presentation">
           <button class="nav-link active" id="cards-tab" data-bs-toggle="pill" data-bs-target="#cards-view" type="button" role="tab" aria-controls="cards-view" aria-selected="true">
@@ -31,6 +38,10 @@
         </li>
       </ul>
     </div>
+
+    <% if parties.empty? %>
+      <p class="text-muted">No clients match "<%= params[:q] %>".</p>
+    <% else %>
 
     <div class="tab-content" id="partyViewTabsContent">
       <div class="tab-pane fade show active" id="cards-view" role="tabpanel" aria-labelledby="cards-tab" tabindex="0">
@@ -161,5 +172,6 @@
         </div>
       </div>
     </div>
+    <% end %>
   <% end %>
 </div>
