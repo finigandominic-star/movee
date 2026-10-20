@@ -6,7 +6,7 @@
     <% end %>
   <% end %>
 
-  <% if @properties.empty? %>
+  <% if @properties.empty? && params[:q].blank? %>
     <%= render layout: "shared/empty_state", locals: { icon: "fa-house-chimney", title: "No properties yet", text: "List your first property, then assign its vendor and start a transaction." } do %>
       <%= link_to new_property_path, class: "btn btn-primary" do %>
         <i class="fa-solid fa-plus" aria-hidden="true"></i>
@@ -15,6 +15,13 @@
     <% end %>
   <% else %>
     <div class="page-toolbar">
+      <%= form_with url: properties_path, method: :get, class: "flex-grow-1", data: { turbo_frame: "_top" } do |f| %>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+          <%= f.search_field :q, value: params[:q], placeholder: "Search properties by address, city, or postcode", class: "form-control", aria: { label: "Search properties" } %>
+        </div>
+      <% end %>
+
       <ul class="nav nav-pills small" id="propertyViewTabs" role="tablist" aria-label="Choose list layout">
         <li class="nav-item" role="presentation">
           <button class="nav-link active py-1 px-3" id="cards-tab" data-bs-toggle="pill" data-bs-target="#cards-view" type="button" role="tab" aria-controls="cards-view" aria-selected="true">
@@ -28,6 +35,10 @@
         </li>
       </ul>
     </div>
+
+    <% if @properties.empty? %>
+      <p class="text-muted">No properties match "<%= params[:q] %>".</p>
+    <% else %>
 
     <div class="tab-content" id="propertyViewTabsContent">
       <div class="tab-pane fade show active" id="cards-view" role="tabpanel" aria-labelledby="cards-tab" tabindex="0">
@@ -172,5 +183,6 @@
         </div>
       </div>
     </div>
+    <% end %>
   <% end %>
 </div>
