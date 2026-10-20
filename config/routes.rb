@@ -11,7 +11,7 @@ Rails.application.routes.draw do
   # Guided "new sale" flow: vendor → property → buyer → chain
   resource :sale, only: [:new, :create]
 
-  # Client PDFs uploaded in the sales stepper ("Fill from PDF")
+  # PDFs uploaded in the sales stepper ("Fill from PDF") for seller, buyer, and adjacent property
   resources :client_documents, only: :create
 
   resources :properties do
