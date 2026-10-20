@@ -60,17 +60,19 @@ class ClientDetailsAi
     }
   }.freeze
 
-  def self.call(text, chat: RubyLLM.chat)
-    new(text, chat: chat).call
+  # we're asking the LLM to do something, so we need to 'chat' with it even without a chat function for the user
+  # Only for the tests. In the app, nobody passes it, so it uses the default RubyLLM.chat and talks to OpenAI
+  def self.call(text, llm: RubyLLM.chat)
+    new(text, llm: chat).call # short for ClientDetailsAi.new(text).call
   end
 
-  def initialize(text, chat: RubyLLM.chat)
+  def initialize(text, llm: RubyLLM.chat)
     @text = text
-    @chat = chat
+    @llm = llm
   end
 
   def call
-    response = @chat.with_instructions(INSTRUCTIONS).with_schema(SCHEMA).ask(@text)
+    response = @llm.with_instructions(INSTRUCTIONS).with_schema(SCHEMA).ask(@text)
     details = response.parsed
     raise Error, "The assistant gave no answer." unless details.is_a?(Hash)
 
