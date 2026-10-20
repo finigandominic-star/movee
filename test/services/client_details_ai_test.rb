@@ -1,34 +1,6 @@
 require "test_helper"
 
 class ClientDetailsAiTest < ActiveSupport::TestCase
-  # Stands in for RubyLLM.chat, so the tests never call OpenAI -> a fake chat
-  # has the same methods the class uses (with_instructions, with_schema, ask),
-  # so the class can't tell the difference.
-  # It also remembers what it received, which lets the second test check that the right things are sent.
-  class FakeChat
-    attr_reader :instructions, :schema, :question
-
-    def initialize(answer)
-      @answer = answer
-    end
-
-    def with_instructions(instructions)
-      @instructions = instructions
-      self
-    end
-
-    def with_schema(schema)
-      @schema = schema
-      self
-    end
-
-    def ask(question)
-      @question = question
-      # quickly create an object with a parsed method, just like a real ruby_llm response.
-      Struct.new(:parsed).new(@answer)
-    end
-  end
-
   test "returns the details from the assistant's answer" do
     llm = FakeChat.new({ "first_name" => "Tunde", "last_name" => "Adebayo", "onward_purchase" => "buying" })
 

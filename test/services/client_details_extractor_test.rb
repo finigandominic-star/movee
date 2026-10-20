@@ -1,25 +1,6 @@
 require "test_helper"
 
 class ClientDetailsExtractorTest < ActiveSupport::TestCase
-  # Stands in for RubyLLM.chat, so the tests never call OpenAI
-  class FakeChat
-    def initialize(answer)
-      @answer = answer
-    end
-
-    def with_instructions(_instructions)
-      self
-    end
-
-    def with_schema(_schema)
-      self
-    end
-
-    def ask(_question)
-      Struct.new(:parsed).new(@answer)
-    end
-  end
-
   setup do
     @text = PdfTextExtractor.call(file_fixture("client_sample.pdf"))
   end
