@@ -5,7 +5,7 @@ require 'open-uri'
 
 class ApiTool < RubyLLM::Tool
   description "What this tool does"
-  param :name, desc: "What this param is"
+  parameter :name, description: "What this param is"
 
   def initialize (some_thing:)
     # @some_thing = some_thing
