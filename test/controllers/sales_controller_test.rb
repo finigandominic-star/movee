@@ -252,4 +252,31 @@ class SalesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".alert-warning", text: /taking longer than expected/
     assert_select "[data-controller=auto-reload]", count: 0
   end
+
+  test "the buyer step fills in the new client form from a finished client PDF" do
+    property = Property.create!(user: @user, involved_party: @vendor, house_number: "7", street: "Acacia Avenue",
+                                city: "Leeds", post_code: "LS1 1AA")
+    document = @user.client_documents.create!(
+      step: "buyer", filename: "buyer.pdf", status: "done",
+      extracted_data: { "first_name" => "Grace", "last_name" => "O'Neill", "email" => "grace@example.com" }
+    )
+
+    get new_sale_url(step: "buyer", vendor_id: @vendor.id, property_id: property.id, client_document_id: document.id)
+
+    assert_select "input[name='involved_party[first_name]'][value=?]", "Grace"
+    assert_select "input[name='involved_party[last_name]'][value=?]", "O'Neill"
+    assert_select ".alert-success", text: /Filled in from buyer.pdf/
+  end
+
+  test "a client PDF from the vendor step does not fill in the buyer step" do
+    property = Property.create!(user: @user, involved_party: @vendor, house_number: "7", street: "Acacia Avenue",
+                                city: "Leeds", post_code: "LS1 1AA")
+    document = @user.client_documents.create!(step: "vendor", filename: "vendor.pdf", status: "done",
+                                              extracted_data: { "first_name" => "Tunde" })
+
+    get new_sale_url(step: "buyer", vendor_id: @vendor.id, property_id: property.id, client_document_id: document.id)
+
+    assert_select "input[name='involved_party[first_name]'][value=?]", "Tunde", count: 0
+    assert_select ".alert-success", count: 0
+  end
 end

@@ -14,7 +14,9 @@ class SalesController < ApplicationController
     @step = current_step
     return unless load_context
 
-    @client_document = current_user.client_documents.find_by(id: params[:client_document_id])
+    # find_by with two conditions finds a document only if both match: the id and the step.
+    # for the AI upload: A vendor document opened in the Buyer step gives nil, as if there were no document.
+    @client_document = current_user.client_documents.find_by(id: params[:client_document_id], step: @step)
 
     prepare_step
   end
@@ -81,13 +83,15 @@ class SalesController < ApplicationController
     case @step
     when "vendor"
       @clients = client_scope.order(:last_name, :first_name)
+      # now works with the client details extracted by AI from PDF upload
       @new_party ||= InvolvedParty.new(seller: true, **client_details_from_document)
     when "property"
       @properties = property_scope.order(:street, :house_number)
       @new_property ||= Property.new
     when "buyer"
       @clients = buyer_scope.order(:last_name, :first_name)
-      @new_party ||= InvolvedParty.new(buyer: true)
+      # now works with the client details extracted by AI from PDF upload
+      @new_party ||= InvolvedParty.new(buyer: true, **client_details_from_document)
     when "chain"
       @suggested_chains = suggested_chains
       @linkable_sales = linkable_sales.includes(:user, property: :user, chain: { transactions: :property })
