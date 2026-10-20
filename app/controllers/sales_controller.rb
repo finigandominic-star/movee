@@ -5,7 +5,10 @@ class SalesController < ApplicationController
   STEPS = %w[vendor property buyer chain].freeze
   STEP_LABELS = { "vendor" => "Vendor", "property" => "Property", "buyer" => "Buyer", "chain" => "Chain" }.freeze
   STEP_PARAMS = { "vendor" => :vendor_id, "property" => :property_id, "buyer" => :buyer_id }.freeze
+  # Fields of the new client form that an uploaded client PDF can fill in
   CLIENT_FIELDS_FROM_DOCUMENT = %w[first_name last_name email phone onward_purchase].freeze
+  # Fields of the new property form that the vendor's client PDF can fill in (their current home address)
+  ADDRESS_FIELDS_FROM_DOCUMENT = %w[house_number street second_line_of_address city post_code].freeze
 
   helper_method :sale_step_params, :sale_carry_params, :sale_step_state, :previous_sale_step
 
@@ -14,9 +17,7 @@ class SalesController < ApplicationController
     @step = current_step
     return unless load_context
 
-    # find_by with two conditions finds a document only if both match: the id and the step.
-    # for the AI upload: A vendor document opened in the Buyer step gives nil, as if there were no document.
-    @client_document = current_user.client_documents.find_by(id: params[:client_document_id], step: @step)
+    load_client_document
 
     prepare_step
   end
@@ -25,6 +26,8 @@ class SalesController < ApplicationController
     authorize :sale, :create?
     @step = current_step
     return unless load_context
+
+    load_client_document
 
     send("create_#{@step}")
   end
@@ -87,7 +90,9 @@ class SalesController < ApplicationController
       @new_party ||= InvolvedParty.new(seller: true, **client_details_from_document)
     when "property"
       @properties = property_scope.order(:street, :house_number)
-      @new_property ||= Property.new
+      # now works with the client property details extracted by AI from PDF upload
+      @address_from_document = address_from_document
+      @new_property ||= Property.new(**@address_from_document)
     when "buyer"
       @clients = buyer_scope.order(:last_name, :first_name)
       # now works with the client details extracted by AI from PDF upload
@@ -105,6 +110,21 @@ class SalesController < ApplicationController
     return {} unless @client_document&.done?
 
     @client_document.extracted_data.slice(*CLIENT_FIELDS_FROM_DOCUMENT).compact.symbolize_keys
+  end
+
+  # The realtor's own client PDF for this step. The property step uses the vendor's PDF,
+  # because a seller's current address is usually the property they're selling.
+  def load_client_document
+    step = @step == "property" ? "vendor" : @step
+    @client_document = current_user.client_documents.find_by(id: params[:client_document_id], step: step)
+  end
+
+  # The vendor's address from their client PDF, to fill in the new property form
+  def address_from_document
+    return {} unless @client_document&.done?
+    return {} if @client_document.extracted_data["selling"] == false
+
+    @client_document.extracted_data.slice(*ADDRESS_FIELDS_FROM_DOCUMENT).compact.symbolize_keys
   end
 
   def render_step_error
@@ -126,7 +146,8 @@ class SalesController < ApplicationController
       apply_onward_purchase!(vendor, plan)
     end
 
-    redirect_to new_sale_path(step: "property", vendor_id: vendor.id), status: :see_other
+    redirect_to new_sale_path(step: "property", vendor_id: vendor.id, client_document_id: @client_document&.id),
+                status: :see_other
   end
 
   def create_property

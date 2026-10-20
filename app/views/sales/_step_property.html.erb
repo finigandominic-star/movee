@@ -9,6 +9,13 @@
     <div class="sale-options sale-options--stacked">
       <div class="sale-option">
         <h3 class="sale-option__title">Add a new property</h3>
+        <% if @address_from_document.present? %>
+          <div class="alert alert-info mb-3" role="status">
+            <i class="fa-solid fa-wand-magic-sparkles me-2" aria-hidden="true"></i>
+            Address filled in from <strong><%= @client_document.filename %></strong> (the client's current home).
+            Please check it's the property being sold.
+          </div>
+        <% end %>
         <%= form_with model: @new_property, scope: :property, url: sale_path, method: :post, local: true do |f| %>
           <%= render "sales/carry" %>
           <div class="row g-3">

@@ -2,3 +2,5 @@
 <% sale_carry_params(@step).each do |key, value| %>
   <%= hidden_field_tag key, value, id: nil %>
 <% end %>
+
+<%= hidden_field_tag :client_document_id, @client_document.id, id: nil if @client_document %>

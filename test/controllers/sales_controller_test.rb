@@ -279,4 +279,40 @@ class SalesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='involved_party[first_name]'][value=?]", "Tunde", count: 0
     assert_select ".alert-success", count: 0
   end
+
+  test "choosing a vendor takes their client PDF on to the property step" do
+    document = @user.client_documents.create!(step: "vendor", filename: "client.pdf", status: "done")
+
+    post sale_url, params: { step: "vendor", existing_id: @vendor.id, client_document_id: document.id }
+
+    assert_redirected_to new_sale_url(step: "property", vendor_id: @vendor.id, client_document_id: document.id)
+  end
+
+  test "the property step suggests the address from the vendor's client PDF" do
+    document = @user.client_documents.create!(
+      step: "vendor", filename: "client.pdf", status: "done",
+      extracted_data: { "selling" => true, "house_number" => "14", "street" => "Maple Grove",
+                        "second_line_of_address" => "Ealing", "city" => "London", "post_code" => "W5 3PL" }
+    )
+
+    get new_sale_url(step: "property", vendor_id: @vendor.id, client_document_id: document.id)
+
+    assert_select "input[name='property[house_number]'][value=?]", "14"
+    assert_select "input[name='property[street]'][value=?]", "Maple Grove"
+    assert_select "input[name='property[second_line_of_address]'][value=?]", "Ealing"
+    assert_select "input[name='property[post_code]'][value=?]", "W5 3PL"
+    assert_select ".alert-info", text: /Address filled in from client.pdf/
+  end
+
+  test "the property step does not suggest the address of a client who is not selling" do
+    document = @user.client_documents.create!(
+      step: "vendor", filename: "client.pdf", status: "done",
+      extracted_data: { "selling" => false, "street" => "Maple Grove" }
+    )
+
+    get new_sale_url(step: "property", vendor_id: @vendor.id, client_document_id: document.id)
+
+    assert_select "input[name='property[street]'][value=?]", "Maple Grove", count: 0
+    assert_select ".alert-info", count: 0
+  end
 end
