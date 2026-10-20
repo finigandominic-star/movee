@@ -77,20 +77,19 @@ class SalesController < ApplicationController
   def prepare_step
     case @step
     when "vendor"
-      @clients = client_scope.order(Arel.sql("COALESCE(involved_parties.seller, FALSE) DESC"), :last_name, :first_name)
+      @clients = client_scope.order(:last_name, :first_name)
       @new_party ||= InvolvedParty.new(seller: true)
     when "property"
       @properties = property_scope.order(:street, :house_number)
       @new_property ||= Property.new
     when "buyer"
-      @clients = buyer_scope.order(Arel.sql("COALESCE(involved_parties.buyer, FALSE) DESC"), :last_name, :first_name)
+      @clients = buyer_scope.order(:last_name, :first_name)
       @new_party ||= InvolvedParty.new(buyer: true)
     when "chain"
       @suggested_chains = suggested_chains
-      @other_chains = my_chains.where.not(id: @suggested_chains.map { |chain, _| chain.id })
-                               .includes(transactions: :property)
-                               .order(updated_at: :desc)
-                               .limit(25)
+      @linkable_sales = linkable_sales.includes(:user, property: :user, chain: { transactions: :property })
+                                      .order("properties.street", "properties.house_number")
+                                      .limit(200)
     end
   end
 
@@ -152,7 +151,15 @@ class SalesController < ApplicationController
 
   def create_chain
     nickname = params[:chain_name].to_s.strip.presence
-    if params[:chain_id].blank? || params[:chain_id] == "new"
+    onward_sale = nil
+    if (link_id = params[:chain_id].to_s[/\Alink-(\d+)\z/, 1])
+      onward_sale = linkable_sales.find_by(id: link_id)
+      unless onward_sale
+        @choice_error = "That property already has a buyer. Choose another or start a new chain."
+        return render_step_error
+      end
+      chain = onward_sale.chain
+    elsif params[:chain_id].blank? || params[:chain_id] == "new"
       chain = Chain.new(user: current_user, active: true, name: nickname)
       authorize chain, :create?
     else
@@ -168,6 +175,17 @@ class SalesController < ApplicationController
     authorize sale, :create?
 
     ActiveRecord::Base.transaction do
+      if onward_sale
+        # Recheck under lock so two agents can't both claim the same purchase
+        onward_sale.lock!
+        if onward_sale.involved_party_id.present?
+          onward_sale.errors.add(:base, "#{onward_sale.property.short_address} has just been given a buyer")
+          raise ActiveRecord::RecordInvalid, onward_sale
+        end
+
+        onward_sale.update!(involved_party: @vendor)
+        apply_onward_purchase!(@vendor, "buying")
+      end
       # Link the vendor to the property (only ever offered when unassigned or already theirs)
       @property.update_attribute(:involved_party_id, @vendor.id) if @property.involved_party_id.nil?
       @vendor.update_attribute(:seller, true) unless @vendor.seller?
@@ -241,9 +259,13 @@ class SalesController < ApplicationController
     found.values
   end
 
-  def my_chains
-    policy_scope(Chain).where(user_id: current_user.id)
-                       .or(Chain.where(id: Transaction.where(user_id: current_user.id).select(:chain_id)))
+  # Pending sales in any agent's chain that still need a buyer: the vendor can be linked in as that buyer.
+  def linkable_sales
+    Transaction.pending.joins(:property)
+               .where(involved_party_id: nil)
+               .where.not(property_id: @property.id)
+               .where(properties: { sold: [false, nil] })
+               .where("properties.involved_party_id IS NULL OR properties.involved_party_id <> ?", @vendor.id)
   end
 
   def new_party_params
@@ -251,7 +273,7 @@ class SalesController < ApplicationController
   end
 
   def new_property_params
-    params.require(:property).permit(:house_number, :street, :second_line_of_address, :city, :post_code)
+    params.require(:property).permit(:house_number, :street, :second_line_of_address, :city, :post_code, :photo)
   end
 
   # Query params for a step's page: ids chosen up to and including that step (so it's preselected)

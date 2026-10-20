@@ -18,10 +18,10 @@ class InvolvedPartyTest < ActiveSupport::TestCase
   test "requires first_name, last_name, email, and phone" do
     party = InvolvedParty.new
     assert_not party.valid?
-    assert_includes party.errors[:first_name], "can't be blank"
-    assert_includes party.errors[:last_name], "can't be blank"
-    assert_includes party.errors[:email], "can't be blank"
-    assert_includes party.errors[:phone], "can't be blank"
+    assert party.errors.added?(:first_name, :blank)
+    assert party.errors.added?(:last_name, :blank)
+    assert party.errors.added?(:email, :blank)
+    assert party.errors.added?(:phone, :blank)
   end
 
   test "enforces unique email and phone" do
@@ -39,7 +39,7 @@ class InvolvedPartyTest < ActiveSupport::TestCase
       phone: "+44 7700 900444"
     )
     assert_not duplicate_email.valid?
-    assert_includes duplicate_email.errors[:email], "has already been taken"
+    assert duplicate_email.errors.of_kind?(:email, :taken)
 
     duplicate_phone = InvolvedParty.new(
       first_name: "Robert",
@@ -48,7 +48,7 @@ class InvolvedPartyTest < ActiveSupport::TestCase
       phone: "+44 7700 900333"
     )
     assert_not duplicate_phone.valid?
-    assert_includes duplicate_phone.errors[:phone], "has already been taken"
+    assert duplicate_phone.errors.of_kind?(:phone, :taken)
   end
 
   test "roles_label shows Buyer / Seller when both are true" do

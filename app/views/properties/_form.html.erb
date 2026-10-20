@@ -89,20 +89,6 @@
         </div>
         <div class="form-text small">Upload an image to display as the listing's preview photo<%= " (leave empty to keep the current one)" if property.photo.attached? %>.</div>
       </div>
-
-      <div class="col-12">
-        <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
-          <div>
-            <label class="form-check-label fw-bold text-dark d-block" for="propertySoldSwitch">
-              Property Status
-            </label>
-            <span class="text-muted small">Toggle whether this property has already been sold or is actively available.</span>
-          </div>
-          <div class="form-check form-switch fs-5 m-0">
-            <%= f.check_box :sold, class: "form-check-input", role: "switch", id: "propertySoldSwitch" %>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -177,20 +163,12 @@
   </section>
 
   <section class="form-section">
-    <h2 class="form-section__title">Photo &amp; status</h2>
+    <h2 class="form-section__title">Photo</h2>
     <div class="row g-3">
       <div class="col-12">
         <%= f.label :photos, "Photo URL", class: "form-label" %>
         <%= f.url_field :photos, class: "form-control", placeholder: "https://images.unsplash.com/photo-..." %>
         <div class="form-text">A publicly accessible image link shown as the listing photo.</div>
-      </div>
-
-      <div class="col-12">
-        <div class="form-check form-switch">
-          <%= f.check_box :sold, class: "form-check-input", role: "switch", id: "propertySoldSwitch" %>
-          <label class="form-check-label" for="propertySoldSwitch">Sold</label>
-        </div>
-        <div class="form-text">Turn on once the sale has completed.</div>
       </div>
     </div>
   </section>

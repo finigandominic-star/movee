@@ -35,6 +35,13 @@ body {
   margin: 0;
 }
 
+.page-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem;
+}
+
 .page-subtitle {
   color: $movee-muted;
   margin: .25rem 0 0;

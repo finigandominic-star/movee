@@ -2,6 +2,9 @@ Rails.application.routes.draw do
   devise_for :users
   root to: "pages#home"
 
+  # Agent profiles (declared after Devise so /users/sign_in etc. still reach Devise)
+  resources :users, only: :show
+
   # Signed-in home for agents
   get "dashboard", to: "dashboards#show", as: :dashboard
 

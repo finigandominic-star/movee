@@ -1,4 +1,4 @@
-<%# Vendor's plans after selling. Locals: name, prefix, selected, hint %>
+<%# Vendor's plans after selling. Locals: name, prefix, selected, hint (optional) %>
 <fieldset class="onward-plans sale-onward">
   <legend class="form-label fs-6 mb-2">After selling, are they buying another property?</legend>
   <div class="d-flex flex-wrap gap-2">
@@ -7,5 +7,7 @@
       <label class="btn btn-outline-secondary btn-sm" for="<%= prefix %>_<%= value %>"><%= label %></label>
     <% end %>
   </div>
-  <div class="form-text"><%= hint %></div>
+  <% if local_assigns[:hint].present? %>
+    <div class="form-text"><%= hint %></div>
+  <% end %>
 </fieldset>

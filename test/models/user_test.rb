@@ -21,7 +21,7 @@ class UserTest < ActiveSupport::TestCase
       company: "Prime Agency"
     )
     assert_not user.valid?
-    assert_includes user.errors[:user_name], "can't be blank"
+    assert user.errors.added?(:user_name, :blank)
   end
 
   test "password requires at least 8 characters with both letters and numbers" do

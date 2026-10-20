@@ -137,12 +137,6 @@
                   <td>
                     <% if agent %>
                       <%= agent_with_avatar(agent, name_class: "fw-medium") %>
-                      <small class="d-block">
-                        <a href="mailto:<%= agent.email %>" class="text-decoration-none"><%= agent.email %></a>
-                        <% if agent.phone.present? %>
-                          · <a href="tel:<%= agent.phone %>" class="text-decoration-none"><%= agent.phone %></a>
-                        <% end %>
-                      </small>
                     <% else %>
                       <span class="text-muted">—</span>
                     <% end %>

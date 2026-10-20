@@ -1,0 +1,39 @@
+# Validation messages that explain the rule, not just that it failed.
+# They appear under the field and in its tooltip, after the field's name (e.g. "Phone is already used by…").
+en:
+  activerecord:
+    errors:
+      models:
+        involved_party:
+          attributes:
+            first_name:
+              blank: "is required so the client can be identified."
+            last_name:
+              blank: "is required so the client can be identified."
+            email:
+              blank: "is required so you can contact the client."
+              taken: "is already used by another client. Each client needs their own email address."
+            phone:
+              blank: "is required so you can contact the client."
+              taken: "is already used by another client. Each client needs their own phone number."
+        property:
+          attributes:
+            house_number:
+              blank: "is required. Use the house or building number, e.g. 10B."
+            street:
+              blank: "is required, e.g. Downing Street."
+            post_code:
+              blank: "is required, e.g. SW1A 2AA."
+        user:
+          attributes:
+            user_name:
+              blank: "is required. It's the name other agents see."
+            email:
+              blank: "is required. You'll use it to log in."
+              invalid: "must be a valid email address, like name@example.com."
+              taken: "is already registered. Try logging in instead."
+            password:
+              blank: "is required."
+              too_short: "is too short. Use at least 8 characters, including a letter and a number."
+            password_confirmation:
+              confirmation: "doesn't match the password. Type the same password in both boxes."

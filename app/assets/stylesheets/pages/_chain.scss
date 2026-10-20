@@ -170,14 +170,6 @@
     margin: 0;
   }
 
-  .chain-link__contact a {
-    display: block;
-    text-decoration: none;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .chain-link__footer {
     display: flex;
     justify-content: space-between;
@@ -330,4 +322,29 @@
 // Open on the left, edit/delete or lock on the right
 .card-footer.chain-actions > :first-child {
   margin-right: auto;
+}
+
+// "Rename chain" toggle under the chain title (app/views/chains/_rename.html.erb)
+.chain-rename {
+  margin-top: .35rem;
+  font-size: .875rem;
+
+  summary {
+    display: inline-block;
+    cursor: pointer;
+    color: $movee-muted;
+    list-style: none;
+
+    &::-webkit-details-marker { display: none; }
+    &:hover { color: $movee-indigo; }
+  }
+
+  &[open] summary { color: $movee-indigo; }
+}
+
+.chain-rename__form {
+  display: flex;
+  gap: .5rem;
+  max-width: 24rem;
+  margin-top: .5rem;
 }

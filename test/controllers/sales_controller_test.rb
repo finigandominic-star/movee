@@ -125,6 +125,59 @@ class SalesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#suggested-chains", text: /Bob Buyer \(your buyer\) is selling/
   end
 
+  test "linking to a property with no buyer joins its chain and makes the vendor its buyer" do
+    other_agent = User.create!(user_name: "other_agent", email: "other_agent@example.com", password: "Password123")
+    onward_home = Property.create!(user: other_agent, house_number: "12", street: "Birch Close", post_code: "LS4 4DD")
+    chain = Chain.create!(user: other_agent, active: true)
+    onward_sale = Transaction.create!(user: other_agent, chain: chain, property: onward_home)
+    property = Property.create!(user: @user, house_number: "9", street: "Oak Lane", post_code: "LS3 3CC",
+                                involved_party: @vendor)
+
+    get new_sale_url(step: "chain", vendor_id: @vendor.id, property_id: property.id, buyer_id: @buyer.id)
+    assert_response :success
+    assert_select "#chainChoices input[name=chain_id][value=?]", "link-#{onward_sale.id}"
+
+    assert_difference("Transaction.count", 1) do
+      assert_no_difference("Chain.count") do
+        post sale_url, params: { step: "chain", vendor_id: @vendor.id, property_id: property.id,
+                                 buyer_id: @buyer.id, chain_id: "link-#{onward_sale.id}" }
+      end
+    end
+    assert_equal @vendor, onward_sale.reload.involved_party
+    assert_equal chain, Transaction.order(:id).last.chain
+    assert_equal "buying", @vendor.reload.onward_purchase
+    assert_redirected_to chain_url(chain)
+  end
+
+  test "properties that already have a buyer can't be linked to" do
+    onward_home = Property.create!(user: @user, house_number: "12", street: "Birch Close", post_code: "LS4 4DD")
+    taken = Transaction.create!(user: @user, chain: Chain.create!(user: @user, active: true), property: onward_home,
+                                involved_party: @buyer)
+    property = Property.create!(user: @user, house_number: "9", street: "Oak Lane", post_code: "LS3 3CC",
+                                involved_party: @vendor)
+
+    get new_sale_url(step: "chain", vendor_id: @vendor.id, property_id: property.id)
+    assert_select "input[value=?]", "link-#{taken.id}", count: 0
+
+    assert_no_difference("Transaction.count") do
+      post sale_url, params: { step: "chain", vendor_id: @vendor.id, property_id: property.id,
+                               chain_id: "link-#{taken.id}" }
+    end
+    assert_response :unprocessable_entity
+    assert_equal @buyer, taken.reload.involved_party
+  end
+
+  test "a new property can be added with a photo" do
+    photo = Rack::Test::UploadedFile.new(StringIO.new("fake image"), "image/png", original_filename: "house.png")
+    assert_difference("Property.count", 1) do
+      post sale_url, params: {
+        step: "property", vendor_id: @vendor.id,
+        property: { house_number: "5", street: "Photo Lane", post_code: "LS6 6FF", photo: photo }
+      }
+    end
+    assert Property.order(:id).last.photo.attached?
+  end
+
   test "unknown ids send the agent back to the first step" do
     get new_sale_url(step: "property", vendor_id: 0)
     assert_redirected_to new_sale_url

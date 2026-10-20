@@ -49,7 +49,6 @@
         <div class="card-header d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
           <div>
             <h2 class="h6 mb-0" id="conveyancing-heading">Conveyancing progress</h2>
-            <p class="text-muted small mb-0">England &amp; Wales conveyancing stages</p>
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="badge <%= tx_timing[:badge_class] %>">
@@ -151,27 +150,36 @@
           <% if @property.transactions.any? %>
             <ul class="property-transactions">
               <% @property.transactions.each do |transaction| %>
+                <% chain = transaction.chain %>
                 <li class="property-transactions__item <%= "property-transactions__item--completed" if transaction.completed? %>">
-                  <div>
-                    <%= link_to "Transaction ##{transaction.id}", transaction_path(transaction), class: "property-transactions__link" %>
-                    <span class="property-transactions__meta">
-                      <% if transaction.chain %>
-                        <%= link_to chain_name(transaction.chain), chain_path(transaction.chain) %>
-                        · Chain #<%= transaction.chain.id %>
-                        · <%= transaction.chain.active? ? "Active" : "Inactive" %> ·
+                  <div class="property-transactions__head">
+                    <div class="text-break">
+                      <% if chain %>
+                        <%= link_to chain_path(chain), class: "property-transactions__link" do %>
+                          <i class="fa-solid fa-link me-1" aria-hidden="true"></i><%= chain_name(chain) %>
+                        <% end %>
                       <% end %>
-                      <%= transaction.created_at.strftime("%d %b %Y") %>
-                    </span>
+                      <span class="property-transactions__meta">
+                        <% if chain %><%= chain_summary(chain) %> · <% end %>
+                        <%= link_to "Transaction ##{transaction.id}", transaction_path(transaction) %>
+                        · <%= transaction.created_at.strftime("%d %b %Y") %>
+                      </span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                      <% if chain %>
+                        <span class="badge <%= chain.chain_completed? ? 'bg-success' : 'bg-warning' %>"><%= chain.chain_completed? ? "Chain completed" : "Chain open" %></span>
+                      <% end %>
+                      <span class="badge <%= transaction.legal_stage_badge_class %>"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            data-bs-title="<%= transaction.legal_stage_definition[:tooltip] %>">
+                        <i class="fa-solid <%= transaction.legal_stage_definition[:icon] %> me-1" aria-hidden="true"></i><%= transaction.legal_stage_short_title %>
+                      </span>
+                    </div>
                   </div>
-                  <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                    <span class="property-transactions__status"><%= transaction.status_label %></span>
-                    <span class="badge <%= transaction.legal_stage_badge_class %>"
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          data-bs-title="<%= transaction.legal_stage_definition[:tooltip] %>">
-                      <i class="fa-solid <%= transaction.legal_stage_definition[:icon] %> me-1" aria-hidden="true"></i><%= transaction.legal_stage_short_title %>
-                    </span>
-                  </div>
+                  <% if chain %>
+                    <div class="property-transactions__flow"><%= render "chains/flow", chain: chain, limit: 4 %></div>
+                  <% end %>
                 </li>
               <% end %>
             </ul>
@@ -207,21 +215,6 @@
               <p class="small text-muted mb-0">
                 Confidential client — personal contact details are protected. Contact the listing agent below.
               </p>
-              <% if @property.user %>
-                <div class="small text-muted bg-white p-2 rounded border mt-2">
-                  <span class="fw-semibold text-dark d-block mb-1">Managing Agent:</span>
-                  <div class="d-flex align-items-center gap-2">
-                    <%= agent_avatar(@property.user, size: 32) %>
-                    <div><%= @property.user.user_name %> <% if @property.user.company.present? %>(<%= @property.user.company %>)<% end %></div>
-                  </div>
-                  <div class="mt-1">
-                    <a href="mailto:<%= @property.user.email %>" class="text-decoration-none d-block"><i class="fa-solid fa-envelope me-1"></i><%= @property.user.email %></a>
-                    <% if @property.user.phone.present? %>
-                      <a href="tel:<%= @property.user.phone %>" class="text-decoration-none d-block"><i class="fa-solid fa-phone me-1"></i><%= @property.user.phone %></a>
-                    <% end %>
-                  </div>
-                </div>
-              <% end %>
             <% end %>
 
             <% if policy(@property).update? %>

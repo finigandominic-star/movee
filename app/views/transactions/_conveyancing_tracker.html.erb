@@ -171,15 +171,6 @@
                 Completed on <strong><%= @transaction.actual_completion_date&.strftime("%d %B %Y") || @transaction.updated_at.strftime("%d %B %Y") %></strong>
                 (<%= overall_timing[:label] %> relative to target date <%= @transaction.estimated_completion_date&.strftime("%d %B %Y") %>).
               </span>
-              <% if @transaction.property && !@transaction.property.sold? && policy(@transaction.property).update? %>
-                <%= button_to property_path(@transaction.property),
-                              method: :patch,
-                              params: { property: { sold: true } },
-                              class: "btn btn-sm btn-secondary mt-2" do %>
-                  <i class="fa-solid fa-house-circle-check" aria-hidden="true"></i>
-                  <span>Mark property as sold</span>
-                <% end %>
-              <% end %>
             </div>
           </div>
         <% end %>

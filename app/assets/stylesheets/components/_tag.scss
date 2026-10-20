@@ -25,6 +25,22 @@
   color: $movee-muted !important;
 }
 
+// Large solid status pill, e.g. beside a page title
+.badge.status-pill {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: .45em 1em;
+  border-radius: 50rem;
+}
+
+@each $name, $color in $theme-colors {
+  .badge.status-pill.bg-#{$name} {
+    background-color: $color !important;
+    border-color: $color !important;
+    color: $movee-navy !important;
+  }
+}
+
 // Brand highlight tag, e.g. "Next step"
 .tag-accent {
   background: $movee-lime;
@@ -60,4 +76,18 @@
     border-color: #FFFFFF !important;
     color: $movee-navy !important;
   }
+}
+
+// Completed / positive status pills use the brand lime (always with navy text) on every surface.
+// Listed last, with the extra selectors, so it beats the tinted, card-header and status-pill rules above.
+.badge.bg-success,
+.badge.bg-success-subtle,
+.badge.text-bg-success,
+.card-header .badge.bg-success,
+.card-header .badge.bg-success-subtle,
+.card-header .badge.text-bg-success,
+.badge.status-pill.bg-success {
+  background-color: $movee-lime !important;
+  border-color: darken($movee-lime, 12%) !important;
+  color: $movee-navy !important;
 }

@@ -1,0 +1,7 @@
+<%# Blue "add a link" tile shown at an open end of a chain. Locals: label %>
+<li class="mini-card mini-card--add">
+  <%= link_to new_transaction_path(chain_id: @chain.id), class: "mini-card__add-link" do %>
+    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+    <span><%= label %></span>
+  <% end %>
+</li>

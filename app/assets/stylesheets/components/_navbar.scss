@@ -1,4 +1,4 @@
-// Movee header navbar (app/views/shared/_navbar.html.erb)
+// Moveee header navbar (app/views/shared/_navbar.html.erb)
 .navbar-movee {
   background: $movee-navy;
   padding-block: .75rem;
@@ -46,7 +46,7 @@
     align-items: center;
     gap: .6rem;
     padding: .25rem .75rem .25rem .25rem;
-    border: 1px solid rgba(#FFFFFF, .2);
+    border: 3px solid $movee-lime;
     border-radius: 50rem;
     background: transparent;
     color: #FFFFFF;
@@ -61,6 +61,7 @@
     justify-content: center;
     width: 2.1rem;
     height: 2.1rem;
+    border: 3px solid $movee-lime;
     border-radius: 50%;
     background: $movee-indigo;
     color: #FFFFFF;

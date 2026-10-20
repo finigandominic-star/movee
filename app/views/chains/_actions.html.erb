@@ -1,22 +1,12 @@
-<%# Row/card actions for a chain. Always the same footprint: open, then edit/delete when allowed,
-    otherwise a lock that says who manages the chain. %>
-<%= link_to chain_path(chain), class: "btn btn-sm btn-outline-primary" do %>
-  Open<span class="visually-hidden"> <%= chain_name(chain) %></span>
-<% end %>
-<% if policy(chain).update? || policy(chain).destroy? %>
-  <% if policy(chain).update? %>
-    <%= link_to edit_chain_path(chain), class: "btn btn-sm btn-outline-secondary btn-icon", aria: { label: "Edit #{chain_name(chain)}" } do %>
-      <i class="fa-solid fa-pen" aria-hidden="true"></i>
-    <% end %>
-  <% end %>
-  <% if policy(chain).destroy? %>
-    <%= link_to chain_path(chain), data: { turbo_method: :delete, turbo_confirm: "Delete #{chain_name(chain)}?" }, class: "btn btn-sm btn-outline-danger btn-icon", aria: { label: "Delete #{chain_name(chain)}" } do %>
-      <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-    <% end %>
+<%# Row/card actions for a chain: delete when allowed, otherwise a lock whose tooltip
+    says who manages the chain. The chain name itself links to the chain (renamed there). %>
+<% if policy(chain).destroy? %>
+  <%= link_to chain_path(chain), data: { turbo_method: :delete, turbo_confirm: "Delete #{chain_name(chain)}?" }, class: "btn btn-sm btn-outline-danger btn-icon", aria: { label: "Delete #{chain_name(chain)}" } do %>
+    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
   <% end %>
 <% else %>
   <span class="chain-locked" data-bs-toggle="tooltip" data-bs-title="Only <%= chain.user&.user_name || 'the creating agent' %> or an admin can edit this chain">
     <i class="fa-solid fa-lock" aria-hidden="true"></i>
-    <span><%= chain.user ? "Managed by #{chain.user.user_name}" : "Read only" %></span>
+    <span class="visually-hidden"><%= chain.user ? "Managed by #{chain.user.user_name}" : "Read only" %></span>
   </span>
 <% end %>

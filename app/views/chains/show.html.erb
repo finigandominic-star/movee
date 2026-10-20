@@ -1,26 +1,16 @@
 <% ordered_txs = @chain.ordered_transactions %>
 <% completed_count = ordered_txs.count(&:completed?) %>
-<% subtitle = [chain_summary(@chain), "created #{@chain.created_at&.strftime('%-d %B %Y') || 'recently'}"] %>
-<% subtitle << "initiated by #{@chain.user.user_name}#{" (#{@chain.user.company})" if @chain.user.company.present?}" if @chain.user %>
+<% status_pill = @chain.chain_completed? ? tag.span("Completed", class: "badge bg-success status-pill") : tag.span("Open", class: "badge bg-warning status-pill") %>
 
 <div class="container-fluid px-3 px-lg-5 py-4 py-lg-5">
   <div class="page-wide">
-    <%= render layout: "shared/page_header", locals: { title: chain_name(@chain), subtitle: subtitle.join(" · ") } do %>
-      <% if @chain.chain_completed? %>
-        <span class="badge bg-success align-self-center">Completed</span>
-      <% else %>
-        <span class="badge bg-warning align-self-center">Open</span>
-      <% end %>
-      <%= link_to chains_path, class: "btn btn-outline-secondary" do %>
-        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All chains
-      <% end %>
+    <%= link_to "All chains", chains_path, class: "d-inline-block small mb-2" %>
+    <% rename = render("chains/rename", chain: @chain) if policy(@chain).update? %>
+    <%= render layout: "shared/page_header", locals: { title: chain_name(@chain), title_badge: status_pill, after_title: rename } do %>
       <% if policy(@chain).update? %>
         <button type="button" class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#connectPropertyModal">
           <i class="fa-solid fa-house-circle-check" aria-hidden="true"></i> Connect property
         </button>
-        <%= link_to edit_chain_path(@chain), class: "btn btn-outline-secondary" do %>
-          <i class="fa-solid fa-pen" aria-hidden="true"></i> Edit
-        <% end %>
       <% end %>
       <% if policy(@chain).destroy? %>
         <%= link_to chain_path(@chain), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete Chain ##{@chain.id}?" }, class: "btn btn-outline-danger btn-icon", aria: { label: "Delete chain" } do %>
@@ -32,9 +22,6 @@
     <section class="card card--chain mb-4 mb-lg-5" aria-labelledby="chainBoundaryTitle">
       <div class="card-header py-3">
         <h5 class="mb-1" id="chainBoundaryTitle">Chain Boundary Analysis</h5>
-        <p class="small text-muted mb-0">
-          A chain is open until both ends are closed (first-time buyer at the bottom, vendor leaving the market at the top) and every transaction has completed.
-        </p>
       </div>
       <div class="card-body p-3 p-lg-4">
         <div class="chain-ends">
@@ -47,7 +34,6 @@
               <span class="badge <%= start_info[:closed] ? 'bg-success' : 'bg-warning' %>"><%= start_info[:label] %></span>
             </div>
             <h6><%= start_info[:party_name] %></h6>
-            <p class="small"><%= start_info[:description] %></p>
             <% if !start_info[:closed] && policy(@chain).update? %>
               <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#connectPropertyModal" data-position="bottom">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Find buyer's property being sold
@@ -75,7 +61,6 @@
               <span class="badge <%= end_info[:closed] ? 'bg-success' : 'bg-warning' %>"><%= end_info[:label] %></span>
             </div>
             <h6><%= end_info[:party_name] %></h6>
-            <p class="small"><%= end_info[:description] %></p>
             <% if !end_info[:closed] && policy(@chain).update? %>
               <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#connectPropertyModal" data-position="top">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Find vendor's onward property
@@ -84,18 +69,17 @@
           </div>
         </div>
 
-        <p class="small text-muted mt-3 mb-0">
-          <% if @chain.chain_completed? %>
-            <i class="fa-solid fa-circle-check text-success me-1" aria-hidden="true"></i>
-            <strong>Chain fully completed:</strong> both ends are closed and every transaction in the chain has completed.
-          <% elsif @chain.both_ends_closed? %>
-            <i class="fa-solid fa-circle-info text-info me-1" aria-hidden="true"></i>
-            <strong>Both ends closed:</strong> the chain stays open while conveyancing proceeds on <%= pluralize(@chain.transactions.pending.size, "transaction") %>.
-          <% else %>
-            <i class="fa-solid fa-triangle-exclamation text-warning me-1" aria-hidden="true"></i>
-            <strong>Chain is open:</strong> connect the onward purchase at the top or the downward sale at the bottom to close its ends.
-          <% end %>
-        </p>
+        <% if @chain.both_ends_closed? %>
+          <p class="small text-muted mt-3 mb-0">
+            <% if @chain.chain_completed? %>
+              <i class="fa-solid fa-circle-check text-success me-1" aria-hidden="true"></i>
+              <strong>Chain fully completed:</strong> both ends are closed and every transaction in the chain has completed.
+            <% else %>
+              <i class="fa-solid fa-circle-info text-info me-1" aria-hidden="true"></i>
+              <strong>Both ends closed:</strong> the chain stays open while conveyancing proceeds on <%= pluralize(@chain.transactions.pending.size, "transaction") %>.
+            <% end %>
+          </p>
+        <% end %>
       </div>
     </section>
 
@@ -115,6 +99,9 @@
         <% end %>
       <% else %>
         <ol class="mini-card-row chain-links list-unstyled mb-0">
+          <% unless @chain.first_time_buyer_at_start? %>
+            <%= render "chains/add_link_card", label: "Add transaction to the start of this chain" %>
+          <% end %>
           <% ordered_txs.each_with_index do |tx, idx| %>
             <% agent = tx.creator_or_listing_user %>
             <li class="mini-card">
@@ -125,19 +112,24 @@
                 <span class="badge <%= tx.completed? ? 'bg-success' : 'bg-warning' %>"><%= tx.status_label %></span>
               </div>
 
-              <div>
-                <h3 class="mini-card__title">
-                  <% if tx.property %>
-                    <%= link_to tx.property.short_address, property_path(tx.property) %>
-                  <% else %>
-                    <span class="text-muted fst-italic">No property assigned</span>
-                  <% end %>
-                </h3>
+              <div class="d-flex align-items-start gap-2">
                 <% if tx.property %>
-                  <div class="small text-muted">
-                    <%= [tx.property.city, tx.property.post_code].compact_blank.join(", ") %><%= " · Sold" if tx.property.sold? %>
-                  </div>
+                  <%= link_to property_thumbnail(tx.property), property_path(tx.property), tabindex: -1, aria: { hidden: true } %>
                 <% end %>
+                <div class="text-break">
+                  <h3 class="mini-card__title">
+                    <% if tx.property %>
+                      <%= link_to tx.property.short_address, property_path(tx.property) %>
+                    <% else %>
+                      <span class="text-muted fst-italic">No property assigned</span>
+                    <% end %>
+                  </h3>
+                  <% if tx.property %>
+                    <div class="small text-muted">
+                      <%= [tx.property.city, tx.property.post_code].compact_blank.join(", ") %><%= " · Sold" if tx.property.sold? %>
+                    </div>
+                  <% end %>
+                </div>
               </div>
 
               <div class="small" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="<%= tx.legal_stage_definition[:tooltip] %>">
@@ -147,114 +139,35 @@
               </div>
 
               <div>
+                <div class="mini-card__label mb-1">Managing agent</div>
+                <% if agent %>
+                  <div class="d-flex align-items-center gap-2">
+                    <%= agent_avatar(agent, size: 28) %>
+                    <h6><%= agent_link(agent, class: "text-decoration-none text-reset") %></h6>
+                  </div>
+                  <% if agent.company.present? %>
+                    <div class="small text-muted"><i class="fa-solid fa-building me-1" aria-hidden="true"></i><%= agent.company %></div>
+                  <% end %>
+                <% else %>
+                  <span class="text-muted fst-italic small">Unassigned agent</span>
+                <% end %>
+              </div>
+
+              <div>
                 <div class="mini-card__label mb-1">Buyer</div>
                 <% if tx.involved_party %>
                   <% if policy(tx.involved_party).show_personal_data? %>
                     <h6><%= link_to tx.involved_party.full_name, involved_party_path(tx.involved_party), class: "text-decoration-none text-reset" %></h6>
-                    <div class="chain-link__contact small">
-                      <a href="mailto:<%= tx.involved_party.email %>"><i class="fa-solid fa-envelope me-1" aria-hidden="true"></i><%= tx.involved_party.email %></a>
-                      <a href="tel:<%= tx.involved_party.phone %>"><i class="fa-solid fa-phone me-1" aria-hidden="true"></i><%= tx.involved_party.phone %></a>
-                    </div>
                   <% else %>
                     <div class="client-confidential">
                       <i class="fa-solid fa-user-shield me-1" aria-hidden="true"></i>
                       <span class="fw-semibold">Client Confidential</span>
-                      <div class="small">Coordinate via <strong><%= agent&.user_name || "the managing agent" %></strong>.</div>
+                      <div class="small">Coordinate via <strong><%= agent ? agent_link(agent) : "the managing agent" %></strong>.</div>
                     </div>
                   <% end %>
                 <% else %>
                   <span class="text-muted fst-italic small">No buyer assigned</span>
                 <% end %>
-              </div>
-
-              <div class="card-body p-3">
-                <div class="row g-3">
-                  <!-- Property Info -->
-                  <div class="col-12 col-md-4 border-end-md">
-                    <span class="text-muted small text-uppercase fw-semibold d-block mb-1">
-                      <i class="fa-solid fa-house me-1 text-primary"></i> Property
-                    </span>
-                    <% if tx.property %>
-                      <div class="d-flex align-items-start gap-2">
-                        <%= link_to property_thumbnail(tx.property), property_path(tx.property) %>
-                        <div>
-                          <h6 class="fw-bold text-dark mb-1">
-                            <%= link_to tx.property.short_address, property_path(tx.property), class: "text-decoration-none text-dark" %>
-                          </h6>
-                          <div class="text-muted small">
-                            <%= tx.property.city %>, <%= tx.property.post_code %><br>
-                            <span class="badge <%= tx.property.sold? ? 'bg-secondary' : 'bg-success-subtle text-success border border-success-subtle' %>">
-                              <%= tx.property.sold? ? 'Sold' : 'Active Listing' %>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    <% else %>
-                      <span class="text-muted fst-italic small">No property assigned</span>
-                    <% end %>
-                  </div>
-
-                  <!-- Managing Agent (Visible to all users for cooperation) -->
-                  <div class="col-12 col-md-4 border-end-md">
-                    <span class="text-muted small text-uppercase fw-semibold d-block mb-1">
-                      <i class="fa-solid fa-user-tie me-1 text-primary"></i> Managing Agent
-                    </span>
-                    <% agent = tx.creator_or_listing_user %>
-                    <% if agent %>
-                      <div class="d-flex align-items-center gap-2 mb-1">
-                        <%= agent_avatar(agent, size: 36) %>
-                        <h6 class="fw-bold text-dark mb-0"><%= agent.user_name %></h6>
-                      </div>
-                      <div class="text-muted small">
-                        <% if agent.company.present? %>
-                          <span class="d-block"><i class="fa-solid fa-building me-1 text-secondary"></i><%= agent.company %></span>
-                        <% end %>
-                        <a href="mailto:<%= agent.email %>" class="text-decoration-none d-block">
-                          <i class="fa-solid fa-envelope me-1 text-secondary"></i><%= agent.email %>
-                        </a>
-                        <% if agent.phone.present? %>
-                          <a href="tel:<%= agent.phone %>" class="text-decoration-none d-block">
-                            <i class="fa-solid fa-phone me-1 text-secondary"></i><%= agent.phone %>
-                          </a>
-                        <% end %>
-                      </div>
-                    <% else %>
-                      <span class="text-muted fst-italic small">Unassigned Agent</span>
-                    <% end %>
-                  </div>
-
-                  <!-- Client / Purchaser Party -->
-                  <div class="col-12 col-md-4">
-                    <span class="text-muted small text-uppercase fw-semibold d-block mb-1">
-                      <i class="fa-solid fa-user-group me-1 text-primary"></i> Purchaser (Buyer)
-                    </span>
-                    <% if tx.involved_party %>
-                      <% if policy(tx.involved_party).show_personal_data? %>
-                        <h6 class="fw-bold text-dark mb-1">
-                          <%= link_to tx.involved_party.full_name, involved_party_path(tx.involved_party), class: "text-decoration-none text-dark" %>
-                        </h6>
-                        <div class="small text-muted">
-                          <a href="mailto:<%= tx.involved_party.email %>" class="text-decoration-none d-block">
-                            <i class="fa-solid fa-envelope me-1"></i><%= tx.involved_party.email %>
-                          </a>
-                          <a href="tel:<%= tx.involved_party.phone %>" class="text-decoration-none d-block">
-                            <i class="fa-solid fa-phone me-1"></i><%= tx.involved_party.phone %>
-                          </a>
-                        </div>
-                      <% else %>
-                        <div class="p-2 bg-light rounded border text-center">
-                          <i class="fa-solid fa-user-shield text-muted me-1"></i>
-                          <span class="small fw-semibold text-muted">Client Confidential</span>
-                          <p class="mb-0 text-muted" style="font-size: 0.72rem;">
-                            Direct details restricted. Coordinate via <strong><%= agent&.user_name || "managing agent" %></strong>.
-                          </p>
-                        </div>
-                      <% end %>
-                    <% else %>
-                      <span class="text-muted fst-italic small">No client party assigned</span>
-                    <% end %>
-                  </div>
-                </div>
               </div>
 
               <div class="chain-link__footer">
@@ -268,6 +181,9 @@
                 <% end %>
               </div>
             </li>
+          <% end %>
+          <% unless @chain.leaving_market_at_end? %>
+            <%= render "chains/add_link_card", label: "Add transaction to the end of this chain" %>
           <% end %>
         </ol>
       <% end %>
@@ -290,7 +206,7 @@
           <div class="modal-body p-4">
             <div class="alert alert-info py-2 small mb-4">
               <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>
-              <strong>Automatic chain linking:</strong> you only need to select the property. If it is already part of another chain, Movee merges both chains under the <strong>lowest ID</strong>.
+              <strong>Automatic chain linking:</strong> you only need to select the property. If it is already part of another chain, Moveee merges both chains under the <strong>lowest ID</strong>.
             </div>
 
             <fieldset class="mb-4">

@@ -48,7 +48,7 @@
 
             <div class="mb-3">
               <% if resource.avatar.attached? %>
-                <%= image_tag resource.avatar, alt: "Current profile photo", class: "rounded-circle object-fit-cover mb-2", width: 64, height: 64 %>
+                <%= image_tag resource.avatar, alt: "Current profile photo", class: "avatar-ring rounded-circle object-fit-cover mb-2", width: 64, height: 64 %>
               <% end %>
               <%= f.input :avatar,
                           as: :file,
