@@ -1,0 +1,39 @@
+<%# "Fill from PDF": upload a client PDF, then show what happened with it. Uses @client_document (may be nil). %>
+<div class="fill-from-pdf border rounded-3 p-3 mb-4 bg-light">
+  <% if @client_document&.processing? %>
+    <p class="mb-0" role="status">
+      <i class="fa-solid fa-spinner fa-spin me-2" aria-hidden="true"></i>
+      Reading <strong><%= @client_document.filename %></strong>… This takes a few seconds.
+      <%= link_to "Check again", request.fullpath, class: "ms-2" %>
+    </p>
+  <% else %>
+    <% if @client_document&.done? %>
+      <% missing = fields_missing_from(@client_document) %>
+      <div class="alert alert-success mb-3" role="status">
+        <i class="fa-solid fa-wand-magic-sparkles me-2" aria-hidden="true"></i>
+        Filled in from <strong><%= @client_document.filename %></strong>. Please check every field before continuing.
+        <% if missing.any? %>
+          <div class="small mt-1">Not found in the PDF: <%= missing.to_sentence %>.</div>
+        <% end %>
+      </div>
+    <% elsif @client_document&.failed? %>
+      <div class="alert alert-danger mb-3" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-2" aria-hidden="true"></i>
+        We couldn't read <strong><%= @client_document.filename %></strong>: <%= @client_document.error_message %>
+      </div>
+    <% end %>
+
+    <%= form_with url: client_documents_path, method: :post, local: true, multipart: true do %>
+      <%= render "sales/carry" %>
+      <label class="form-label" for="clientPdf">Fill from PDF <span class="text-muted fw-normal">(optional)</span></label>
+      <div class="input-group">
+        <%= file_field_tag :file, accept: "application/pdf", id: "clientPdf", class: "form-control", required: true %>
+        <button type="submit" class="btn btn-outline-primary">
+          <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Read PDF
+        </button>
+      </div>
+      <div class="form-text">
+        We read the client's details from the PDF and filled in the form below. The PDF itself is not stored.</div>
+    <% end %>
+  <% end %>
+</div>

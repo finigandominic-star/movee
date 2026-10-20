@@ -5,6 +5,7 @@ class SalesController < ApplicationController
   STEPS = %w[vendor property buyer chain].freeze
   STEP_LABELS = { "vendor" => "Vendor", "property" => "Property", "buyer" => "Buyer", "chain" => "Chain" }.freeze
   STEP_PARAMS = { "vendor" => :vendor_id, "property" => :property_id, "buyer" => :buyer_id }.freeze
+  CLIENT_FIELDS_FROM_DOCUMENT = %w[first_name last_name email phone onward_purchase].freeze
 
   helper_method :sale_step_params, :sale_carry_params, :sale_step_state, :previous_sale_step
 
@@ -12,6 +13,8 @@ class SalesController < ApplicationController
     authorize :sale, :new?
     @step = current_step
     return unless load_context
+
+    @client_document = current_user.client_documents.find_by(id: params[:client_document_id])
 
     prepare_step
   end
@@ -78,7 +81,7 @@ class SalesController < ApplicationController
     case @step
     when "vendor"
       @clients = client_scope.order(:last_name, :first_name)
-      @new_party ||= InvolvedParty.new(seller: true)
+      @new_party ||= InvolvedParty.new(seller: true, **client_details_from_document)
     when "property"
       @properties = property_scope.order(:street, :house_number)
       @new_property ||= Property.new
@@ -91,6 +94,13 @@ class SalesController < ApplicationController
                                       .order("properties.street", "properties.house_number")
                                       .limit(200)
     end
+  end
+
+  # Details found in an uploaded client PDF (see ClientDocumentsController), to fill in the new client form
+  def client_details_from_document
+    return {} unless @client_document&.done?
+
+    @client_document.extracted_data.slice(*CLIENT_FIELDS_FROM_DOCUMENT).compact.symbolize_keys
   end
 
   def render_step_error

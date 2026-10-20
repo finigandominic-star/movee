@@ -188,4 +188,49 @@ class SalesControllerTest < ActionDispatch::IntegrationTest
     get new_sale_url
     assert_redirected_to new_user_session_url
   end
+
+  test "the vendor step fills in the new client form from a finished client PDF" do
+    document = @user.client_documents.create!(
+      step: "vendor", filename: "client.pdf", status: "done",
+      extracted_data: { "first_name" => "Tunde", "last_name" => "Adebayo", "email" => "tunde.adebayo@example.com",
+                        "phone" => nil, "onward_purchase" => "buying" }
+    )
+
+    get new_sale_url(client_document_id: document.id)
+
+    assert_select "input[name='involved_party[first_name]'][value=?]", "Tunde"
+    assert_select "input[name='involved_party[email]'][value=?]", "tunde.adebayo@example.com"
+    assert_select "input[name='involved_party[onward_purchase]'][value=buying][checked]"
+    assert_select ".alert-success", text: /Not found in the PDF: phone number/
+  end
+
+  test "the vendor step says when a client PDF is still being read" do
+    document = @user.client_documents.create!(step: "vendor", filename: "client.pdf")
+
+    get new_sale_url(client_document_id: document.id)
+
+    assert_select ".fill-from-pdf", text: /Reading client.pdf/
+    assert_select "input[name='involved_party[first_name]'][value]", count: 0
+  end
+
+  test "the vendor step shows why a client PDF could not be read" do
+    document = @user.client_documents.create!(step: "vendor", filename: "client.pdf", status: "failed",
+                                              error_message: "The assistant gave no answer.")
+
+    get new_sale_url(client_document_id: document.id)
+
+    assert_select ".alert-danger", text: /The assistant gave no answer/
+  end
+
+  test "the vendor step ignores another agent's client PDF" do
+    other = User.create!(user_name: "other_agent", email: "other@example.com", password: "Password123",
+                         phone: "+44 20 7946 0199")
+    document = other.client_documents.create!(step: "vendor", filename: "secret.pdf", status: "done",
+                                              extracted_data: { "first_name" => "Secret" })
+
+    get new_sale_url(client_document_id: document.id)
+
+    assert_response :success
+    assert_select "input[name='involved_party[first_name]'][value=?]", "Secret", count: 0
+  end
 end
