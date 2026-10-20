@@ -1,0 +1,171 @@
+<% agent = @agent %>
+<% member_since = agent.created_at&.strftime("%d %b %Y") %>
+<% pending_count = @transactions.count { |tx| !tx.completed? } %>
+
+<div class="container py-4 py-lg-5">
+  <%= render layout: "shared/page_header", locals: { title: agent.user_name.presence || agent.email, subtitle: ["Agent", agent.company.presence, ("Member since #{member_since}" if member_since)].compact.join(" · ") } do %>
+    <% if agent == current_user %>
+      <%= link_to edit_user_registration_path, class: "btn btn-outline-primary" do %>
+        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+        <span>Edit profile</span>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-8 d-flex flex-column gap-4">
+      <div class="card card--property">
+        <div class="card-header">
+          <h2 class="h5 mb-0">Properties listed <span class="badge ms-1"><%= @properties.size %></span></h2>
+        </div>
+        <div class="card-body">
+          <% if @properties.any? %>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <caption class="visually-hidden">Properties listed by <%= agent.user_name %></caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Address</th>
+                    <th scope="col">Post code</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @properties.each do |property| %>
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <%= property_thumbnail(property, size: 40) %>
+                          <div>
+                            <%= link_to property.short_address, property_path(property), class: "fw-semibold text-decoration-none" %>
+                            <% if property.city.present? %>
+                              <div class="small text-muted"><%= property.city %></div>
+                            <% end %>
+                          </div>
+                        </div>
+                      </td>
+                      <td><%= property.post_code %></td>
+                      <td>
+                        <% if property.sold? %>
+                          <span class="badge bg-secondary">Sold</span>
+                        <% else %>
+                          <span class="badge bg-success">Available</span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <p class="text-muted mb-0">No properties listed yet.</p>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card card--transaction">
+        <div class="card-header">
+          <h2 class="h5 mb-0">Sales <span class="badge ms-1"><%= @transactions.size %></span></h2>
+        </div>
+        <div class="card-body">
+          <% if @transactions.any? %>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <caption class="visually-hidden">Sales managed by <%= agent.user_name %></caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Property</th>
+                    <th scope="col">Chain</th>
+                    <th scope="col">Stage</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @transactions.each do |tx| %>
+                    <tr>
+                      <td>
+                        <%= link_to tx.property&.short_address || "Transaction ##{tx.id}", transaction_path(tx), class: "fw-semibold text-decoration-none" %>
+                      </td>
+                      <td>
+                        <% if tx.chain %>
+                          <%= link_to chain_name(tx.chain), chain_path(tx.chain), class: "text-decoration-none" %>
+                        <% else %>
+                          <span class="text-muted">—</span>
+                        <% end %>
+                      </td>
+                      <td class="small"><%= tx.legal_stage_short_title %></td>
+                      <td><span class="badge <%= tx.status_badge_class %>"><%= tx.status_label %></span></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <p class="text-muted mb-0">No sales yet.</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-4 d-flex flex-column gap-4">
+      <div class="card card--party">
+        <div class="card-header">
+          <h2 class="h5 mb-0">Contact details</h2>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <%= agent_avatar(agent, size: 64) %>
+            <div>
+              <div class="fw-bold"><%= agent.user_name %></div>
+              <% if agent.company.present? %>
+                <div class="small text-muted"><%= agent.company %></div>
+              <% end %>
+            </div>
+          </div>
+          <dl class="mb-0 d-flex flex-column gap-2">
+            <div class="record-meta">
+              <dt>Email</dt>
+              <dd><a href="mailto:<%= agent.email %>" class="text-decoration-none"><%= agent.email %></a></dd>
+            </div>
+            <div class="record-meta">
+              <dt>Phone</dt>
+              <dd>
+                <% if agent.phone.present? %>
+                  <a href="tel:<%= agent.phone %>" class="text-decoration-none"><%= agent.phone %></a>
+                <% else %>
+                  <span class="text-muted">—</span>
+                <% end %>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card card--chain">
+        <div class="card-header">
+          <h2 class="h5 mb-0">At a glance</h2>
+        </div>
+        <div class="card-body">
+          <dl class="mb-0 d-flex flex-column gap-2">
+            <div class="record-meta">
+              <dt>Properties</dt>
+              <dd><%= @properties.size %> (<%= @properties.count { |p| !p.sold? } %> available)</dd>
+            </div>
+            <div class="record-meta">
+              <dt>Sales in progress</dt>
+              <dd><%= pending_count %></dd>
+            </div>
+            <div class="record-meta">
+              <dt>Completed sales</dt>
+              <dd><%= @transactions.size - pending_count %></dd>
+            </div>
+            <div class="record-meta">
+              <dt>Clients</dt>
+              <dd><%= @client_count %></dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

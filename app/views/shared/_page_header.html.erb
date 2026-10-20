@@ -1,14 +1,23 @@
 <%# Page title row. Render with a block for the action buttons:
-    render layout: "shared/page_header", locals: { title: "Clients", subtitle: "..." } do ... end %>
+    render layout: "shared/page_header", locals: { title: "Clients", subtitle: "..." } do ... end
+    Optional locals: eyebrow, subtitle, title_badge (HTML shown beside the title), after_title (HTML shown under it) %>
 <header class="page-header">
   <div>
     <% if local_assigns[:eyebrow].present? %>
       <span class="tag-accent d-inline-block mb-2"><%= eyebrow %></span>
     <% end %>
-    <h1 class="page-title"><%= title %></h1>
+    <% if local_assigns[:title_badge].present? %>
+      <div class="page-title-row">
+        <h1 class="page-title"><%= title %></h1>
+        <%= title_badge %>
+      </div>
+    <% else %>
+      <h1 class="page-title"><%= title %></h1>
+    <% end %>
     <% if local_assigns[:subtitle].present? %>
       <p class="page-subtitle"><%= subtitle %></p>
     <% end %>
+    <%= local_assigns[:after_title] %>
   </div>
   <div class="page-actions">
     <%= yield %>

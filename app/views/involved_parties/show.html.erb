@@ -1,9 +1,8 @@
 <% party = @involved_party %>
 <% can_update = policy(party).update? %>
-<% added_on = party.created_at&.strftime("%d %b %Y") %>
 
 <div class="container py-4 py-lg-5">
-  <%= render layout: "shared/page_header", locals: { title: party.full_name, subtitle: safe_join([client_role_tags(party), (" · #{party.onward_purchase_label}" if party.seller?), (" · Client since #{added_on}" if added_on)].compact) } do %>
+  <%= render layout: "shared/page_header", locals: { title: party.full_name, title_badge: client_role_tags(party) } do %>
     <% if can_update && party.seller? %>
       <%= link_to new_property_path(involved_party_id: party.id), class: "btn btn-accent" do %>
         <i class="fa-solid fa-house-circle-check" aria-hidden="true"></i>
@@ -236,7 +235,7 @@
             </p>
             <p class="small text-muted">
               Direct contact details are only visible to the managing agent<% if party.user %>
-                (<strong><%= party.user.user_name %></strong><% if party.user.company.present? %>, <%= party.user.company %><% end %>)<% end %>.
+                (<strong><%= agent_link(party.user) %></strong><% if party.user.company.present? %>, <%= party.user.company %><% end %>)<% end %>.
             </p>
             <% if party.user %>
               <div class="small">

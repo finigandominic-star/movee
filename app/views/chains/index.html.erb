@@ -1,6 +1,6 @@
 <div class="container-fluid px-3 px-lg-5 py-4 py-lg-5">
   <div class="page-wide">
-    <%= render layout: "shared/page_header", locals: { title: "Chains", subtitle: "#{pluralize(@chains.size, 'chain')} · track property chains across collaborating agents" } do %>
+    <%= render layout: "shared/page_header", locals: { title: "Chains", subtitle: pluralize(@chains.size, 'chain') } do %>
       <% if policy(Chain).create? %>
         <%= link_to new_chain_path, class: "btn btn-primary" do %>
           <i class="fa-solid fa-plus" aria-hidden="true"></i> New chain

@@ -29,8 +29,10 @@ class ChainsController < ApplicationController
     end
   end
 
+  # There's no separate edit page: renaming happens inline on the chain page
   def edit
     authorize @chain
+    redirect_to @chain
   end
 
   def update
@@ -38,7 +40,7 @@ class ChainsController < ApplicationController
     if @chain.update(chain_params)
       redirect_to @chain, notice: "Chain was successfully updated."
     else
-      render :edit, status: :unprocessable_entity
+      redirect_to @chain, alert: "Chain couldn't be updated: #{@chain.errors.full_messages.to_sentence}"
     end
   end
 

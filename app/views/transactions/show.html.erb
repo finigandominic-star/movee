@@ -89,13 +89,7 @@
                     <span class="text-muted">· #<%= other_tx.id %></span>
                     <% if other_agent %>
                       <div class="text-muted mt-1">
-                        <%= agent_with_avatar(other_agent, name_class: "fw-bold text-body") %><%= " (#{other_agent.company})" if other_agent.company.present? %>
-                        <div>
-                          <a href="mailto:<%= other_agent.email %>" class="text-decoration-none me-2"><%= other_agent.email %></a>
-                          <% if other_agent.phone.present? %>
-                            <a href="tel:<%= other_agent.phone %>" class="text-decoration-none"><%= other_agent.phone %></a>
-                          <% end %>
-                        </div>
+                        <%= agent_with_avatar(other_agent, name_class: "fw-bold") %>
                       </div>
                     <% end %>
                   </div>
@@ -120,7 +114,7 @@
             <div class="d-flex align-items-center gap-3 mb-3">
               <%= agent_avatar(agent) %>
               <div>
-                <p class="fw-bold mb-0"><%= agent.user_name %></p>
+                <p class="fw-bold mb-0"><%= agent_link(agent, class: "text-decoration-none") %></p>
                 <p class="text-muted small mb-0"><%= agent.company.presence || "Estate agent" %></p>
               </div>
             </div>
@@ -170,7 +164,7 @@
             <% else %>
               <div class="text-center">
                 <span class="badge bg-light mb-2"><i class="fa-solid fa-user-shield me-1" aria-hidden="true"></i>Confidential Client</span>
-                <p class="small text-muted mb-0">Personal contact details are protected. Contact the managing agent<%= " #{agent.user_name}" if agent %> instead.</p>
+                <p class="small text-muted mb-0">Personal contact details are protected. Contact the managing agent<% if agent %> <%= agent_link(agent) %><% end %> instead.</p>
               </div>
             <% end %>
 

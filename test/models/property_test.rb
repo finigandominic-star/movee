@@ -30,9 +30,9 @@ class PropertyTest < ActiveSupport::TestCase
   test "requires house_number, street, and post_code" do
     prop = Property.new(user: @user)
     assert_not prop.valid?
-    assert_includes prop.errors[:house_number], "can't be blank"
-    assert_includes prop.errors[:street], "can't be blank"
-    assert_includes prop.errors[:post_code], "can't be blank"
+    assert prop.errors.added?(:house_number, :blank)
+    assert prop.errors.added?(:street, :blank)
+    assert prop.errors.added?(:post_code, :blank)
   end
 
   test "full_address and short_address methods" do
@@ -60,5 +60,24 @@ class PropertyTest < ActiveSupport::TestCase
 
     prop.update!(involved_party: nil)
     assert_nil prop.reload.involved_party
+  end
+
+  test "sold follows the property's transactions" do
+    user = User.create!(user_name: "sold_agent", email: "sold_agent@example.com", password: "Password123")
+    property = Property.create!(user: user, house_number: "1", street: "Status Street", post_code: "LS7 7GG")
+    buyer = InvolvedParty.create!(user: user, first_name: "Sam", last_name: "Buyer", email: "sam@example.com",
+                                  phone: "+44 7700 900555", buyer: true)
+
+    sale = Transaction.create!(user: user, property: property, legal_stage: "offer_accepted")
+    assert_not property.reload.sold?, "no buyer and not yet in conveyancing: still for sale"
+
+    sale.update!(involved_party: buyer)
+    assert property.reload.sold?, "a buyer is attached"
+
+    sale.update!(involved_party: nil, legal_stage: "solicitors_instructed")
+    assert property.reload.sold?, "conveyancing has started"
+
+    sale.destroy!
+    assert_not property.reload.sold?, "no transactions left"
   end
 end

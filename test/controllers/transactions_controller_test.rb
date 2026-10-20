@@ -36,8 +36,8 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     get transactions_url
     assert_response :success
     assert_select "h1", text: /Transactions/i
-    assert_select "a[href='mailto:#{@user.email}']"
-    assert_select "a[href='tel:#{@user.phone}']"
+    assert_select "a[href=?]", user_path(@user)
+    assert_select "a[href='mailto:#{@user.email}']", count: 0
   end
 
   test "should get show" do

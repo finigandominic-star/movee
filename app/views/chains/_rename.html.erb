@@ -1,0 +1,11 @@
+<%# Small "Rename chain" toggle under the chain title, with an inline nickname form %>
+<details class="chain-rename">
+  <summary><i class="fa-solid fa-pen me-1" aria-hidden="true"></i>Rename chain</summary>
+  <%= form_with model: chain, class: "chain-rename__form" do |f| %>
+    <%= f.label :name, "Chain nickname", class: "visually-hidden" %>
+    <%= f.text_field :name, class: "form-control form-control-sm", maxlength: 60,
+          placeholder: "e.g. Henderson chain", aria: { describedby: "chainRenameHint" } %>
+    <%= f.submit "Save", class: "btn btn-sm btn-primary" %>
+  <% end %>
+  <div class="form-text" id="chainRenameHint">Leave blank to name it after your property in the chain.</div>
+</details>

@@ -75,8 +75,7 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
           house_number: "15",
           street: "Piccadilly",
           city: "London",
-          post_code: "W1J 0LF",
-          sold: false
+          post_code: "W1J 0LF"
         }
       }
     end
@@ -101,7 +100,7 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to property_url(@property)
     @property.reload
-    assert_equal true, @property.sold
+    assert_not @property.sold, "sold can't be set by hand; it follows the property's transactions"
     assert_equal "Flat 2", @property.second_line_of_address
   end
 
@@ -174,9 +173,8 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Sarah Connor/, count: 0
     assert_select "body", text: /Protected Client/
 
-    # Managing agent contact info is visible for coordination
-    assert_select "a[href='mailto:#{@user.email}']"
-    assert_select "a[href='tel:#{@user.phone}']"
+    # Managing agent links to their profile (where their contact details are) for coordination
+    assert_select "a[href=?]", user_path(@user)
 
     # No seller/buyer tags on properties index
     assert_select ".badge", text: "Seller", count: 0

@@ -2,8 +2,7 @@
 <section class="card card--chain sale-step" aria-labelledby="saleStepTitle">
   <div class="card-header">
     <h2 class="h5 mb-1" id="saleStepTitle">Which chain does this sale belong to?</h2>
-    <p class="small text-muted mb-0">Start a new chain, or link it to a chain you already know about.</p>
-  </div>
+      </div>
   <div class="card-body p-4">
     <%= render "sales/choice_error" %>
 
@@ -33,48 +32,78 @@
     <%= form_with url: sale_path, method: :post, local: true do %>
       <%= render "sales/carry" %>
       <fieldset>
-        <legend class="sale-option__title">Chain</legend>
-        <div class="choice-list choice-list--open">
-          <div class="choice choice--new">
-            <%= radio_button_tag :chain_id, "new", chosen == "new", id: "chain_new", class: "form-check-input choice__input", autofocus: true %>
-            <label class="choice__label" for="chain_new">
-              <span class="choice__title">Start a new chain</span>
-              <span class="choice__meta">This sale becomes the first link. You can connect other sales later.</span>
-            </label>
-          </div>
-          <div class="sale-nickname">
-            <%= label_tag :chain_name, class: "form-label" do %>
-              Chain nickname <span class="text-muted fw-normal">(optional, new chains only)</span>
-            <% end %>
-            <%= text_field_tag :chain_name, params[:chain_name], class: "form-control", placeholder: "e.g. Smith family move", maxlength: 120 %>
+        <legend class="visually-hidden">Chain</legend>
+        <div class="sale-options sale-options--stacked">
+          <% if @linkable_sales.any? %>
+            <div class="sale-option" data-controller="client-search"
+                 data-action="change->client-search#choose click@window->client-search#closeOnOutsideClick">
+              <h3 class="sale-option__title">Link to an existing chain</h3>
+              <p class="small text-muted">Find the property <%= @vendor.full_name %> is buying. Only properties still waiting for a buyer are listed; picking one records <%= @vendor.first_name %> as its buyer.</p>
+              <label class="visually-hidden" for="chainSearch">Search properties by address</label>
+              <div class="input-group mb-2">
+                <span class="input-group-text"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+                <input type="search" id="chainSearch" class="form-control" placeholder="Search by address or postcode, or browse…" autocomplete="off"
+                       data-client-search-target="input" data-action="input->client-search#filter focus->client-search#show">
+                <button type="button" class="btn btn-outline-secondary" aria-controls="chainChoices" aria-expanded="false"
+                        aria-label="Show all properties needing a buyer" data-client-search-target="toggle" data-action="client-search#toggle">
+                  <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="choice-list" id="chainChoices" role="group" aria-label="Properties needing a buyer">
+                <% @linkable_sales.each do |sale| %>
+                  <% agent = sale.creator_or_listing_user %>
+                  <div data-client-search-target="item" data-name="<%= sale.property.full_address %>">
+                    <%= render "sales/choice", name: "chain_id", value: "link-#{sale.id}", id: "chain_link_#{sale.id}",
+                          checked: chosen == "link-#{sale.id}",
+                          title: sale.property.full_address,
+                          meta: [chain_name(sale.chain), ("Agent: #{agent.user_name.presence || agent.email}" if agent)].compact.join(" · "),
+                          tags: tag.span("Needs a buyer", class: "badge bg-light") %>
+                  </div>
+                <% end %>
+              </div>
+              <p class="text-muted small mb-0" data-client-search-target="empty" hidden>No properties waiting for a buyer match that address.</p>
+            </div>
+          <% end %>
+
+          <% if @suggested_chains.any? %>
+            <div class="sale-option">
+              <h3 class="sale-group-title mt-0" id="suggested-chains-title">
+                <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Suggested
+              </h3>
+              <div class="choice-list choice-list--open" id="suggested-chains" aria-labelledby="suggested-chains-title" role="group">
+                <% @suggested_chains.each do |chain, reason| %>
+                  <%= render "sales/choice", name: "chain_id", value: chain.id, id: "chain_#{chain.id}",
+                        checked: chosen == chain.id.to_s,
+                        title: chain.name.presence || chain_name(chain),
+                        meta: safe_join([chain_summary(chain), tag.span(reason, class: "choice__reason")], tag.br) %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
+          <% if @linkable_sales.any? || @suggested_chains.any? %>
+            <div class="sale-or" role="separator"><span>or</span></div>
+          <% end %>
+
+          <div class="sale-option sale-option--secondary">
+            <h3 class="sale-option__title">Start a new chain</h3>
+            <div class="choice-list choice-list--open">
+              <div class="choice choice--new">
+                <%= radio_button_tag :chain_id, "new", chosen == "new", id: "chain_new", class: "form-check-input choice__input" %>
+                <label class="choice__label" for="chain_new">
+                  <span class="choice__title">New chain</span>
+                  <span class="choice__meta">This sale becomes the first link. You can connect other sales later.</span>
+                </label>
+              </div>
+              <div class="sale-nickname">
+                <%= label_tag :chain_name, class: "form-label" do %>
+                  Chain nickname <span class="text-muted fw-normal">(optional, new chains only)</span>
+                <% end %>
+                <%= text_field_tag :chain_name, params[:chain_name], class: "form-control", placeholder: "e.g. Smith family move", maxlength: 120 %>
+              </div>
+            </div>
           </div>
         </div>
-
-        <% if @suggested_chains.any? %>
-          <h3 class="sale-group-title" id="suggested-chains-title">
-            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Suggested
-          </h3>
-          <div class="choice-list choice-list--open" id="suggested-chains" aria-labelledby="suggested-chains-title" role="group">
-            <% @suggested_chains.each do |chain, reason| %>
-              <%= render "sales/choice", name: "chain_id", value: chain.id, id: "chain_#{chain.id}",
-                    checked: chosen == chain.id.to_s,
-                    title: chain.name.presence || chain_name(chain),
-                    meta: safe_join([chain_summary(chain), tag.span(reason, class: "choice__reason")], tag.br) %>
-            <% end %>
-          </div>
-        <% end %>
-
-        <% if @other_chains.any? %>
-          <h3 class="sale-group-title" id="other-chains-title">Your other chains</h3>
-          <div class="choice-list" aria-labelledby="other-chains-title" role="group">
-            <% @other_chains.each do |chain| %>
-              <%= render "sales/choice", name: "chain_id", value: chain.id, id: "chain_#{chain.id}",
-                    checked: chosen == chain.id.to_s,
-                    title: chain.name.presence || chain_name(chain),
-                    meta: chain_summary(chain) %>
-            <% end %>
-          </div>
-        <% end %>
       </fieldset>
 
       <%= render layout: "sales/step_footer" do %>

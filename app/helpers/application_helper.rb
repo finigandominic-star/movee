@@ -42,19 +42,27 @@ module ApplicationHelper
   # round avatar for an agent: their uploaded photo, or a user-tie icon if they have none
   def agent_avatar(user, size: 48)
     if user.avatar.attached?
-      image_tag user.avatar, alt: user.user_name, class: "rounded-circle object-fit-cover flex-shrink-0", width: size, height: size
+      image_tag user.avatar, alt: user.user_name, class: "avatar-ring rounded-circle object-fit-cover flex-shrink-0", width: size, height: size
     else
-      tag.span class: "rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0",
+      tag.span class: "avatar-ring rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0",
                style: "width: #{size}px; height: #{size}px;" do
         tag.i class: "fa-solid fa-user-tie"
       end
     end
   end
 
-  # agent's avatar next to their name, for anywhere an agent is listed
-  def agent_with_avatar(user, size: 24, name_class: nil)
-    tag.span class: "d-inline-flex align-items-center gap-2" do
-      safe_join([agent_avatar(user, size: size), tag.span(user.user_name.presence || user.email, class: name_class)])
-    end
+  # agent's avatar next to their name, linked to their profile, for anywhere an agent is listed
+  def agent_with_avatar(user, size: 24, name_class: nil, link: true)
+    content = safe_join([agent_avatar(user, size: size), tag.span(user.user_name.presence || user.email, class: name_class)])
+    classes = "d-inline-flex align-items-center gap-2"
+    # raised above record cards' whole-card link so the agent link stays clickable
+    return link_to(content, user_path(user), class: "#{classes} text-decoration-none position-relative z-2") if link
+
+    tag.span(content, class: classes)
+  end
+
+  # agent's name as a link to their profile
+  def agent_link(user, **options)
+    link_to user.user_name.presence || user.email, user_path(user), **options
   end
 end
