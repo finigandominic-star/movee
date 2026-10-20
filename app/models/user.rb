@@ -12,6 +12,8 @@ class User < ApplicationRecord
 
   has_one_attached :avatar
 
+  has_many :client_documents, dependent: :destroy
+
   validates :user_name, presence: true
   validates :password, format: { with: /\A(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}\z/, message: "must be at least 8 characters and include at least one letter and one number" }, if: :password_required?
 
@@ -19,15 +21,11 @@ class User < ApplicationRecord
   # ToDo: check if it makes more sense to enqueue from the controller (see lecture from Oct. 15)
   # and then decide from where to enqueue
 
-  # ToDo: remove these two, if we decide against updating users with background jobs (by model
-  # or decide completely against bg jobs for that)
-
-  after_commit :async_update, on: [:create, :update]
+  after_commit :async_update, on: %i[create update]
 
   private
 
   def async_update
     UpdateUserJob.perform_later(self)
   end
-
 end
