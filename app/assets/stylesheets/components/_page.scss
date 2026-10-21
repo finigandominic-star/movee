@@ -63,6 +63,23 @@ body {
   margin-bottom: 1.25rem;
 }
 
+// Live suggestions dropdown under a search box (search-autocomplete controller)
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin-top: .25rem;
+  background: $movee-surface;
+  border: 1px solid $movee-border;
+  border-radius: .5rem;
+  box-shadow: 0 8px 24px rgba($movee-ink, .12);
+  overflow: hidden;
+
+  .dropdown-item { cursor: pointer; }
+}
+
 // Grid of record cards: 1 / 2 / 3 / 4 per row at sm / md / lg / xxl
 .card-grid {
   --bs-gutter-x: 1.5rem;

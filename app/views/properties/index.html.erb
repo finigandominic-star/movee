@@ -1,4 +1,4 @@
-<div class="container py-4 py-lg-5">
+<div class="container py-4 py-lg-5" data-controller="search-autocomplete" data-action="click@window->search-autocomplete#closeSuggestions">
   <%= render layout: "shared/page_header", locals: { title: "Properties" } do %>
     <%= link_to new_property_path, class: "btn btn-primary" do %>
       <i class="fa-solid fa-plus" aria-hidden="true"></i>
@@ -16,9 +16,13 @@
   <% else %>
     <div class="page-toolbar">
       <%= form_with url: properties_path, method: :get, class: "flex-grow-1", data: { turbo_frame: "_top" } do |f| %>
-        <div class="input-group">
+        <div class="input-group position-relative">
           <span class="input-group-text"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
-          <%= f.search_field :q, value: params[:q], placeholder: "Search properties by address, city, or postcode", class: "form-control", aria: { label: "Search properties" } %>
+          <%= f.search_field :q, value: params[:q], placeholder: "Search properties by address, city, or postcode", class: "form-control", aria: { label: "Search properties" }, data: { search_autocomplete_target: "input", action: "input->search-autocomplete#filter focus->search-autocomplete#filter" } %>
+          <%= link_to properties_path, class: "btn btn-outline-secondary", hidden: params[:q].blank?, aria: { label: "Clear search" }, data: { search_autocomplete_target: "clear", action: "search-autocomplete#reset" } do %>
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          <% end %>
+          <div class="search-suggestions" hidden data-search-autocomplete-target="suggestions" data-action="click->search-autocomplete#pick"></div>
         </div>
       <% end %>
 
@@ -46,7 +50,7 @@
           <% @properties.each do |property| %>
             <% party = property.involved_party %>
             <% agent = property.user %>
-            <div class="col">
+            <div class="col" data-search-autocomplete-target="item" data-name="<%= property.full_address %>">
               <article class="card record-card card--property">
                 <% if property.photo.attached? %>
                   <%= image_tag property.photo, class: "record-card__image", alt: property.short_address %>
@@ -134,7 +138,7 @@
               <% @properties.each do |property| %>
                 <% party = property.involved_party %>
                 <% agent = property.user %>
-                <tr>
+                <tr data-search-autocomplete-target="item" data-name="<%= property.full_address %>">
                   <td>
                     <%= link_to property.short_address, property_path(property), class: "fw-semibold text-decoration-none" %>
                     <% if property.second_line_of_address.present? %>
