@@ -29,14 +29,26 @@
   border-radius: $border-radius;
 }
 
-// The "shared link created" banner: centred at the top of the page, in normal
-// document flow (not fixed - it scrolls away like any other content).
+// The "shared link created" banner: a pop-up that overlays the page without
+// shifting any other element - it scrolls away with the page like normal
+// content (it is NOT position: fixed), it just doesn't take up flow space.
+.share-link-banner-anchor {
+  position: relative;
+  height: 0;
+}
+
 .share-link-banner {
+  position: absolute;
+  top: .75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1060;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: .4rem;
-  padding: 1rem 1rem 0;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
 }
 
 .share-link-banner__pill {
@@ -51,8 +63,10 @@
   border-radius: 50rem;
   padding: .5rem .5rem .5rem 1.1rem;
   font-size: .9rem;
+  box-shadow: $box-shadow-lg;
 
-  i { color: $movee-lime; }
+  // Only the leading link icon is lime - icons inside buttons set their own colour.
+  > i { color: $movee-lime; }
 }
 
 .share-link-banner__input {

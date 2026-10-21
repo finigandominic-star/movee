@@ -32,3 +32,11 @@
 .shared-link-view__intro {
   max-width: 640px;
 }
+
+.shared-link-view__property-photo {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: $border-radius-sm;
+  flex-shrink: 0;
+}

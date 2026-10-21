@@ -1,34 +1,45 @@
 <% content_for :title, "Conveyancing status" %>
+<% property = @transaction.property %>
 <% agent = @transaction.creator_or_listing_user %>
 
 <div class="container py-4 py-lg-5 shared-link-view">
   <div class="row align-items-start g-3 mb-3">
     <div class="col-12 col-md-8">
       <span class="tag-accent d-inline-block mb-2">Conveyancing status</span>
-      <h1 class="page-title"><%= @transaction.property&.short_address || "Transaction ##{@transaction.id}" %></h1>
-      <% if @transaction.property.present? %>
-        <p class="page-subtitle mb-0"><%= [@transaction.property.city, @transaction.property.post_code].compact_blank.join(" · ") %></p>
-      <% end %>
+      <div class="d-flex align-items-center gap-3">
+        <% if property&.photo&.attached? %>
+          <%= image_tag property.photo, class: "shared-link-view__property-photo", alt: property.short_address %>
+        <% end %>
+        <div>
+          <h1 class="page-title mb-0"><%= property&.short_address || "Transaction ##{@transaction.id}" %></h1>
+          <% if property.present? %>
+            <p class="page-subtitle mb-0"><%= [property.city, property.post_code].compact_blank.join(" · ") %></p>
+          <% end %>
+        </div>
+      </div>
     </div>
 
     <% if agent %>
       <div class="col-12 col-md-4">
         <div class="card">
-          <div class="card-body py-3">
-            <div class="text-uppercase small fw-bold text-muted mb-1">Your agent</div>
-            <div class="fw-bold"><%= agent.user_name.presence || agent.email %></div>
-            <% if agent.company.present? %>
-              <div class="text-muted small mb-2"><%= agent.company %></div>
-            <% end %>
-            <div class="d-flex flex-wrap gap-3 small">
-              <a href="mailto:<%= agent.email %>" class="text-decoration-none">
-                <i class="fa-solid fa-envelope me-1" aria-hidden="true"></i><%= agent.email %>
-              </a>
-              <% if agent.phone.present? %>
-                <a href="tel:<%= agent.phone %>" class="text-decoration-none">
-                  <i class="fa-solid fa-phone me-1" aria-hidden="true"></i><%= agent.phone %>
-                </a>
+          <div class="card-body py-3 d-flex align-items-start gap-3">
+            <%= agent_avatar(agent, size: 48) %>
+            <div>
+              <div class="text-uppercase small fw-bold text-muted mb-1">Your agent</div>
+              <div class="fw-bold"><%= agent.user_name.presence || agent.email %></div>
+              <% if agent.company.present? %>
+                <div class="text-muted small mb-2"><%= agent.company %></div>
               <% end %>
+              <div class="d-flex flex-wrap gap-3 small">
+                <a href="mailto:<%= agent.email %>" class="text-decoration-none">
+                  <i class="fa-solid fa-envelope me-1" aria-hidden="true"></i><%= agent.email %>
+                </a>
+                <% if agent.phone.present? %>
+                  <a href="tel:<%= agent.phone %>" class="text-decoration-none">
+                    <i class="fa-solid fa-phone me-1" aria-hidden="true"></i><%= agent.phone %>
+                  </a>
+                <% end %>
+              </div>
             </div>
           </div>
         </div>
@@ -37,9 +48,10 @@
   </div>
 
   <%= render "transactions/conveyancing_tracker" %>
+  <%= render "transactions/conveyancing_guide" %>
 
-  <p class="text-muted small text-center mb-0">
+  <p class="text-muted small text-center mb-0" data-controller="countdown" data-countdown-expires-at-value="<%= @link.expires_at.iso8601 %>">
     <i class="fa-solid fa-lock me-1" aria-hidden="true"></i>
-    This is a private, time-limited link shared by your agent. It expires <%= time_ago_in_words(@link.expires_at) %> from now and shows only this property's conveyancing stage.
+    This is a private, time-limited link shared by your agent. It <span data-countdown-target="text">expires in <%= distance_of_time_in_words(Time.current, @link.expires_at) %></span> and shows only this property's conveyancing stage.
   </p>
 </div>

@@ -56,15 +56,17 @@
     <%= render "shared/navbar" %>
 
     <% if (link = flash[:share_link]) %>
-      <div class="share-link-banner">
-        <div class="share-link-banner__pill" data-controller="clipboard">
-          <i class="fa-solid fa-link" aria-hidden="true"></i>
-          <input type="text" class="share-link-banner__input" value="<%= link["url"] %>" readonly data-clipboard-target="source">
-          <button type="button" class="share-link-banner__copy" data-action="clipboard#copy" data-clipboard-target="button">
-            <i class="fa-solid fa-copy" aria-hidden="true"></i> Copy
-          </button>
+      <div class="share-link-banner-anchor">
+        <div class="share-link-banner">
+          <div class="share-link-banner__pill" data-controller="clipboard">
+            <i class="fa-solid fa-link" aria-hidden="true"></i>
+            <input type="text" class="share-link-banner__input" value="<%= link["url"] %>" readonly data-clipboard-target="source">
+            <button type="button" class="share-link-banner__copy" data-action="clipboard#copy" data-clipboard-target="button">
+              <i class="fa-solid fa-copy" aria-hidden="true"></i> Copy
+            </button>
+          </div>
+          <div class="share-link-banner__expiry">Expires in <%= distance_of_time_in_words(Time.current, Time.zone.parse(link["expires_at"])) %></div>
         </div>
-        <div class="share-link-banner__expiry">Expires in <%= distance_of_time_in_words(Time.current, Time.zone.parse(link["expires_at"])) %></div>
       </div>
     <% end %>
 
