@@ -10,6 +10,17 @@ class Chain < ApplicationRecord
   has_many :buyers, through: :transactions, source: :involved_party
   has_many :sellers, through: :properties, source: :involved_party
 
+  scope :search, ->(query) {
+    return all if query.blank?
+
+    q = "%#{sanitize_sql_like(query)}%"
+    left_joins(:properties, :user)
+      .where("chains.name ILIKE :q OR properties.house_number ILIKE :q OR properties.street ILIKE :q
+              OR properties.city ILIKE :q OR properties.post_code ILIKE :q
+              OR users.user_name ILIKE :q OR users.company ILIKE :q", q: q)
+      .distinct
+  }
+
   def all_parties
     InvolvedParty.where(id: (buyer_ids + seller_ids).uniq)
   end

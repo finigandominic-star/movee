@@ -168,6 +168,17 @@ class Transaction < ApplicationRecord
   scope :pending, -> { where(completed: [false, nil]) }
   scope :by_legal_stage, ->(stage) { where(legal_stage: stage) }
 
+  scope :search, ->(query) {
+    return all if query.blank?
+
+    q = "%#{sanitize_sql_like(query)}%"
+    left_joins(:property, :involved_party, :chain)
+      .where("properties.house_number ILIKE :q OR properties.street ILIKE :q OR properties.city ILIKE :q OR properties.post_code ILIKE :q
+              OR involved_parties.first_name ILIKE :q OR involved_parties.last_name ILIKE :q
+              OR chains.name ILIKE :q OR transactions.legal_stage ILIKE :q", q: q)
+      .distinct
+  }
+
   def creator_or_listing_user
     user || property&.user
   end
