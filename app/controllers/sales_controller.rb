@@ -5,10 +5,8 @@ class SalesController < ApplicationController
   STEPS = %w[vendor property buyer chain].freeze
   STEP_LABELS = { "vendor" => "Vendor", "property" => "Property", "buyer" => "Buyer", "chain" => "Chain" }.freeze
   STEP_PARAMS = { "vendor" => :vendor_id, "property" => :property_id, "buyer" => :buyer_id }.freeze
-  # Fields of the new client form that an uploaded client PDF can fill in
-  CLIENT_FIELDS_FROM_DOCUMENT = %w[first_name last_name email phone onward_purchase].freeze
-  # Fields of the new property form that the vendor's client PDF can fill in (their current home address)
-  ADDRESS_FIELDS_FROM_DOCUMENT = %w[house_number street second_line_of_address city post_code].freeze
+  # CLIENT_FIELDS_FROM_DOCUMENT and ADDRESS_FIELDS_FROM_DOCUMENT moved to client_document.rb to make
+  #   them available in the sales_stepper, and also the new_client & new_property
 
   helper_method :sale_step_params, :sale_carry_params, :sale_step_state, :previous_sale_step
 
@@ -38,7 +36,7 @@ class SalesController < ApplicationController
     STEPS.include?(params[:step]) ? params[:step] : "vendor"
   end
 
-  # Finds the records chosen in earlier steps and checks the ones this step needs are present.
+  # Loads the records chosen in earlier steps; returns false (after redirecting) if one is missing
   def load_context
     @vendor = lookup(:vendor_id) { |id| client_scope.find_by(id: id) }
     @property = lookup(:property_id) { |id| @vendor && property_scope.find_by(id: id) }
@@ -105,11 +103,11 @@ class SalesController < ApplicationController
     end
   end
 
-  # Details found in an uploaded client PDF (see ClientDocumentsController), to fill in the new client form
+  # Details found in an uploaded client PDF (see ClientDocument#client_details), to fill in the new client form
   def client_details_from_document
-    return {} unless @client_document&.done?
-
-    @client_document.extracted_data.slice(*CLIENT_FIELDS_FROM_DOCUMENT).compact.symbolize_keys
+    # ask the document for its client details, or give nil if there's no document (that's what &. does).
+    #  || {} turns that nil into an empty Hash, so InvolvedParty.new(seller: true, **…) still works without a document.
+    @client_document&.client_details || {}
   end
 
   # The realtor's own client PDF for this step. The property step uses the vendor's PDF,
@@ -121,10 +119,7 @@ class SalesController < ApplicationController
 
   # The vendor's address from their client PDF, to fill in the new property form
   def address_from_document
-    return {} unless @client_document&.done?
-    return {} if @client_document.extracted_data["selling"] == false
-
-    @client_document.extracted_data.slice(*ADDRESS_FIELDS_FROM_DOCUMENT).compact.symbolize_keys
+    @client_document&.property_address || {}
   end
 
   def render_step_error

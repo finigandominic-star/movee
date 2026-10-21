@@ -59,4 +59,20 @@ class ClientDocumentTest < ActiveSupport::TestCase
       assert_not document.stuck?
     end
   end
+
+  test "gives the client details only when done" do
+    document = build_document(extracted_data: { "first_name" => "Tunde", "email" => nil, "city" => "London" })
+
+    assert_equal({}, document.client_details)
+    document.status = "done"
+    assert_equal({ first_name: "Tunde" }, document.client_details)
+  end
+
+  test "gives the address only when done and the client may be selling" do
+    document = build_document(status: "done", extracted_data: { "street" => "Maple Grove", "first_name" => "Tunde" })
+
+    assert_equal({ street: "Maple Grove" }, document.property_address)
+    document.extracted_data["selling"] = false
+    assert_equal({}, document.property_address)
+  end
 end
