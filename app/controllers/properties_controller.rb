@@ -3,7 +3,7 @@ class PropertiesController < ApplicationController
   before_action :set_property, only: %i[show edit update destroy remove_involved_party]
 
   def index
-    @properties = policy_scope(Property).includes(:user, :involved_party, :transactions).all
+    @properties = policy_scope(Property).includes(:user, :involved_party, :transactions).search(params[:q])
   end
 
   def show
