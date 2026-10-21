@@ -2,7 +2,7 @@ class TransactionsController < ApplicationController
   before_action :set_transaction, only: %i[show edit update destroy remove_involved_party update_stage]
 
   def index
-    @transactions = policy_scope(Transaction).includes(:property, :involved_party, :user, chain: { transactions: :property }).order(created_at: :desc)
+    @transactions = policy_scope(Transaction).includes(:property, :involved_party, :user, chain: { transactions: :property }).search(params[:q]).order(created_at: :desc)
   end
 
   def show

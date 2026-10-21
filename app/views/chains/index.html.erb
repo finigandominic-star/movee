@@ -1,4 +1,4 @@
-<div class="container-fluid px-3 px-lg-5 py-4 py-lg-5 chains-index">
+<div class="container-fluid px-3 px-lg-5 py-4 py-lg-5 chains-index" data-controller="search-autocomplete" data-action="click@window->search-autocomplete#closeSuggestions">
   <div class="page-wide">
     <%= render layout: "shared/page_header", locals: { title: "Chains" } do %>
       <% if policy(Chain).create? %>
@@ -8,7 +8,7 @@
       <% end %>
     <% end %>
 
-    <% if @chains.empty? %>
+    <% if @chains.empty? && params[:q].blank? %>
       <%= render layout: "shared/empty_state", locals: { icon: "fa-link-slash", title: "No chains yet", text: "Chains appear when transactions are linked together. Start one to track a sale from first-time buyer to market exit." } do %>
         <% if policy(Chain).create? %>
           <%= link_to new_chain_path, class: "btn btn-primary" do %>
@@ -18,6 +18,17 @@
       <% end %>
     <% else %>
       <div class="page-toolbar">
+        <%= form_with url: chains_path, method: :get, class: "flex-grow-1", data: { turbo_frame: "_top" } do |f| %>
+          <div class="input-group position-relative">
+            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+            <%= f.search_field :q, value: params[:q], placeholder: "Search chains by name, address, or agent", class: "form-control", aria: { label: "Search chains" }, data: { search_autocomplete_target: "input", action: "input->search-autocomplete#filter focus->search-autocomplete#filter" } %>
+            <%= link_to chains_path, class: "btn btn-outline-dark", hidden: params[:q].blank?, aria: { label: "Clear search" }, data: { search_autocomplete_target: "clear", action: "search-autocomplete#reset" } do %>
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            <% end %>
+            <div class="search-suggestions" hidden data-search-autocomplete-target="suggestions" data-action="click->search-autocomplete#pick"></div>
+          </div>
+        <% end %>
+
         <ul class="nav nav-pills small" id="chainViewTab" role="tablist" aria-label="Choose list layout">
           <li class="nav-item" role="presentation">
             <button class="nav-link active" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-view" type="button" role="tab" aria-controls="table-view" aria-selected="true">
@@ -38,6 +49,10 @@
         </ul>
       </div>
 
+      <% if @chains.empty? %>
+        <p class="text-muted">No chains match "<%= params[:q] %>".</p>
+      <% else %>
+
       <div class="tab-content" id="chainViewTabContent">
         <div class="tab-pane fade show active" id="table-view" role="tabpanel" aria-labelledby="table-tab" tabindex="0">
           <div class="table-responsive">
@@ -54,7 +69,8 @@
               </thead>
               <tbody>
                 <% @chains.each do |chain| %>
-                  <tr>
+                  <% chain_label = [chain_name(chain), chain.transactions.map { |t| t.property&.full_address }.compact.join(" "), chain.user&.user_name, chain.user&.company].compact.join(" ") %>
+                  <tr data-search-autocomplete-target="item" data-name="<%= chain_label %>">
                     <td class="chain-table__name">
                       <%= link_to chain_name(chain), chain_path(chain), class: "fw-bold text-decoration-none" %>
                       <div class="small text-muted"><%= chain_summary(chain) %></div>
@@ -92,7 +108,8 @@
             <% @chains.each do |chain| %>
               <% done = chain.transactions.count(&:completed?) %>
               <% total = chain.transactions.size %>
-              <div class="col">
+              <% chain_label = [chain_name(chain), chain.transactions.map { |t| t.property&.full_address }.compact.join(" "), chain.user&.user_name, chain.user&.company].compact.join(" ") %>
+              <div class="col" data-search-autocomplete-target="item" data-name="<%= chain_label %>">
                 <div class="card record-card card--chain">
                   <div class="card-header">
                     <div>
@@ -129,6 +146,7 @@
           </div>
         </div>
       </div>
+      <% end %>
     <% end %>
   </div>
 </div>

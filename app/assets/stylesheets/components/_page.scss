@@ -63,6 +63,35 @@ body {
   margin-bottom: 1.25rem;
 }
 
+// Live suggestions dropdown under a search box (search-autocomplete controller)
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin-top: .375rem;
+  padding: .4rem;
+  background: $movee-surface;
+  border: 1px solid $movee-border;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow-lg;
+
+  .dropdown-item {
+    cursor: pointer;
+    padding: .55rem .9rem;
+    border-radius: $border-radius-sm;
+    font-size: .9rem;
+    font-weight: 600;
+    color: $movee-ink;
+
+    &:hover, &:focus {
+      background: rgba($movee-navy, .08);
+      color: $movee-navy;
+    }
+  }
+}
+
 // Grid of record cards: 1 / 2 / 3 / 4 per row at sm / md / lg / xxl
 .card-grid {
   --bs-gutter-x: 1.5rem;
