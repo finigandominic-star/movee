@@ -1,4 +1,4 @@
-<div class="container py-4 py-lg-5" data-controller="tooltip">
+<div class="container py-4 py-lg-5" data-controller="tooltip search-autocomplete" data-action="click@window->search-autocomplete#closeSuggestions">
   <%= render layout: "shared/page_header", locals: { title: "Transactions" } do %>
     <%= link_to new_transaction_path, class: "btn btn-primary" do %>
       <i class="fa-solid fa-plus" aria-hidden="true"></i>
@@ -6,7 +6,7 @@
     <% end %>
   <% end %>
 
-  <% if @transactions.empty? %>
+  <% if @transactions.empty? && params[:q].blank? %>
     <%= render layout: "shared/empty_state", locals: { icon: "fa-file-signature", title: "No transactions yet", text: "Track a sale through conveyancing by recording your first transaction." } do %>
       <%= link_to new_transaction_path, class: "btn btn-primary" do %>
         <i class="fa-solid fa-plus" aria-hidden="true"></i>
@@ -15,6 +15,17 @@
     <% end %>
   <% else %>
     <div class="page-toolbar">
+      <%= form_with url: transactions_path, method: :get, class: "flex-grow-1", data: { turbo_frame: "_top" } do |f| %>
+        <div class="input-group position-relative">
+          <span class="input-group-text"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+          <%= f.search_field :q, value: params[:q], placeholder: "Search transactions by address, chain, buyer, or stage", class: "form-control", aria: { label: "Search transactions" }, data: { search_autocomplete_target: "input", action: "input->search-autocomplete#filter focus->search-autocomplete#filter" } %>
+          <%= link_to transactions_path, class: "btn btn-outline-dark", hidden: params[:q].blank?, aria: { label: "Clear search" }, data: { search_autocomplete_target: "clear", action: "search-autocomplete#reset" } do %>
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          <% end %>
+          <div class="search-suggestions" hidden data-search-autocomplete-target="suggestions" data-action="click->search-autocomplete#pick"></div>
+        </div>
+      <% end %>
+
       <ul class="nav nav-pills small" id="transactionViewTabs" role="tablist" aria-label="Choose list layout">
         <li class="nav-item" role="presentation">
           <button class="nav-link active" id="cards-tab" data-bs-toggle="pill" data-bs-target="#cards-view" type="button" role="tab" aria-controls="cards-view" aria-selected="true">
@@ -29,13 +40,19 @@
       </ul>
     </div>
 
+    <% if @transactions.empty? %>
+      <p class="text-muted">No transactions match "<%= params[:q] %>".</p>
+    <% else %>
+
     <div class="tab-content" id="transactionViewTabsContent">
       <div class="tab-pane fade show active" id="cards-view" role="tabpanel" aria-labelledby="cards-tab" tabindex="0">
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 card-grid">
           <% @transactions.each do |tx| %>
             <% party = tx.involved_party %>
             <% agent = tx.creator_or_listing_user %>
-            <div class="col">
+            <% buyer_visible = party.present? && policy(party).show_personal_data? %>
+            <% tx_label = [tx.property&.short_address, chain_name(tx.chain), tx.legal_stage_short_title, (party.full_name if buyer_visible)].compact.join(" ") %>
+            <div class="col" data-search-autocomplete-target="item" data-name="<%= tx_label %>">
               <div class="card record-card card--transaction">
                 <% if tx.property&.photo&.attached? %>
                   <%= image_tag tx.property.photo, class: "record-card__image", alt: tx.property.short_address %>
@@ -119,7 +136,9 @@
               <% @transactions.each do |tx| %>
                 <% party = tx.involved_party %>
                 <% agent = tx.creator_or_listing_user %>
-                <tr>
+                <% buyer_visible = party.present? && policy(party).show_personal_data? %>
+                <% tx_label = [tx.property&.short_address, chain_name(tx.chain), tx.legal_stage_short_title, (party.full_name if buyer_visible)].compact.join(" ") %>
+                <tr data-search-autocomplete-target="item" data-name="<%= tx_label %>">
                   <td>
                     <%= link_to tx.property&.short_address || "Transaction ##{tx.id}", transaction_path(tx), class: "fw-semibold text-decoration-none" %>
                     <small class="text-muted d-block">#<%= tx.id %><%= " · #{tx.property.post_code}" if tx.property&.post_code.present? %></small>
@@ -167,5 +186,6 @@
         </div>
       </div>
     </div>
+    <% end %>
   <% end %>
 </div>
