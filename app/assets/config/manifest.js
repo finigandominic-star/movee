@@ -5,3 +5,4 @@
 //= link popper.js
 //= link bootstrap.min.js
 //= link mission_control/jobs/application.js
+//= link manifest.json
