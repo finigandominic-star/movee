@@ -1,6 +1,6 @@
-<div class="container-fluid px-3 px-lg-5 py-4 py-lg-5">
+<div class="container-fluid px-3 px-lg-5 py-4 py-lg-5 chains-index">
   <div class="page-wide">
-    <%= render layout: "shared/page_header", locals: { title: "Chains", subtitle: pluralize(@chains.size, 'chain') } do %>
+    <%= render layout: "shared/page_header", locals: { title: "Chains" } do %>
       <% if policy(Chain).create? %>
         <%= link_to new_chain_path, class: "btn btn-primary" do %>
           <i class="fa-solid fa-plus" aria-hidden="true"></i> New chain
@@ -34,7 +34,7 @@
           <li><span class="chain-flow__dot chain-flow__dot--done" aria-hidden="true"></span>Completed</li>
           <li><span class="chain-flow__dot chain-flow__dot--active" aria-hidden="true"></span>In progress</li>
           <li><span class="chain-flow__dot chain-flow__dot--late" aria-hidden="true"></span>Behind</li>
-          <li><i class="fa-solid fa-ellipsis" aria-hidden="true"></i>Open end</li>
+          <li><span class="chain-flow__end chain-flow__end--open chain-flow__end--legend" aria-hidden="true"><i class="fa-solid fa-ellipsis"></i></span>Open end</li>
         </ul>
       </div>
 
@@ -64,7 +64,7 @@
                       <% if chain.chain_completed? %>
                         <span class="badge bg-success">Completed</span>
                       <% else %>
-                        <span class="badge bg-warning">Open</span>
+                        <span class="badge status-open">Open</span>
                       <% end %>
                     </td>
                     <td>
@@ -102,7 +102,7 @@
                     <% if chain.chain_completed? %>
                       <span class="badge bg-success">Completed</span>
                     <% else %>
-                      <span class="badge bg-warning">Open</span>
+                      <span class="badge status-open">Open</span>
                     <% end %>
                   </div>
 

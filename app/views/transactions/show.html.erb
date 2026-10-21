@@ -5,8 +5,7 @@
 <% can_update = policy(@transaction).update? %>
 
 <div class="container py-4 py-lg-5" data-controller="tooltip">
-  <% subtitle = safe_join(["Transaction ##{@transaction.id} · Chain: #{chain_name(chain)}", " ", render("transactions/status_tag", tx: @transaction)]) %>
-  <%= render layout: "shared/page_header", locals: { title: property&.short_address || "Transaction ##{@transaction.id}", subtitle: subtitle } do %>
+  <%= render layout: "shared/page_header", locals: { title: property&.short_address || "Transaction ##{@transaction.id}", subtitle: render("transactions/status_tag", tx: @transaction) } do %>
     <% if party.nil? && can_update %>
       <%= link_to edit_transaction_path(@transaction), class: "btn btn-accent" do %>
         <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
@@ -33,40 +32,6 @@
     <div class="col-12 col-lg-8">
       <%= render "conveyancing_tracker" %>
       <%= render "conveyancing_guide" %>
-
-      <div class="card card--property mb-4">
-        <div class="card-header d-flex align-items-center justify-content-between">
-          <h2 class="h6 mb-0"><i class="fa-solid fa-house me-2" aria-hidden="true"></i>Property</h2>
-          <% if property %>
-            <%= link_to "View property", property_path(property), class: "btn btn-sm btn-outline-primary" %>
-          <% end %>
-        </div>
-        <div class="card-body p-4">
-          <% if property %>
-            <div class="row g-3 align-items-center">
-              <% if property.photo.attached? %>
-                <div class="col-12 col-md-4">
-                  <%= image_tag property.photo, class: "img-fluid rounded object-fit-cover w-100 transaction-property__photo", alt: property.short_address %>
-                </div>
-              <% end %>
-              <div class="col-12 <%= 'col-md-8' if property.photo.attached? %>">
-                <p class="fw-bold mb-1"><%= property.short_address %></p>
-                <% if property.second_line_of_address.present? %>
-                  <p class="text-muted small mb-1"><%= property.second_line_of_address %></p>
-                <% end %>
-                <p class="text-muted small mb-2"><%= property.city %>, <%= property.post_code %></p>
-                <% if property.sold? %>
-                  <span class="badge bg-secondary">Sold</span>
-                <% else %>
-                  <span class="badge bg-success">Available for sale</span>
-                <% end %>
-              </div>
-            </div>
-          <% else %>
-            <p class="text-muted mb-0 fst-italic">No property linked to this transaction.</p>
-          <% end %>
-        </div>
-      </div>
 
       <div class="card card--chain mb-4">
         <div class="card-header d-flex align-items-center justify-content-between gap-2">
@@ -105,31 +70,53 @@
     </div>
 
     <div class="col-12 col-lg-4">
+      <div class="card card--property mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h2 class="h6 mb-0"><i class="fa-solid fa-house me-2" aria-hidden="true"></i>Property</h2>
+          <% if property %>
+            <%= link_to "View property", property_path(property), class: "btn btn-sm btn-outline-primary" %>
+          <% end %>
+        </div>
+        <div class="card-body p-4">
+          <% if property %>
+            <div class="row g-3 align-items-center">
+              <% if property.photo.attached? %>
+                <div class="col-7">
+                  <%= image_tag property.photo, class: "rounded object-fit-cover w-100 transaction-property__photo", alt: property.short_address %>
+                </div>
+              <% end %>
+              <div class="<%= property.photo.attached? ? 'col-5 text-end' : 'col-12' %>">
+                <p class="fw-bold mb-1"><%= property.short_address %></p>
+                <% if property.second_line_of_address.present? %>
+                  <p class="text-muted small mb-1"><%= property.second_line_of_address %></p>
+                <% end %>
+                <p class="text-muted small mb-2"><%= property.city %>, <%= property.post_code %></p>
+                <% if property.sold? %>
+                  <span class="badge bg-secondary">Sold</span>
+                <% else %>
+                  <span class="badge bg-success">Available for sale</span>
+                <% end %>
+              </div>
+            </div>
+          <% else %>
+            <p class="text-muted mb-0 fst-italic">No property linked to this transaction.</p>
+          <% end %>
+        </div>
+      </div>
+
       <div class="card card--transaction mb-4">
         <div class="card-header">
           <h2 class="h6 mb-0"><i class="fa-solid fa-user-tie me-2" aria-hidden="true"></i>Managing agent</h2>
         </div>
         <div class="card-body p-4">
           <% if agent %>
-            <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="d-flex align-items-center gap-3">
               <%= agent_avatar(agent) %>
               <div>
                 <p class="fw-bold mb-0"><%= agent_link(agent, class: "text-decoration-none") %></p>
                 <p class="text-muted small mb-0"><%= agent.company.presence || "Estate agent" %></p>
               </div>
             </div>
-            <dl class="mb-0 d-flex flex-column gap-2">
-              <div class="record-meta">
-                <dt>Email</dt>
-                <dd><a href="mailto:<%= agent.email %>" class="text-decoration-none"><%= agent.email %></a></dd>
-              </div>
-              <% if agent.phone.present? %>
-                <div class="record-meta">
-                  <dt>Phone</dt>
-                  <dd><a href="tel:<%= agent.phone %>" class="text-decoration-none"><%= agent.phone %></a></dd>
-                </div>
-              <% end %>
-            </dl>
           <% else %>
             <p class="text-muted mb-0 small fst-italic">No agent assigned to this transaction.</p>
           <% end %>

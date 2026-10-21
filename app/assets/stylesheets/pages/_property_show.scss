@@ -180,3 +180,10 @@
     align-items: flex-start;
   }
 }
+
+// Yellow stage pills (Searches & Enquiries, Survey & Mortgage) use the same soft yellow as open chain pills
+.property-transactions .badge.bg-warning {
+  background-color: #FFF5D6 !important;
+  border-color: #FFF8E1 !important;
+  color: $movee-navy !important;
+}
