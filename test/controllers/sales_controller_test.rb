@@ -188,4 +188,131 @@ class SalesControllerTest < ActionDispatch::IntegrationTest
     get new_sale_url
     assert_redirected_to new_user_session_url
   end
+
+  test "the vendor step fills in the new client form from a finished client PDF" do
+    document = @user.client_documents.create!(
+      step: "vendor", filename: "client.pdf", status: "done",
+      extracted_data: { "first_name" => "Tunde", "last_name" => "Adebayo", "email" => "tunde.adebayo@example.com",
+                        "phone" => nil, "onward_purchase" => "buying" }
+    )
+
+    get new_sale_url(client_document_id: document.id)
+
+    assert_select "input[name='involved_party[first_name]'][value=?]", "Tunde"
+    assert_select "input[name='involved_party[email]'][value=?]", "tunde.adebayo@example.com"
+    assert_select "input[name='involved_party[onward_purchase]'][value=buying][checked]"
+    assert_select ".alert-success", text: /Not found in the PDF: phone number/
+  end
+
+  test "the vendor step says when a client PDF is still being read" do
+    document = @user.client_documents.create!(step: "vendor", filename: "client.pdf")
+
+    get new_sale_url(client_document_id: document.id)
+
+    assert_select ".fill-from-pdf", text: /Reading client.pdf/
+    assert_select "input[name='involved_party[first_name]'][value]", count: 0
+  end
+
+  test "the vendor step shows why a client PDF could not be read" do
+    document = @user.client_documents.create!(step: "vendor", filename: "client.pdf", status: "failed",
+                                              error_message: "The assistant gave no answer.")
+
+    get new_sale_url(client_document_id: document.id)
+
+    assert_select ".alert-danger", text: /The assistant gave no answer/
+  end
+
+  test "the vendor step ignores another agent's client PDF" do
+    other = User.create!(user_name: "other_agent", email: "other@example.com", password: "Password123",
+                         phone: "+44 20 7946 0199")
+    document = other.client_documents.create!(step: "vendor", filename: "secret.pdf", status: "done",
+                                              extracted_data: { "first_name" => "Secret" })
+
+    get new_sale_url(client_document_id: document.id)
+
+    assert_response :success
+    assert_select "input[name='involved_party[first_name]'][value=?]", "Secret", count: 0
+  end
+
+  test "the vendor step keeps checking while a client PDF is being read" do
+    document = @user.client_documents.create!(step: "vendor", filename: "client.pdf")
+
+    get new_sale_url(client_document_id: document.id)
+
+    assert_select "[data-controller=auto-reload]", text: /Reading client.pdf/
+  end
+
+  test "the vendor step stops checking when reading a client PDF takes too long" do
+    document = @user.client_documents.create!(step: "vendor", filename: "client.pdf")
+
+    travel 3.minutes do
+      get new_sale_url(client_document_id: document.id)
+    end
+
+    assert_select ".alert-warning", text: /taking longer than expected/
+    assert_select "[data-controller=auto-reload]", count: 0
+  end
+
+  test "the buyer step fills in the new client form from a finished client PDF" do
+    property = Property.create!(user: @user, involved_party: @vendor, house_number: "7", street: "Acacia Avenue",
+                                city: "Leeds", post_code: "LS1 1AA")
+    document = @user.client_documents.create!(
+      step: "buyer", filename: "buyer.pdf", status: "done",
+      extracted_data: { "first_name" => "Grace", "last_name" => "O'Neill", "email" => "grace@example.com" }
+    )
+
+    get new_sale_url(step: "buyer", vendor_id: @vendor.id, property_id: property.id, client_document_id: document.id)
+
+    assert_select "input[name='involved_party[first_name]'][value=?]", "Grace"
+    assert_select "input[name='involved_party[last_name]'][value=?]", "O'Neill"
+    assert_select ".alert-success", text: /Filled in from buyer.pdf/
+  end
+
+  test "a client PDF from the vendor step does not fill in the buyer step" do
+    property = Property.create!(user: @user, involved_party: @vendor, house_number: "7", street: "Acacia Avenue",
+                                city: "Leeds", post_code: "LS1 1AA")
+    document = @user.client_documents.create!(step: "vendor", filename: "vendor.pdf", status: "done",
+                                              extracted_data: { "first_name" => "Tunde" })
+
+    get new_sale_url(step: "buyer", vendor_id: @vendor.id, property_id: property.id, client_document_id: document.id)
+
+    assert_select "input[name='involved_party[first_name]'][value=?]", "Tunde", count: 0
+    assert_select ".alert-success", count: 0
+  end
+
+  test "choosing a vendor takes their client PDF on to the property step" do
+    document = @user.client_documents.create!(step: "vendor", filename: "client.pdf", status: "done")
+
+    post sale_url, params: { step: "vendor", existing_id: @vendor.id, client_document_id: document.id }
+
+    assert_redirected_to new_sale_url(step: "property", vendor_id: @vendor.id, client_document_id: document.id)
+  end
+
+  test "the property step suggests the address from the vendor's client PDF" do
+    document = @user.client_documents.create!(
+      step: "vendor", filename: "client.pdf", status: "done",
+      extracted_data: { "selling" => true, "house_number" => "14", "street" => "Maple Grove",
+                        "second_line_of_address" => "Ealing", "city" => "London", "post_code" => "W5 3PL" }
+    )
+
+    get new_sale_url(step: "property", vendor_id: @vendor.id, client_document_id: document.id)
+
+    assert_select "input[name='property[house_number]'][value=?]", "14"
+    assert_select "input[name='property[street]'][value=?]", "Maple Grove"
+    assert_select "input[name='property[second_line_of_address]'][value=?]", "Ealing"
+    assert_select "input[name='property[post_code]'][value=?]", "W5 3PL"
+    assert_select ".alert-info", text: /Address filled in from client.pdf/
+  end
+
+  test "the property step does not suggest the address of a client who is not selling" do
+    document = @user.client_documents.create!(
+      step: "vendor", filename: "client.pdf", status: "done",
+      extracted_data: { "selling" => false, "street" => "Maple Grove" }
+    )
+
+    get new_sale_url(step: "property", vendor_id: @vendor.id, client_document_id: document.id)
+
+    assert_select "input[name='property[street]'][value=?]", "Maple Grove", count: 0
+    assert_select ".alert-info", count: 0
+  end
 end

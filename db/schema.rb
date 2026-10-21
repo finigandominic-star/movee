@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_130537) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -57,6 +57,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_chats_on_user_id"
+  end
+
+  create_table "client_documents", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "step"
+    t.string "filename"
+    t.integer "byte_size"
+    t.text "content"
+    t.string "status", default: "processing", null: false
+    t.jsonb "extracted_data", default: {}, null: false
+    t.string "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_client_documents_on_user_id"
   end
 
   create_table "involved_parties", force: :cascade do |t|
@@ -308,6 +322,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_120000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "chains", "users"
   add_foreign_key "chats", "users"
+  add_foreign_key "client_documents", "users"
   add_foreign_key "involved_parties", "users"
   add_foreign_key "messages", "chats"
   add_foreign_key "properties", "involved_parties"

@@ -50,4 +50,7 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Jobs are only recorded in tests (not run or stored), so tests can check what was queued
+  config.active_job.queue_adapter = :test
 end
