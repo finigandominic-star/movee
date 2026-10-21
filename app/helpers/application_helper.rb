@@ -65,4 +65,9 @@ module ApplicationHelper
   def agent_link(user, **options)
     link_to user.user_name.presence || user.email, user_path(user), **options
   end
+
+  # Human label for a TransactionShareLink::DURATIONS key, e.g. "30m" -> "30 minutes"
+  def share_link_duration_label(key)
+    { "30m" => "30 minutes", "1h" => "1 hour", "5h" => "5 hours", "1d" => "1 day" }.fetch(key, key)
+  end
 end

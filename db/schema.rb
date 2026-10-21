@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_130537) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_131855) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -283,6 +283,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_130537) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "transaction_share_links", force: :cascade do |t|
+    t.string "token", null: false
+    t.bigint "transaction_id", null: false
+    t.bigint "user_id"
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token"], name: "index_transaction_share_links_on_token", unique: true
+    t.index ["transaction_id"], name: "index_transaction_share_links_on_transaction_id"
+    t.index ["user_id"], name: "index_transaction_share_links_on_user_id"
+  end
+
   create_table "transactions", force: :cascade do |t|
     t.bigint "involved_party_id"
     t.bigint "chain_id", null: false
@@ -335,6 +347,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_130537) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "transaction_share_links", "transactions"
+  add_foreign_key "transaction_share_links", "users"
   add_foreign_key "transactions", "chains"
   add_foreign_key "transactions", "involved_parties"
   add_foreign_key "transactions", "properties"
