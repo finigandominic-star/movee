@@ -2,7 +2,10 @@
 <% total_stages = Transaction::LEGAL_STAGES.size %>
 <% percent = @transaction.legal_stage_percentage %>
 <% current_def = @transaction.legal_stage_definition %>
-<% can_update = policy(@transaction).update? %>
+<%# The public share-link page always passes can_update: false explicitly -
+    never computed from the viewer's own session, which could belong to a
+    signed-in agent/admin browsing in the same browser. %>
+<% can_update = local_assigns.fetch(:can_update, policy(@transaction).update?) %>
 <% overall_timing = @transaction.overall_timing_status %>
 
 <div class="card card--transaction mb-4" data-controller="tooltip">
@@ -15,10 +18,18 @@
         Stage <%= current_idx %> of <%= total_stages %> (<%= percent %>%) · England &amp; Wales conveyancing
       </p>
     </div>
-    <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#legalExplainerModal">
-      <i class="fa-solid fa-book-open" aria-hidden="true"></i>
-      <span>Legal guide</span>
-    </button>
+    <div class="d-flex flex-wrap gap-2">
+      <% if can_update %>
+        <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#shareStatusModal">
+          <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+          <span>Share status with client</span>
+        </button>
+      <% end %>
+      <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#legalExplainerModal">
+        <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+        <span>Legal guide</span>
+      </button>
+    </div>
   </div>
 
   <div class="card-body p-4">

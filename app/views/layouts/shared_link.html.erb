@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <title><%= content_for(:title) || "Moveee" %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#212161">
+    <meta name="robots" content="noindex, nofollow">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload", media: "all" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="shared-link-page">
+    <header class="shared-link-page__header">
+      <%= link_to "Moveee", root_path, class: "shared-link-page__brand" %>
+    </header>
+
+    <main class="shared-link-page__main">
+      <%= yield %>
+    </main>
+
+    <%= render "shared/footer" %>
+  </body>
+</html>

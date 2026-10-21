@@ -28,3 +28,74 @@
 .alert {
   border-radius: $border-radius;
 }
+
+// The "shared link created" banner: a pop-up that overlays the page without
+// shifting any other element - it scrolls away with the page like normal
+// content (it is NOT position: fixed), it just doesn't take up flow space.
+.share-link-banner-anchor {
+  position: relative;
+  height: 0;
+}
+
+.share-link-banner {
+  position: absolute;
+  top: .75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1060;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4rem;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+}
+
+.share-link-banner__pill {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  max-width: 100%;
+  background: $movee-navy;
+  color: #FFFFFF;
+  border: 2px solid $movee-lime;
+  border-radius: 50rem;
+  padding: .5rem .5rem .5rem 1.1rem;
+  font-size: .9rem;
+  box-shadow: $box-shadow-lg;
+
+  // Only the leading link icon is lime - icons inside buttons set their own colour.
+  > i { color: $movee-lime; }
+}
+
+.share-link-banner__input {
+  background: transparent;
+  border: 0;
+  color: #FFFFFF;
+  font-size: .85rem;
+  width: 280px;
+  max-width: 50vw;
+
+  &:focus { outline: none; }
+}
+
+.share-link-banner__expiry {
+  color: $movee-muted;
+  font-size: .8rem;
+}
+
+.share-link-banner__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: $movee-lime;
+  color: $movee-navy;
+  border: 0;
+  border-radius: 50rem;
+  padding: .35rem .9rem;
+  font-weight: 600;
+  font-size: .85rem;
+
+  &:hover { background: darken($movee-lime, 8%); }
+}

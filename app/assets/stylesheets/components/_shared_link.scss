@@ -1,0 +1,48 @@
+// Public, unauthenticated page a buyer/seller lands on from a time-limited
+// transaction share link (layouts/shared_link.html.erb).
+.shared-link-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shared-link-page__header {
+  background: $movee-navy;
+  padding: 1rem 1.5rem;
+}
+
+.shared-link-page__brand {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: $movee-lime;
+  text-decoration: none;
+
+  &:hover { color: $movee-lime; }
+}
+
+.shared-link-page__main {
+  flex: 1 0 auto;
+}
+
+.shared-link-view {
+  max-width: 960px;
+}
+
+.shared-link-view__intro {
+  max-width: 640px;
+}
+
+.shared-link-view__property-photo {
+  width: 104px;
+  height: 104px;
+  object-fit: cover;
+  border-radius: $border-radius;
+  flex-shrink: 0;
+}
+
+// Without this, the flex child next to the agent's avatar refuses to shrink
+// below its content width, so a long email just overflows instead of wrapping.
+.shared-link-view__agent-info {
+  min-width: 0;
+}
