@@ -1,0 +1,38 @@
+<%# app/assets/config/manifest.json.erb %>
+{
+  "background_color": "white",
+  "description": "Your app description here.",
+  "display": "fullscreen",
+  "name": "Your App Name",
+  "icons": [
+    <%
+      # 1. Find all matching icon files and store them in an array (ignoring hidden files like . and ..)
+      files = Dir.entries(Rails.root.join("app/assets/images/icons/")).reject { |f| f.start_with?('.') }
+      icon_entries = []
+
+      files.each do |file|
+        match = file.match(/.+-(?<size>\d{2,3}x\d{2,3}).png/)
+        if match
+          icon_entries << {
+            src: image_path("icons/#{file}"),
+            sizes: match[:size],
+            type: "image/png"
+          }
+        end
+      end
+    %>
+
+    <%# 2. Map over them and safely join with commas, guaranteeing no trailing comma error %>
+    <%=
+      icon_entries.map.with_index { |icon, i|
+        <<-JSON.strip
+  {
+    "src": "#{icon[:src]}",
+    "sizes": "#{icon[:sizes]}",
+    "type": "#{icon[:type]}"
+  }#{"," unless i == icon_entries.length - 1}
+        JSON
+      }.join("\n")
+    %>
+  ]
+}
