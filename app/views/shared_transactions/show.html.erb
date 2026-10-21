@@ -24,19 +24,19 @@
         <div class="card">
           <div class="card-body py-3 d-flex align-items-start gap-3">
             <%= agent_avatar(agent, size: 48) %>
-            <div>
+            <div class="shared-link-view__agent-info">
               <div class="text-uppercase small fw-bold text-muted mb-1">Your agent</div>
               <div class="fw-bold"><%= agent.user_name.presence || agent.email %></div>
               <% if agent.company.present? %>
                 <div class="text-muted small mb-2"><%= agent.company %></div>
               <% end %>
               <div class="d-flex flex-column gap-1 small">
-                <a href="mailto:<%= agent.email %>" class="text-decoration-none d-inline-flex align-items-center gap-2">
-                  <i class="fa-solid fa-envelope" aria-hidden="true"></i><span><%= agent.email %></span>
+                <a href="mailto:<%= agent.email %>" class="text-decoration-none d-flex align-items-center gap-2">
+                  <i class="fa-solid fa-envelope" aria-hidden="true"></i><span class="text-break"><%= agent.email %></span>
                 </a>
                 <% if agent.phone.present? %>
-                  <a href="tel:<%= agent.phone %>" class="text-decoration-none d-inline-flex align-items-center gap-2">
-                    <i class="fa-solid fa-phone" aria-hidden="true"></i><span><%= agent.phone %></span>
+                  <a href="tel:<%= agent.phone %>" class="text-decoration-none d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-phone" aria-hidden="true"></i><span class="text-break"><%= agent.phone %></span>
                   </a>
                 <% end %>
               </div>
