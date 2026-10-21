@@ -4,6 +4,10 @@
 
 require "open-uri"
 
+puts "Purging previous attachments (including Cloudinary files)..."
+ActiveStorage::Attachment.find_each(&:purge)
+ActiveStorage::Blob.find_each(&:purge)
+
 puts "Cleaning database..."
 User.destroy_all
 Chain.destroy_all
@@ -119,7 +123,7 @@ property_configs = [
 properties = []
 property_configs.each_with_index do |cfg, index|
   cfg[:seller].update!(user: cfg[:user]) if cfg[:seller].user.nil? || cfg[:seller].user != cfg[:user]
-  photo_path = Rails.root.join("public/images/properties/property_#{(index % 20) + 1}.jpg")
+  photo_path = Rails.root.join("public/images/properties/property_#{(index % 17) + 1}.jpg")
   p = Property.new(
     user: cfg[:user],
     involved_party: cfg[:seller],
