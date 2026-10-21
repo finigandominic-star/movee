@@ -1,4 +1,4 @@
-module SalesHelper
+module ClientDocumentsHelper
   CLIENT_FIELD_LABELS = { "first_name" => "first name", "last_name" => "last name",
                           "email" => "email", "phone" => "phone number" }.freeze
 

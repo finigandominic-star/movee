@@ -11,7 +11,8 @@
       <div class="sale-option">
         <h3 class="sale-option__title">Add a new client</h3>
         <%# new shortcut: read a client PDF and fill in the form below (see ClientDocumentsController) %>
-        <%= render "sales/fill_from_pdf" %>
+        <%= render "client_documents/fill_from_pdf", document: @client_document, step: @step,
+                                                     carry: sale_carry_params(@step) %>
         <%= form_with model: @new_party, scope: :involved_party, url: sale_path, method: :post, local: true do |f| %>
           <%= render "sales/carry" %>
           <div class="row g-3">
