@@ -5,6 +5,8 @@
       <p class="text-muted small mb-0">List the address now; assign the vendor and start a transaction next.</p>
     </div>
     <div class="card-body p-4">
+      <%# Optional shortcut: read a client PDF and fill in the address below (see ClientDocumentsController) %>
+      <%= render "client_documents/fill_from_pdf", document: @client_document, step: "property" %>
       <%= render "properties/form", property: @property, submit_label: "Add property" %>
     </div>
   </div>

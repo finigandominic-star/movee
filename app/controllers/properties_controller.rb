@@ -11,7 +11,8 @@ class PropertiesController < ApplicationController
   end
 
   def new
-    @property = Property.new
+    @client_document = current_user.client_documents.find_by(id: params[:client_document_id], step: "property")
+    @property = Property.new(**address_from_document)
     authorize @property
   end
 
@@ -55,6 +56,11 @@ class PropertiesController < ApplicationController
   end
 
   private
+
+  # The address found in a client PDF uploaded on this page (see ClientDocument#property_address)
+  def address_from_document
+    @client_document&.property_address || {}
+  end
 
   def set_property
     @property = Property.includes(:user, :involved_party, transactions: :chain).find(params[:id])

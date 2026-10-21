@@ -5,9 +5,9 @@ module ClientDocumentsHelper
   ADDRESS_FIELD_LABELS = { "house_number" => "house number", "street" => "street",
                            "city" => "city", "post_code" => "postcode" }.freeze
 
-  # Fields of the new client form that the uploaded PDF didn't provide, e.g. ["phone number"] or ["post code"]
+  # Fields of the form that the uploaded PDF didn't provide, e.g. ["phone number"] or ["post code"]
   def fields_missing_from(client_document)
-    labels = client_document.step == "property" ? ADDRESS_FIELD_LABELS :
-    CLIENT_FIELD_LABELS.labels.reject { |field, _| client_document.extracted_data[field].present? }.values
+    labels = client_document.step == "property" ? ADDRESS_FIELD_LABELS : CLIENT_FIELD_LABELS
+    labels.reject { |field, _| client_document.extracted_data[field].present? }.values
   end
 end

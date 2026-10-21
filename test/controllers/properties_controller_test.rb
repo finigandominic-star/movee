@@ -245,4 +245,40 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Sarah Connor/, count: 0
     assert_select "p", text: /Confidential client/
   end
+
+   test "new fills in the address from a finished client PDF" do
+    sign_in @user
+    document = @user.client_documents.create!(
+      step: "property", filename: "client.pdf", status: "done",
+      extracted_data: { "house_number" => "14", "street" => "Maple Grove", "second_line_of_address" => "Ealing",
+                        "city" => "London", "post_code" => nil, "first_name" => "Tunde" }
+    )
+
+    get new_property_url(client_document_id: document.id)
+
+    assert_response :success
+    assert_select "input[name='property[house_number]'][value=?]", "14"
+    assert_select "input[name='property[street]'][value=?]", "Maple Grove"
+    assert_select "input[name='property[second_line_of_address]'][value=?]", "Ealing"
+    assert_select "input[name='property[city]'][value=?]", "London"
+    assert_select ".alert-success", text: /Not found in the PDF: postcode/
+  end
+
+  test "new ignores client PDFs from other pages" do
+    sign_in @user
+    document = @user.client_documents.create!(step: "vendor", filename: "vendor.pdf", status: "done",
+                                              extracted_data: { "street" => "Maple Grove" })
+
+    get new_property_url(client_document_id: document.id)
+
+    assert_select "input[name='property[street]'][value=?]", "Maple Grove", count: 0
+  end
+
+  test "new shows the Fill from PDF box" do
+    sign_in @user
+
+    get new_property_url
+
+    assert_select ".fill-from-pdf input[type=hidden][name=step][value=property]"
+  end
 end
