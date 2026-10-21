@@ -1,4 +1,5 @@
-# Receives a client PDF from the sales stepper, reads its text and starts finding the client's details.
+# Receives a client PDF from a "Fill from PDF" box (sales stepper, new client or new property page),
+#   reads its text and starts finding the client's details.
 # The PDF itself is not kept: only its text is saved (see ClientDocument).
 
 # status: :see_other (HTTP 303) is the correct status for "after a form submission, go to this page".
@@ -16,7 +17,7 @@ class ClientDocumentsController < ApplicationController
     file = params[:file]
 
     error = upload_error(file)
-    return redirect_to(step_path, alert: error, status: :see_other) if error
+    return redirect_to(back_path, alert: error, status: :see_other) if error
 
     # save the document as the realtor's own, using the has_many from the model
     document = current_user.client_documents.create!(
@@ -27,24 +28,29 @@ class ClientDocumentsController < ApplicationController
       content: PdfTextExtractor.call(file.tempfile))
     ExtractClientDetailsJob.perform_later(document)
 
-    redirect_to step_path(client_document_id: document.id), status: :see_other
+    redirect_to back_path(client_document_id: document.id), status: :see_other
   # a scanned PDF, a broken file or too many pages → the realtor goes back to the step with the error message
   rescue PdfTextExtractor::Error => e
-    redirect_to step_path, alert: e.message, status: :see_other
+    redirect_to back_path, alert: e.message, status: :see_other
   end
 
   private
 
   def step
     # only allow vendor or buyer. Anything else falls back to vendor, so nobody can save a nonsense step.
+    # Where the PDF was uploaded (see ClientDocument::STEPS); anything unknown falls back to the vendor step
     ClientDocument::STEPS.include?(params[:step]) ? params[:step] : "vendor"
   end
 
-  # Back to the same stepper step, keeping the choices made in earlier steps
-  # keep vendor_id and property_id when going back
-  def step_path(extra = {})
-    earlier_choices = { vendor_id: params[:vendor_id], property_id: params[:property_id] }.compact_blank
-    new_sale_path(step: step, **earlier_choices, **extra)
+  # Back to the page the PDF was uploaded on; in the stepper, keeping the choices made in earlier steps
+  def back_path(extra = {})
+    case step
+    when "client" then new_involved_party_path(extra)
+    when "property" then new_property_path(extra)
+    else
+      earlier_choices = { vendor_id: params[:vendor_id], property_id: params[:property_id] }.compact_blank
+      new_sale_path(step: step, **earlier_choices, **extra)
+    end
   end
 
   def upload_error(file)

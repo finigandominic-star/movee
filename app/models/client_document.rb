@@ -4,7 +4,8 @@
 class ClientDocument < ApplicationRecord
   # allowed values, used by the validations
   STATUSES = %w[processing done failed].freeze
-  STEPS = %w[vendor buyer].freeze
+ # Where the PDF was uploaded: a sales stepper step (vendor, buyer), or the new client / new property page
+  STEPS = %w[vendor buyer client property].freeze
   # Still processing after 2 minutes: the background job is probably not running
   STUCK_AFTER = 2.minutes
   # Which found details fit which field (needed to have the fill_from_form functionality in the sales_stepper,
