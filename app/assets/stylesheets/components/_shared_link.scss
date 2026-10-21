@@ -34,9 +34,9 @@
 }
 
 .shared-link-view__property-photo {
-  width: 64px;
-  height: 64px;
+  width: 104px;
+  height: 104px;
   object-fit: cover;
-  border-radius: $border-radius-sm;
+  border-radius: $border-radius;
   flex-shrink: 0;
 }

@@ -18,6 +18,22 @@ class SharedTransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /#{@transaction.legal_stage_short_title}/
     assert_match @agent.email, response.body
     assert_no_match(/Secretname/, response.body)
+    assert_no_match(/Advance to stage/, response.body)
+    assert_no_match(/Change stage/, response.body)
+    assert_no_match(/Share status with client/, response.body)
+  end
+
+  test "the stage controls stay hidden even when the browser has an admin's own session" do
+    admin = User.create!(email: "admin@example.com", user_name: "Admin", password: "Password123", admin: true)
+    link = TransactionShareLink.create_for!(@transaction, user: @agent, duration: "1h")
+
+    sign_in admin
+    get shared_transaction_path(link.token)
+
+    assert_response :success
+    assert_no_match(/Advance to stage/, response.body)
+    assert_no_match(/Change stage/, response.body)
+    assert_no_match(/Share status with client/, response.body)
   end
 
   test "an expired link renders the expired page with 404" do

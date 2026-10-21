@@ -30,13 +30,13 @@
               <% if agent.company.present? %>
                 <div class="text-muted small mb-2"><%= agent.company %></div>
               <% end %>
-              <div class="d-flex flex-wrap gap-3 small">
-                <a href="mailto:<%= agent.email %>" class="text-decoration-none">
-                  <i class="fa-solid fa-envelope me-1" aria-hidden="true"></i><%= agent.email %>
+              <div class="d-flex flex-column gap-1 small">
+                <a href="mailto:<%= agent.email %>" class="text-decoration-none d-inline-flex align-items-center gap-2">
+                  <i class="fa-solid fa-envelope" aria-hidden="true"></i><span><%= agent.email %></span>
                 </a>
                 <% if agent.phone.present? %>
-                  <a href="tel:<%= agent.phone %>" class="text-decoration-none">
-                    <i class="fa-solid fa-phone me-1" aria-hidden="true"></i><%= agent.phone %>
+                  <a href="tel:<%= agent.phone %>" class="text-decoration-none d-inline-flex align-items-center gap-2">
+                    <i class="fa-solid fa-phone" aria-hidden="true"></i><span><%= agent.phone %></span>
                   </a>
                 <% end %>
               </div>
@@ -47,7 +47,7 @@
     <% end %>
   </div>
 
-  <%= render "transactions/conveyancing_tracker" %>
+  <%= render "transactions/conveyancing_tracker", can_update: false %>
   <%= render "transactions/conveyancing_guide" %>
 
   <p class="text-muted small text-center mb-0" data-controller="countdown" data-countdown-expires-at-value="<%= @link.expires_at.iso8601 %>">
