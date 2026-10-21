@@ -75,4 +75,21 @@ class ClientDocumentTest < ActiveSupport::TestCase
     document.extracted_data["selling"] = false
     assert_equal({}, document.property_address)
   end
+
+  test "gives the roles found in the PDF" do
+    document = build_document(status: "done", extracted_data: { "selling" => true, "buying" => nil })
+
+    assert_equal({ seller: true }, document.client_roles)
+  end
+
+  test "gives the address as one line" do
+    document = build_document(status: "done", extracted_data: {
+      "house_number" => "14", "street" => "Maple Grove", "second_line_of_address" => nil,
+      "city" => "London", "post_code" => "W5 3PL"
+    })
+
+    assert_equal "14 Maple Grove, London, W5 3PL", document.address_line
+    document.extracted_data = {}
+    assert_nil document.address_line
+  end
 end

@@ -5,6 +5,8 @@
       <p class="text-muted small mb-0">A buyer or seller you act for. You can link them to properties and transactions next.</p>
     </div>
     <div class="card-body p-4">
+      <%# new shortcut: read a client PDF and fill in the form below (see ClientDocumentsController) %>
+      <%= render "client_documents/fill_from_pdf", document: @client_document, step: "client" %>
       <%= render "involved_parties/form", involved_party: @involved_party, submit_label: "Add client" %>
     </div>
   </div>

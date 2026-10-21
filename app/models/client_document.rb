@@ -4,7 +4,7 @@
 class ClientDocument < ApplicationRecord
   # allowed values, used by the validations
   STATUSES = %w[processing done failed].freeze
- # Where the PDF was uploaded: a sales stepper step (vendor, buyer), or the new client / new property page
+  # Where the PDF was uploaded: a sales stepper step (vendor, buyer), or the new client / new property page
   STEPS = %w[vendor buyer client property].freeze
   # Still processing after 2 minutes: the background job is probably not running
   STUCK_AFTER = 2.minutes
@@ -40,5 +40,21 @@ class ClientDocument < ApplicationRecord
     return {} if extracted_data["selling"] == false
 
     extracted_data.slice(*ADDRESS_FIELDS).compact.symbolize_keys
+  end
+
+  # Seller / buyer as found in the PDF, for the new client page, where the realtor chooses the roles
+  def client_roles
+    return {} unless done?
+
+    { seller: extracted_data["selling"], buyer: extracted_data["buying"] }.compact
+  end
+
+  # The client's address as one line, e.g. "14 Maple Grove, Ealing, London, W5 3PL" (nil if none was found)
+  def address_line
+    return nil unless done?
+
+    house_and_street = extracted_data.values_at("house_number", "street").compact.join(" ")
+    parts = [house_and_street, *extracted_data.values_at("second_line_of_address", "city", "post_code")]
+    parts.compact_blank.join(", ").presence
   end
 end

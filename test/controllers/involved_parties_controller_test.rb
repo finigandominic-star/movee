@@ -207,4 +207,38 @@ class InvolvedPartiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='mailto:#{@user.email}']"
     assert_select "a[href='tel:#{@user.phone}']"
   end
+
+  test "new fills in the form from a finished client PDF" do
+    document = @user.client_documents.create!(
+      step: "client", filename: "client.pdf", status: "done",
+      extracted_data: { "first_name" => "Tunde", "last_name" => "Adebayo", "selling" => true, "buying" => true,
+                        "onward_purchase" => "buying", "house_number" => "14", "street" => "Maple Grove",
+                        "city" => "London", "post_code" => "W5 3PL" }
+    )
+
+    get new_involved_party_url(client_document_id: document.id)
+
+    assert_response :success
+    assert_select "input[name='involved_party[first_name]'][value=?]", "Tunde"
+    assert_select "input[type=checkbox][name='involved_party[seller]'][checked]"
+    assert_select "input[type=checkbox][name='involved_party[buyer]'][checked]"
+    assert_select "input[name='involved_party[onward_purchase]'][value=buying][checked]"
+    assert_select "textarea[name='involved_party[contact_info]']", text: "14 Maple Grove, London, W5 3PL"
+    assert_select ".alert-success", text: /Filled in from client.pdf/
+  end
+
+  test "new ignores client PDFs from the sales stepper" do
+    document = @user.client_documents.create!(step: "vendor", filename: "vendor.pdf", status: "done",
+                                              extracted_data: { "first_name" => "Tunde" })
+
+    get new_involved_party_url(client_document_id: document.id)
+
+    assert_select "input[name='involved_party[first_name]'][value=?]", "Tunde", count: 0
+  end
+
+  test "new shows the Fill from PDF box" do
+    get new_involved_party_url
+
+    assert_select ".fill-from-pdf input[type=hidden][name=step][value=client]"
+  end
 end
