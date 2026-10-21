@@ -18,10 +18,6 @@
       <% end %>
     <% end %>
     <% if can_update %>
-      <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#shareStatusModal">
-        <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
-        <span>Share status with client</span>
-      </button>
       <%= link_to edit_transaction_path(@transaction), class: "btn btn-outline-primary" do %>
         <i class="fa-solid fa-pen" aria-hidden="true"></i>
         <span>Edit</span>

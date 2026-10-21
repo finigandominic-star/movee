@@ -55,7 +55,20 @@
     <a href="#main-content" class="visually-hidden-focusable btn btn-accent position-absolute m-2" style="z-index: 2000;">Skip to content</a>
     <%= render "shared/navbar" %>
 
-    <% if notice || alert || flash[:share_link] %>
+    <% if (link = flash[:share_link]) %>
+      <div class="share-link-banner">
+        <div class="share-link-banner__pill" data-controller="clipboard">
+          <i class="fa-solid fa-link" aria-hidden="true"></i>
+          <span>Shared link ready, expires <%= time_ago_in_words(Time.zone.parse(link["expires_at"])) %> from now.</span>
+          <input type="text" class="share-link-banner__input" value="<%= link["url"] %>" readonly data-clipboard-target="source">
+          <button type="button" class="share-link-banner__copy" data-action="clipboard#copy" data-clipboard-target="button">
+            <i class="fa-solid fa-copy" aria-hidden="true"></i> Copy
+          </button>
+        </div>
+      </div>
+    <% end %>
+
+    <% if notice || alert %>
       <div class="flash-stack" aria-live="polite">
         <% if notice %>
           <div class="alert alert-success alert-dismissible fade show" role="status">
@@ -66,19 +79,6 @@
         <% if alert %>
           <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="fa-solid fa-triangle-exclamation me-2" aria-hidden="true"></i><%= alert %>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        <% end %>
-        <% if (link = flash[:share_link]) %>
-          <div class="alert alert-success alert-dismissible fade show" role="status" data-controller="clipboard">
-            <i class="fa-solid fa-link me-2" aria-hidden="true"></i>
-            Shared link ready, expires <%= time_ago_in_words(Time.zone.parse(link["expires_at"])) %> from now.
-            <div class="input-group input-group-sm mt-2">
-              <input type="text" class="form-control" value="<%= link["url"] %>" readonly data-clipboard-target="source">
-              <button type="button" class="btn btn-outline-dark" data-action="clipboard#copy" data-clipboard-target="button">
-                <i class="fa-solid fa-copy" aria-hidden="true"></i> Copy
-              </button>
-            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
         <% end %>

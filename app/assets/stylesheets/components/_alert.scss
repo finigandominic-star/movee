@@ -28,3 +28,53 @@
 .alert {
   border-radius: $border-radius;
 }
+
+// The "shared link created" banner: centred at the top of the page, in normal
+// document flow (not fixed - it scrolls away like any other content).
+.share-link-banner {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 1rem 0;
+}
+
+.share-link-banner__pill {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  max-width: 100%;
+  background: $movee-navy;
+  color: #FFFFFF;
+  border: 2px solid $movee-lime;
+  border-radius: 50rem;
+  padding: .5rem .5rem .5rem 1.1rem;
+  font-size: .9rem;
+
+  i { color: $movee-lime; }
+}
+
+.share-link-banner__input {
+  background: transparent;
+  border: 0;
+  color: #FFFFFF;
+  font-size: .8rem;
+  width: 220px;
+  max-width: 40vw;
+
+  &:focus { outline: none; }
+}
+
+.share-link-banner__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: $movee-lime;
+  color: $movee-navy;
+  border: 0;
+  border-radius: 50rem;
+  padding: .35rem .9rem;
+  font-weight: 600;
+  font-size: .85rem;
+
+  &:hover { background: darken($movee-lime, 8%); }
+}
