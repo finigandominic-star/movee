@@ -59,12 +59,12 @@
       <div class="share-link-banner">
         <div class="share-link-banner__pill" data-controller="clipboard">
           <i class="fa-solid fa-link" aria-hidden="true"></i>
-          <span>Shared link ready, expires <%= time_ago_in_words(Time.zone.parse(link["expires_at"])) %> from now.</span>
           <input type="text" class="share-link-banner__input" value="<%= link["url"] %>" readonly data-clipboard-target="source">
           <button type="button" class="share-link-banner__copy" data-action="clipboard#copy" data-clipboard-target="button">
             <i class="fa-solid fa-copy" aria-hidden="true"></i> Copy
           </button>
         </div>
+        <div class="share-link-banner__expiry">Expires in <%= distance_of_time_in_words(Time.current, Time.zone.parse(link["expires_at"])) %></div>
       </div>
     <% end %>
 

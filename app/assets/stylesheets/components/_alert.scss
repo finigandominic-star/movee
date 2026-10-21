@@ -33,7 +33,9 @@
 // document flow (not fixed - it scrolls away like any other content).
 .share-link-banner {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: .4rem;
   padding: 1rem 1rem 0;
 }
 
@@ -57,11 +59,16 @@
   background: transparent;
   border: 0;
   color: #FFFFFF;
-  font-size: .8rem;
-  width: 220px;
-  max-width: 40vw;
+  font-size: .85rem;
+  width: 280px;
+  max-width: 50vw;
 
   &:focus { outline: none; }
+}
+
+.share-link-banner__expiry {
+  color: $movee-muted;
+  font-size: .8rem;
 }
 
 .share-link-banner__copy {

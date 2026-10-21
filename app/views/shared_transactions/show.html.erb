@@ -2,46 +2,44 @@
 <% agent = @transaction.creator_or_listing_user %>
 
 <div class="container py-4 py-lg-5 shared-link-view">
-  <div class="shared-link-view__intro mb-4">
-    <span class="tag-accent d-inline-block mb-2">Conveyancing status</span>
-    <h1 class="page-title"><%= @transaction.property&.short_address || "Transaction ##{@transaction.id}" %></h1>
-    <% if @transaction.property.present? %>
-      <p class="page-subtitle"><%= [@transaction.property.city, @transaction.property.post_code].compact_blank.join(" · ") %></p>
+  <div class="row align-items-start g-3 mb-3">
+    <div class="col-12 col-md-8">
+      <span class="tag-accent d-inline-block mb-2">Conveyancing status</span>
+      <h1 class="page-title"><%= @transaction.property&.short_address || "Transaction ##{@transaction.id}" %></h1>
+      <% if @transaction.property.present? %>
+        <p class="page-subtitle mb-0"><%= [@transaction.property.city, @transaction.property.post_code].compact_blank.join(" · ") %></p>
+      <% end %>
+    </div>
+
+    <% if agent %>
+      <div class="col-12 col-md-4">
+        <div class="card">
+          <div class="card-body py-3">
+            <div class="text-uppercase small fw-bold text-muted mb-1">Your agent</div>
+            <div class="fw-bold"><%= agent.user_name.presence || agent.email %></div>
+            <% if agent.company.present? %>
+              <div class="text-muted small mb-2"><%= agent.company %></div>
+            <% end %>
+            <div class="d-flex flex-wrap gap-3 small">
+              <a href="mailto:<%= agent.email %>" class="text-decoration-none">
+                <i class="fa-solid fa-envelope me-1" aria-hidden="true"></i><%= agent.email %>
+              </a>
+              <% if agent.phone.present? %>
+                <a href="tel:<%= agent.phone %>" class="text-decoration-none">
+                  <i class="fa-solid fa-phone me-1" aria-hidden="true"></i><%= agent.phone %>
+                </a>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
     <% end %>
   </div>
 
-  <div class="row g-4">
-    <div class="col-12 col-lg-8">
-      <%= render "transactions/conveyancing_tracker" %>
-    </div>
+  <%= render "transactions/conveyancing_tracker" %>
 
-    <div class="col-12 col-lg-4">
-      <% if agent %>
-        <div class="card">
-          <div class="card-header">
-            <h2 class="h6 mb-0"><i class="fa-solid fa-user-tie me-2" aria-hidden="true"></i>Your agent</h2>
-          </div>
-          <div class="card-body d-flex flex-column gap-2">
-            <div class="fw-bold"><%= agent.user_name.presence || agent.email %></div>
-            <% if agent.company.present? %>
-              <div class="text-muted small"><%= agent.company %></div>
-            <% end %>
-            <a href="mailto:<%= agent.email %>" class="text-decoration-none">
-              <i class="fa-solid fa-envelope me-2" aria-hidden="true"></i><%= agent.email %>
-            </a>
-            <% if agent.phone.present? %>
-              <a href="tel:<%= agent.phone %>" class="text-decoration-none">
-                <i class="fa-solid fa-phone me-2" aria-hidden="true"></i><%= agent.phone %>
-              </a>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-
-      <p class="text-muted small mt-3">
-        <i class="fa-solid fa-lock me-1" aria-hidden="true"></i>
-        This is a private, time-limited link shared by your agent. It expires <%= time_ago_in_words(@link.expires_at) %> from now and shows only this property's conveyancing stage.
-      </p>
-    </div>
-  </div>
+  <p class="text-muted small text-center mb-0">
+    <i class="fa-solid fa-lock me-1" aria-hidden="true"></i>
+    This is a private, time-limited link shared by your agent. It expires <%= time_ago_in_words(@link.expires_at) %> from now and shows only this property's conveyancing stage.
+  </p>
 </div>
