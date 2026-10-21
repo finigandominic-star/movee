@@ -22,7 +22,7 @@
         <div class="input-group position-relative">
           <span class="input-group-text"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
           <%= f.search_field :q, value: params[:q], placeholder: "Search clients by name, email, or phone", class: "form-control", aria: { label: "Search clients" }, data: { search_autocomplete_target: "input", action: "input->search-autocomplete#filter focus->search-autocomplete#filter" } %>
-          <%= link_to involved_parties_path, class: "btn btn-outline-secondary", hidden: params[:q].blank?, aria: { label: "Clear search" }, data: { search_autocomplete_target: "clear", action: "search-autocomplete#reset" } do %>
+          <%= link_to involved_parties_path, class: "btn btn-outline-dark", hidden: params[:q].blank?, aria: { label: "Clear search" }, data: { search_autocomplete_target: "clear", action: "search-autocomplete#reset" } do %>
             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
           <% end %>
           <div class="search-suggestions" hidden data-search-autocomplete-target="suggestions" data-action="click->search-autocomplete#pick"></div>

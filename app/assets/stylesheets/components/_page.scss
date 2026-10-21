@@ -70,14 +70,26 @@ body {
   left: 0;
   right: 0;
   z-index: 20;
-  margin-top: .25rem;
+  margin-top: .375rem;
+  padding: .4rem;
   background: $movee-surface;
   border: 1px solid $movee-border;
-  border-radius: .5rem;
-  box-shadow: 0 8px 24px rgba($movee-ink, .12);
-  overflow: hidden;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow-lg;
 
-  .dropdown-item { cursor: pointer; }
+  .dropdown-item {
+    cursor: pointer;
+    padding: .55rem .9rem;
+    border-radius: $border-radius-sm;
+    font-size: .9rem;
+    font-weight: 600;
+    color: $movee-ink;
+
+    &:hover, &:focus {
+      background: rgba($movee-navy, .08);
+      color: $movee-navy;
+    }
+  }
 }
 
 // Grid of record cards: 1 / 2 / 3 / 4 per row at sm / md / lg / xxl
