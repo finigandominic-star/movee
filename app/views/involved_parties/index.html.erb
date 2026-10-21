@@ -1,7 +1,7 @@
 <%# Only clients the current agent manages or is associated with are listed %>
 <% parties = @involved_parties.select { |party| current_user&.admin? || party.user == current_user || party.user_associated?(current_user) } %>
 
-<div class="container py-4 py-lg-5">
+<div class="container py-4 py-lg-5" data-controller="search-autocomplete" data-action="click@window->search-autocomplete#closeSuggestions">
   <%= render layout: "shared/page_header", locals: { title: "Clients" } do %>
     <%= link_to new_involved_party_path, class: "btn btn-primary" do %>
       <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
@@ -19,9 +19,13 @@
   <% else %>
     <div class="page-toolbar">
       <%= form_with url: involved_parties_path, method: :get, class: "flex-grow-1", data: { turbo_frame: "_top" } do |f| %>
-        <div class="input-group">
+        <div class="input-group position-relative">
           <span class="input-group-text"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
-          <%= f.search_field :q, value: params[:q], placeholder: "Search clients by name, email, or phone", class: "form-control", aria: { label: "Search clients" } %>
+          <%= f.search_field :q, value: params[:q], placeholder: "Search clients by name, email, or phone", class: "form-control", aria: { label: "Search clients" }, data: { search_autocomplete_target: "input", action: "input->search-autocomplete#filter focus->search-autocomplete#filter" } %>
+          <%= link_to involved_parties_path, class: "btn btn-outline-dark", hidden: params[:q].blank?, aria: { label: "Clear search" }, data: { search_autocomplete_target: "clear", action: "search-autocomplete#reset" } do %>
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          <% end %>
+          <div class="search-suggestions" hidden data-search-autocomplete-target="suggestions" data-action="click->search-autocomplete#pick"></div>
         </div>
       <% end %>
 
@@ -49,7 +53,7 @@
           <% parties.each do |party| %>
             <% personal = policy(party).show_personal_data? %>
             <% label = personal ? party.full_name : "client ##{party.id}" %>
-            <div class="col">
+            <div class="col" data-search-autocomplete-target="item" data-name="<%= label %>">
               <div class="card record-card card--party">
                 <div class="card-header">
                   <div>
@@ -123,7 +127,7 @@
               <% parties.each do |party| %>
                 <% personal = policy(party).show_personal_data? %>
                 <% label = personal ? party.full_name : "client ##{party.id}" %>
-                <tr>
+                <tr data-search-autocomplete-target="item" data-name="<%= label %>">
                   <td>
                     <% if personal %>
                       <%= link_to party.full_name, involved_party_path(party), class: "fw-semibold text-decoration-none" %>

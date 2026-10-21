@@ -2,7 +2,7 @@ class ChainsController < ApplicationController
   before_action :set_chain, only: %i[show edit update destroy merge connect_property]
 
   def index
-    @chains = policy_scope(Chain).includes(:user, transactions: [:property, :user, :involved_party]).order(created_at: :desc)
+    @chains = policy_scope(Chain).includes(:user, transactions: [:property, :user, :involved_party]).search(params[:q]).order(created_at: :desc)
   end
 
   def show
