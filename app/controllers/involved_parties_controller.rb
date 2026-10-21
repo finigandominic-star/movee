@@ -2,7 +2,7 @@ class InvolvedPartiesController < ApplicationController
   before_action :set_involved_party, only: %i[show edit update destroy assign_property unassign_property assign_transaction unassign_transaction]
 
   def index
-    @involved_parties = policy_scope(InvolvedParty).includes(:properties, :transactions, :user).order(created_at: :desc)
+    @involved_parties = policy_scope(InvolvedParty).includes(:properties, :transactions, :user).search(params[:q]).order(created_at: :desc)
   end
 
   def show
