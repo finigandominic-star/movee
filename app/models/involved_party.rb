@@ -30,6 +30,12 @@ class InvolvedParty < ApplicationRecord
   validates :email, presence: true, uniqueness: true
   validates :phone, presence: true, uniqueness: true
 
+  scope :search, ->(query) {
+    return all if query.blank?
+
+    where("first_name ILIKE :q OR last_name ILIKE :q OR email ILIKE :q OR phone ILIKE :q", q: "%#{sanitize_sql_like(query)}%")
+  }
+
   def full_name
     "#{first_name} #{last_name}".strip
   end

@@ -1,10 +1,9 @@
 <% ordered_txs = @chain.ordered_transactions %>
 <% completed_count = ordered_txs.count(&:completed?) %>
-<% status_pill = @chain.chain_completed? ? tag.span("Completed", class: "badge bg-success status-pill") : tag.span("Open", class: "badge bg-warning status-pill") %>
+<% status_pill = @chain.chain_completed? ? tag.span("Completed", class: "badge bg-success status-pill") : tag.span("Open", class: "badge status-pill status-open") %>
 
 <div class="container-fluid px-3 px-lg-5 py-4 py-lg-5">
   <div class="page-wide">
-    <%= link_to "All chains", chains_path, class: "d-inline-block small mb-2" %>
     <% rename = render("chains/rename", chain: @chain) if policy(@chain).update? %>
     <%= render layout: "shared/page_header", locals: { title: chain_name(@chain), title_badge: status_pill, after_title: rename } do %>
       <% if policy(@chain).update? %>
@@ -31,7 +30,7 @@
               <span class="chain-end__label">
                 <i class="fa-solid fa-arrow-down-short-wide me-1" aria-hidden="true"></i> Start of Chain (bottom)
               </span>
-              <span class="badge <%= start_info[:closed] ? 'bg-success' : 'bg-warning' %>"><%= start_info[:label] %></span>
+              <span class="badge <%= start_info[:closed] ? 'bg-success' : 'status-open' %>"><%= start_info[:label] %></span>
             </div>
             <h6><%= start_info[:party_name] %></h6>
             <% if !start_info[:closed] && policy(@chain).update? %>
@@ -58,7 +57,7 @@
               <span class="chain-end__label">
                 <i class="fa-solid fa-arrow-up-wide-short me-1" aria-hidden="true"></i> End of Chain (top)
               </span>
-              <span class="badge <%= end_info[:closed] ? 'bg-success' : 'bg-warning' %>"><%= end_info[:label] %></span>
+              <span class="badge <%= end_info[:closed] ? 'bg-success' : 'status-open' %>"><%= end_info[:label] %></span>
             </div>
             <h6><%= end_info[:party_name] %></h6>
             <% if !end_info[:closed] && policy(@chain).update? %>
@@ -86,9 +85,6 @@
     <section aria-labelledby="chainLinksTitle">
       <div class="page-toolbar">
         <h2 class="h4 fw-bold mb-0" id="chainLinksTitle">Links in this chain</h2>
-        <%= link_to new_transaction_path(chain_id: @chain.id), class: "btn btn-outline-primary" do %>
-          <i class="fa-solid fa-plus" aria-hidden="true"></i> Add transaction
-        <% end %>
       </div>
 
       <% if ordered_txs.empty? %>

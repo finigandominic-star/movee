@@ -1,5 +1,5 @@
 <div class="container py-4 py-lg-5" data-controller="tooltip">
-  <%= render layout: "shared/page_header", locals: { title: "Transactions", subtitle: "#{pluralize(@transactions.size, 'transaction')} across your chains" } do %>
+  <%= render layout: "shared/page_header", locals: { title: "Transactions" } do %>
     <%= link_to new_transaction_path, class: "btn btn-primary" do %>
       <i class="fa-solid fa-plus" aria-hidden="true"></i>
       <span>New transaction</span>

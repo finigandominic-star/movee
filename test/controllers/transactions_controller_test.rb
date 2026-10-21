@@ -44,9 +44,11 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     get transaction_url(@transaction)
     assert_response :success
     assert_select "h1", text: /#{Regexp.escape(@property.short_address)}/
-    assert_select ".page-subtitle", text: /Transaction ##{@transaction.id}/
-    assert_select "a[href='mailto:#{@user.email}']"
-    assert_select "a[href='tel:#{@user.phone}']"
+    assert_select ".page-subtitle", text: /Chain:|Transaction #/, count: 0
+    # Managing agent card shows name and company only; contact details live on the agent's profile
+    assert_select "a[href=?]", user_path(@user)
+    assert_select "a[href='mailto:#{@user.email}']", count: 0
+    assert_select "a[href='tel:#{@user.phone}']", count: 0
   end
 
   test "should get new with prefilled query parameters" do

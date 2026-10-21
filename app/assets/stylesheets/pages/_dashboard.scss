@@ -117,3 +117,87 @@
   color: $movee-green;
   margin-bottom: .5rem;
 }
+
+// Needs attention and recent transactions sit side by side: same header height, same card height
+.dashboard-panel {
+  height: 100%;
+
+  // Fixed height (not padding) so the "View all" button doesn't make one header taller
+  > .card-header {
+    height: 3.75rem;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+// Greeting on the left, new-sale button on the right, centred on the same line
+.dashboard-header .page-header {
+  align-items: center;
+}
+
+// Primary call to action: start the guided new-sale flow
+.new-sale-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .7rem 1.5rem .7rem .7rem;
+  border-radius: 50rem;
+  background: $movee-lime;
+  color: $movee-navy;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba($movee-lime, .55), 0 2px 6px rgba($movee-navy, .15);
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: $movee-navy;
+    background: darken($movee-lime, 6%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba($movee-lime, .7), 0 4px 10px rgba($movee-navy, .2);
+
+    .new-sale-cta__arrow {
+      transform: translateX(4px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid $movee-indigo;
+    outline-offset: 3px;
+  }
+}
+
+.new-sale-cta__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: $movee-navy;
+  color: $movee-lime;
+  font-size: 1.25rem;
+  animation: new-sale-ring 2.4s ease-out infinite;
+}
+
+.new-sale-cta__title {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.new-sale-cta__arrow {
+  margin-left: auto;
+  transition: transform .15s ease;
+}
+
+@keyframes new-sale-ring {
+  0%   { box-shadow: 0 0 0 0 rgba($movee-navy, .45); }
+  70%  { box-shadow: 0 0 0 10px rgba($movee-navy, 0); }
+  100% { box-shadow: 0 0 0 0 rgba($movee-navy, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .new-sale-cta__icon {
+    animation: none;
+  }
+}

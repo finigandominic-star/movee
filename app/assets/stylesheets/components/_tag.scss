@@ -91,3 +91,31 @@
   border-color: darken($movee-lime, 12%) !important;
   color: $movee-navy !important;
 }
+
+// Client role tags (Seller / Buyer): heavier outline so the role reads at a glance.
+// On dark card headers the solid pill matches the header, so the outline turns light.
+.badge.role-tag {
+  border-width: 2px;
+}
+
+.card-header .badge.role-tag {
+  border-color: rgba(#FFFFFF, .85) !important;
+}
+
+// Open chain status: solid vibrant yellow with navy text so it grabs attention on light pages and dark headers alike.
+// Listed last, with the card-header selector, so it beats the tinted and card-header badge rules above.
+.badge.status-open,
+.card-header .badge.status-open {
+  background-color: $movee-yellow !important;
+  border-color: darken($movee-yellow, 18%) !important;
+  color: $movee-navy !important;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px rgba($movee-yellow, .3);
+}
+
+// Wrap a card in .soft-yellow-pills to show its amber pills (e.g. "In Progress") in the soft yellow used for open chains
+.soft-yellow-pills .badge.bg-warning {
+  background-color: #FFF5D6 !important;
+  border-color: #FFF8E1 !important;
+  color: $movee-navy !important;
+}
