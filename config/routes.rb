@@ -25,7 +25,11 @@ Rails.application.routes.draw do
       delete :remove_involved_party
       patch :update_stage
     end
+    resources :share_links, only: :create, controller: "transaction_share_links"
   end
+
+  # Public, token-authenticated view of a single transaction's conveyancing stage
+  get "shared/transactions/:token", to: "shared_transactions#show", as: :shared_transaction
 
   resources :involved_parties do
     member do

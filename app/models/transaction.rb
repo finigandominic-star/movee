@@ -3,6 +3,7 @@ class Transaction < ApplicationRecord
   belongs_to :involved_party, optional: true
   belongs_to :chain
   belongs_to :property
+  has_many :share_links, class_name: "TransactionShareLink", dependent: :destroy
 
   # The 8 statutory/procedural stages of UK residential property conveyancing post-offer acceptance
   LEGAL_STAGES = %w[

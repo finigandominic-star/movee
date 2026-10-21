@@ -27,6 +27,10 @@ class TransactionPolicy < ApplicationPolicy
     update?
   end
 
+  def share_links?
+    update?
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope.all

@@ -1,0 +1,30 @@
+<%# Lets the agent generate a private, time-limited link showing only this
+    transaction's conveyancing stage - for the exact buyer/seller it's about. %>
+<div class="modal fade" id="shareStatusModal" tabindex="-1" aria-labelledby="shareStatusModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <%= form_with url: transaction_share_links_path(tx), method: :post do |f| %>
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="shareStatusModalLabel">Share status with client</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small">
+            Creates a private link showing only this property's conveyancing stage and your contact details &mdash;
+            no other buyer/seller names, chain, or price information. Choose how long it should stay active:
+          </p>
+          <div class="d-flex flex-wrap gap-2" role="radiogroup" aria-label="Link expiry">
+            <% TransactionShareLink::DURATIONS.each_key.with_index do |key, i| %>
+              <input type="radio" class="btn-check" name="duration" id="duration_<%= key %>" value="<%= key %>" autocomplete="off" <%= "checked" if i.zero? %>>
+              <label class="btn btn-outline-primary" for="duration_<%= key %>"><%= share_link_duration_label(key) %></label>
+            <% end %>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <%= f.submit "Generate link", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

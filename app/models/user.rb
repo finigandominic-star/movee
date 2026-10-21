@@ -8,6 +8,7 @@ class User < ApplicationRecord
   has_many :transactions, dependent: :nullify
   has_many :chains, dependent: :nullify
   has_many :involved_parties, dependent: :nullify
+  has_many :transaction_share_links, dependent: :nullify
   has_many :chats, dependent: :destroy
 
   has_one_attached :avatar
