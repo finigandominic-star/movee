@@ -56,15 +56,17 @@
 
     <div class="mb-3">
       <%= f.label :involved_party_id, "Buyer", class: "form-label", for: "buyerSearch" %>
-      <% if InvolvedParty.any? %>
-        <% selected_buyer_id = (transaction.involved_party_id || params[:involved_party_id]).to_i %>
+      <%# Only the realtor's own clients (same Pundit rule as the Clients page), sorted names by first_name, last_name included %>
+      <% buyers = policy_scope(InvolvedParty).order(:first_name, :last_name) %>
+    <% if buyers.any? %>
+      <% selected_buyer_id = (transaction.involved_party_id || params[:involved_party_id]).to_i %>
         <div data-controller="client-search" data-action="change->client-search#choose click@window->client-search#closeOnOutsideClick">
           <div class="input-group mb-2">
             <span class="input-group-text"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
-            <input type="search" id="buyerSearch" class="form-control" placeholder="Search by name or email, or browse all clients…" autocomplete="off"
+            <input type="search" id="buyerSearch" class="form-control" placeholder="Search by name or email, or browse your clients…" autocomplete="off"
                    data-client-search-target="input" data-action="input->client-search#filter focus->client-search#show">
             <button type="button" class="btn btn-outline-secondary" aria-controls="buyerChoices" aria-expanded="false"
-                    aria-label="Show all clients" data-client-search-target="toggle" data-action="client-search#toggle">
+                    aria-label="Show your clients" data-client-search-target="toggle" data-action="client-search#toggle">
               <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
             </button>
           </div>
@@ -73,7 +75,7 @@
               <%= render "sales/choice", name: "transaction[involved_party_id]", value: "", id: "buyer_none",
                     checked: selected_buyer_id.zero?, title: "No buyer yet" %>
             </div>
-            <% InvolvedParty.order(:first_name, :last_name).each do |ip| %>
+            <% buyers.each do |ip| %>
               <div data-client-search-target="item" data-name="<%= ip.full_name %> <%= ip.email %>">
                 <%= render "sales/choice", name: "transaction[involved_party_id]", value: ip.id, id: "buyer_#{ip.id}",
                       checked: selected_buyer_id == ip.id, title: ip.full_name, meta: "#{ip.roles_label} · #{ip.email}" %>
