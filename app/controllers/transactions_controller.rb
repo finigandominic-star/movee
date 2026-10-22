@@ -18,6 +18,18 @@ class TransactionsController < ApplicationController
   end
 
   def create
+    # A property only ever has one transaction, so adding a buyer to it updates that one
+    existing = Transaction.find_by(property_id: transaction_params[:property_id])
+    if existing
+      authorize existing, :update?
+      if existing.update(transaction_params)
+        return redirect_to existing, notice: "Transaction was successfully updated."
+      end
+
+      @transaction = existing
+      return render :new, status: :unprocessable_entity
+    end
+
     @transaction = Transaction.new(transaction_params)
     @transaction.user = current_user if current_user.present?
     authorize @transaction

@@ -153,6 +153,7 @@ class Transaction < ApplicationRecord
   }.freeze
 
   validates :legal_stage, inclusion: { in: LEGAL_STAGES }
+  validates :property_id, uniqueness: { message: "already has a transaction" }
 
   before_validation :ensure_chain, on: :create
   before_validation :sync_completion_and_stage
