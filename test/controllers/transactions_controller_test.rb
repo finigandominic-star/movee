@@ -56,6 +56,16 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "creating a transaction for a property that has one updates it instead" do
+    @transaction.update!(involved_party: nil)
+    assert_no_difference "Transaction.count" do
+      post transactions_url, params: { transaction: { property_id: @property.id, chain_id: @chain.id,
+                                                      involved_party_id: @party.id, legal_stage: "offer_accepted" } }
+    end
+    assert_redirected_to transaction_url(@transaction)
+    assert_equal @party, @transaction.reload.involved_party
+  end
+
   test "should create transaction" do
     new_prop = Property.create!(
       user: @user,
@@ -210,10 +220,8 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
 
   test "overdue transaction displays red pill with exact number of days over in index and show" do
     start_date = Date.current - 10.days
-    overdue_tx = Transaction.create!(
-      user: @user,
-      property: @property,
-      chain: @chain,
+    overdue_tx = @transaction
+    overdue_tx.update!(
       legal_stage: "offer_accepted",
       created_at: start_date.beginning_of_day,
       estimated_completion_date: start_date + 84.days,

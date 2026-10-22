@@ -52,6 +52,7 @@ isabella = InvolvedParty.create!(first_name: "Isabella", last_name: "Jones", ema
 liam = InvolvedParty.create!(first_name: "Liam", last_name: "Clark", email: "liam.clark@virgin.net", phone: "+44 7700 901123", contact_info: "41 Forest Drive, Norwich, NR1 6CD", seller: false, buyer: true)
 noah = InvolvedParty.create!(first_name: "Noah", last_name: "Miller", email: "noah.miller@zoho.com", phone: "+44 29 2046 0678", contact_info: "64 Green Way, Swansea, SA1 4YZ", seller: false, buyer: true)
 grace = InvolvedParty.create!(first_name: "Grace", last_name: "Fletcher", email: "grace.f@rocketmail.com", phone: "+44 1273 496 101", contact_info: "14 Beech Road, Hastings, TN34 2OP", seller: false, buyer: true)
+poppy = InvolvedParty.create!(first_name: "Poppy", last_name: "Walsh", email: "poppy.walsh@gmail.com", phone: "+44 7700 900482", contact_info: "9 Orchard Close, Leeds, LS1 4AB", seller: false, buyer: true)
 
 # 2. Leaving the Property Market (seller only, no onward purchase / probate / emigration) -> Closed Top
 frances = InvolvedParty.create!(first_name: "Frances", last_name: "Wright", email: "frances@wright.com", phone: "+44 20 7123 4567", contact_info: "10 Downing Street, London, SW1A 2AA", seller: true, buyer: false, onward_purchase: "leaving_market")
@@ -77,7 +78,8 @@ theo = InvolvedParty.create!(first_name: "Theo", last_name: "Barnes", email: "th
 lily = InvolvedParty.create!(first_name: "Lily", last_name: "Cooper", email: "lily.c@icloud.co.uk", phone: "+44 1865 496 212", contact_info: "9 Ash Tree Lane, Oxford, OX2 4ST", seller: true, buyer: true, onward_purchase: "buying")
 
 # Assign FTB buyers to their managing agent
-sophie.update!(user: toni)
+sophie.update!(user: toni) # Sophie is deliberately left without a purchase: she closes the chain in the demo
+poppy.update!(user: toni)
 harry.update!(user: sarah)
 isabella.update!(user: emily)
 liam.update!(user: mark)
@@ -171,17 +173,17 @@ puts "Creating Themed Chains & Transactions..."
 
 # -------------------------------------------------------------------------------------------------
 # SCENARIO 1: Completed Chain (Both Ends Closed & Fully Completed)
-# Structure: Sophie (FTB) -> Oliver -> Frances (Leaving market). Both transactions completed.
+# Structure: Poppy (FTB) -> Oliver -> Frances (Leaving market). Both transactions completed.
 # -------------------------------------------------------------------------------------------------
 chain1 = Chain.create!(user: sarah, active: true)
 
-# Deal 1: Sophie buys Property 17 from Oliver (Completed 12d ahead)
+# Deal 1: Poppy buys Property 17 from Oliver (Completed 12d ahead)
 start_d1 = today - 92.days
 comp_d1 = start_d1 + 72.days
 Transaction.create!(
   chain: chain1,
   user: toni,
-  involved_party: sophie,
+  involved_party: poppy,
   property: properties[16], # Magnolia Close (seller: Oliver)
   completed: true,
   legal_stage: "completion",

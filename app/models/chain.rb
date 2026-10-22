@@ -176,6 +176,9 @@ class Chain < ApplicationRecord
       return Chain.merge!(self, existing_other_chain)
     end
 
+    # A property only ever has one transaction
+    return self if property.transactions.exists?
+
     # Otherwise, create a transaction connecting this chain to the property
     if position.to_sym == :top
       buyer = end_transaction&.property&.involved_party

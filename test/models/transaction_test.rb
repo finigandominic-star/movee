@@ -48,7 +48,8 @@ class TransactionTest < ActiveSupport::TestCase
 
   test "scopes completed and pending" do
     tx1 = Transaction.create!(chain: @chain, property: @property, completed: true)
-    tx2 = Transaction.create!(chain: @chain, property: @property, completed: false)
+    other_property = Property.create!(user: @user, house_number: "8", street: "Green Way", post_code: "SW1A 1AA")
+    tx2 = Transaction.create!(chain: @chain, property: other_property, completed: false)
 
     assert_includes Transaction.completed, tx1
     assert_not_includes Transaction.completed, tx2
@@ -220,5 +221,13 @@ class TransactionTest < ActiveSupport::TestCase
 
     assert_equal new_chain.id, tx.reload.chain_id
     assert_not Chain.exists?(old_chain_id)
+  end
+
+  test "a property can only have one transaction" do
+    Transaction.create!(chain: @chain, property: @property)
+
+    dupe = Transaction.new(chain: Chain.create!(active: true), property: @property, involved_party: @party)
+    assert_not dupe.valid?
+    assert_includes dupe.errors[:property_id], "already has a transaction"
   end
 end

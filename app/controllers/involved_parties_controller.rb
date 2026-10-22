@@ -77,8 +77,11 @@ class InvolvedPartiesController < ApplicationController
     authorize @involved_party
     transaction = Transaction.find_by(id: params[:transaction_id])
     if transaction
-      transaction.update(involved_party: @involved_party)
-      redirect_to @involved_party, notice: "Transaction ##{transaction.id} was assigned to #{@involved_party.full_name}."
+      if transaction.update(involved_party: @involved_party)
+        redirect_to @involved_party, notice: "Transaction ##{transaction.id} was assigned to #{@involved_party.full_name}."
+      else
+        redirect_to @involved_party, alert: "Transaction ##{transaction.id} could not be assigned: #{transaction.errors.full_messages.to_sentence}."
+      end
     else
       redirect_to @involved_party, alert: "Transaction could not be found."
     end
