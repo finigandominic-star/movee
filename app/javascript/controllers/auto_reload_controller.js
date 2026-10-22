@@ -9,6 +9,9 @@ export default class extends Controller {
   connect() {
     this.timeout = setTimeout(() => {
       Turbo.visit(window.location.href, { action: "replace" })
+      // Seen once: the "buying onward" question stayed hidden for a seller after this reload.
+      // If occurs continuously, use a full reload instead (and remove the Turbo import):
+      //   window.location.replace(window.location.href)
     }, this.delayValue)
   }
 

@@ -59,4 +59,33 @@ class ClientDocumentsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_user_session_path
   end
+
+   test "goes back to the new client page after an upload there" do
+    upload fixture_file_upload("client_sample.pdf", "application/pdf"), step: "client"
+
+    document = @user.client_documents.last
+    assert_equal "client", document.step
+    assert_redirected_to new_involved_party_path(client_document_id: document.id)
+  end
+
+  test "goes back to the new property page after an upload there" do
+    upload fixture_file_upload("client_sample.pdf", "application/pdf"), step: "property"
+
+    document = @user.client_documents.last
+    assert_equal "property", document.step
+    assert_redirected_to new_property_path(client_document_id: document.id)
+  end
+
+  test "shows errors on the page the PDF came from" do
+    upload fixture_file_upload("client_sample.pdf", "text/plain"), step: "client"
+
+    assert_redirected_to new_involved_party_path
+    assert_equal "Please choose a PDF file.", flash[:alert]
+  end
+
+  test "treats an unknown place as the vendor step" do
+    upload fixture_file_upload("client_sample.pdf", "application/pdf"), step: "chain"
+
+    assert_equal "vendor", @user.client_documents.last.step
+  end
 end

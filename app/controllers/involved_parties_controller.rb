@@ -12,7 +12,8 @@ class InvolvedPartiesController < ApplicationController
   end
 
   def new
-    @involved_party = InvolvedParty.new
+    @client_document = current_user.client_documents.find_by(id: params[:client_document_id], step: "client")
+    @involved_party = InvolvedParty.new(**client_details_from_document)
     authorize @involved_party
   end
 
@@ -96,6 +97,15 @@ class InvolvedPartiesController < ApplicationController
   end
 
   private
+
+  # Details found in a client PDF uploaded on this page (see ClientDocument), to fill in the new client form
+  def client_details_from_document
+    return {} unless @client_document
+
+    @client_document.client_details
+                    .merge(@client_document.client_roles, contact_info: @client_document.address_line)
+                    .compact
+  end
 
   def set_involved_party
     @involved_party = InvolvedParty.includes(:properties, transactions: [:property, :chain]).find(params[:id])
