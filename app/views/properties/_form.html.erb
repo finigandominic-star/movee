@@ -51,7 +51,7 @@
 
       <div class="col-12 col-sm-6">
         <%= f.label :post_code, class: "form-label" do %>
-          Postcode <span class="text-danger">*</span>
+          Post code <span class="text-danger">*</span>
         <% end %>
         <div class="input-group">
           <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-envelope-open"></i></span>
@@ -61,76 +61,7 @@
           <% end %>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Section 2: Media & Listing Details -->
-  <div class="mb-4">
-    <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
-      <span class="rounded-circle bg-success bg-opacity-10 text-success p-2 me-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-        <i class="fa-solid fa-camera"></i>
-      </span>
-      <h5 class="fw-bold text-dark mb-0">Photos & Status</h5>
-    </div>
-
-    <div class="row g-3">
-      <div class="col-12">
-        <%= f.label :photo, class: "form-label fw-semibold small text-secondary" do %>
-          Property Photo <span class="text-muted fw-normal">(Upload)</span>
-        <% end %>
-        <% if property.photo.attached? %>
-          <div class="mb-2">
-            <%= image_tag property.photo, alt: "Current photo", class: "rounded object-fit-cover", width: 160, height: 100 %>
-          </div>
-        <% end %>
-        <div class="input-group">
-          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-image"></i></span>
-          <%= f.file_field :photo, accept: "image/*", class: "form-control" %>
-        </div>
-        <div class="form-text small">Upload an image to display as the listing's preview photo<%= " (leave empty to keep the current one)" if property.photo.attached? %>.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Section 3: Involved Party -->
-  <div class="mb-4">
-    <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
-      <span class="rounded-circle bg-info bg-opacity-10 text-info p-2 me-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-        <i class="fa-solid fa-user-tie"></i>
-      </span>
-      <h5 class="fw-bold text-dark mb-0">Involved Party</h5>
-    </div>
-
-    <div class="row g-3">
-      <div class="col-12">
-        <%= f.label :involved_party_id, class: "form-label fw-semibold small text-secondary" do %>
-          Associated Client / Party <span class="text-muted fw-normal">(Optional)</span>
-        <% end %>
-
-        <% if InvolvedParty.any? %>
-          <div class="input-group">
-            <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-users"></i></span>
-            <%= f.collection_select :involved_party_id,
-                InvolvedParty.all,
-                :id,
-                ->(ip) { "#{ip.first_name} #{ip.last_name} (#{ip.seller? ? 'Seller' : (ip.buyer? ? 'Buyer' : 'Party')}) — #{ip.email}" },
-                { include_blank: "-- None / Unassigned --", selected: (property.involved_party_id || params[:involved_party_id]) },
-                { class: "form-select #{'is-invalid' if property.errors[:involved_party].any?}" } %>
-            <% if property.errors[:involved_party].any? %>
-              <div class="invalid-feedback"><%= property.errors[:involved_party].first %></div>
-            <% end %>
-          </div>
-          <div class="form-text small">Select the seller, buyer, or client associated with this property, or leave unassigned.</div>
-        <% else %>
-          <div class="alert alert-light border mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2" role="alert">
-            <div class="text-muted small">
-              <i class="fa-solid fa-circle-info me-1 text-primary"></i> No clients registered yet. You can save this property now and assign a client later.
-            </div>
-            <%= link_to "Register Client", new_involved_party_path, class: "btn btn-sm btn-outline-primary" %>
-          </div>
-        <% end %>
-      </div>
-    </div>
+     </div>
   </section>
 
   <section class="form-section">
@@ -139,10 +70,11 @@
       Vendor (seller) <span class="text-muted fw-normal">(optional)</span>
     <% end %>
 
-    <% if InvolvedParty.any? %>
-      <%# Sellers are listed first; each option shows the client's role %>
+    <%# Only the realtor's own clients; sellers are listed first, each with their role %>
+    <% vendors = policy_scope(InvolvedParty).order(seller: :desc, last_name: :asc, first_name: :asc) %>
+    <% if vendors.any? %>
       <%= f.collection_select :involved_party_id,
-          InvolvedParty.order(seller: :desc, last_name: :asc, first_name: :asc),
+          vendors,
           :id,
           ->(ip) { "#{ip.full_name} (#{ip.seller? ? 'Seller' : (ip.buyer? ? 'Buyer' : 'Client')})" },
           { include_blank: "Not assigned yet", selected: (property.involved_party_id || params[:involved_party_id]) },
@@ -152,24 +84,29 @@
       <% end %>
       <div class="form-text">
         The client selling this property. Not on the list?
-        <%= link_to "Register client", new_involved_party_path %>
+        <%= link_to "Add client", new_involved_party_path %>
       </div>
     <% else %>
       <div class="alert alert-light border mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2" role="alert">
-        <span class="text-muted small">No clients registered yet. You can save this property now and assign a vendor later.</span>
-        <%= link_to "Register client", new_involved_party_path, class: "btn btn-sm btn-outline-primary" %>
+        <span class="text-muted small">No clients yet. You can save this property now and assign a vendor later.</span>
+        <%= link_to "Add client", new_involved_party_path, class: "btn btn-sm btn-outline-primary" %>
       </div>
     <% end %>
   </section>
 
   <section class="form-section">
     <h2 class="form-section__title">Photo</h2>
-    <div class="row g-3">
-      <div class="col-12">
-        <%= f.label :photos, "Photo URL", class: "form-label" %>
-        <%= f.url_field :photos, class: "form-control", placeholder: "https://images.unsplash.com/photo-..." %>
-        <div class="form-text">A publicly accessible image link shown as the listing photo.</div>
+    <%= f.label :photo, class: "form-label" do %>
+      Listing photo <span class="text-muted fw-normal">(optional)</span>
+    <% end %>
+    <% if property.photo.attached? %>
+      <div class="mb-2">
+        <%= image_tag property.photo, alt: "Current listing photo", class: "rounded object-fit-cover", width: 160, height: 100 %>
       </div>
+    <% end %>
+    <%= f.file_field :photo, accept: "image/*", class: "form-control" %>
+    <div class="form-text">
+      Shown as the listing's photo.<%= " Leave empty to keep the current one." if property.photo.attached? %>
     </div>
   </section>
 
