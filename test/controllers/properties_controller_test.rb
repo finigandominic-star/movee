@@ -281,4 +281,17 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".fill-from-pdf input[type=hidden][name=step][value=property]"
   end
+
+   test "the vendor dropdown only lists the agent's own clients" do
+    sign_in @user
+    own_client = InvolvedParty.create!(user: @user, first_name: "Olivia", last_name: "Own", email: "olivia@example.com",
+                                       phone: "+44 7700 900501", seller: true)
+    stranger = InvolvedParty.create!(user: @other_user, first_name: "Sam", last_name: "Stranger",
+                                     email: "sam@example.com", phone: "+44 7700 900502", seller: true)
+
+    get new_property_url
+
+    assert_select "select[name='property[involved_party_id]'] option[value=?]", own_client.id.to_s
+    assert_select "select[name='property[involved_party_id]'] option[value=?]", stranger.id.to_s, count: 0
+  end
 end
