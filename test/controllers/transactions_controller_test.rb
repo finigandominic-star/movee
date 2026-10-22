@@ -103,7 +103,7 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button[name=merge_chains][value='1']"
     assert_select "button[name=confirm_unlinked][value='1']"
     assert_select "input[name='transaction[involved_party_id]'][value=?][checked]", @party.id.to_s
-    assert_select "select[name='transaction[property_id]'] option[selected][value=?]", target.id.to_s
+    assert_select "input[name='transaction[property_id]'][value=?][checked]", target.id.to_s
     assert_select "select[name='transaction[chain_id]'] option[selected][value=?]", @chain.id.to_s
 
     # Linking to the buyer's chain needs no warning
@@ -401,5 +401,17 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='transaction[involved_party_id]'][value=?]", own_client.id.to_s
     assert_select "input[name='transaction[involved_party_id]'][value=?]", stranger.id.to_s, count: 0
     assert_no_match "sam@example.com", response.body
+  end
+
+  test "the property field is a searchable list sorted by address" do
+    later = Property.create!(user: @user, house_number: "10", street: "Acacia Avenue", city: "Leeds", post_code: "LS1 1AA")
+    earlier = Property.create!(user: @user, house_number: "2", street: "Acacia Avenue", city: "Leeds", post_code: "LS1 1AA")
+
+    get new_transaction_url(property_id: later.id)
+
+    assert_select "#propertySearch[type=search]"
+    assert_select "input[name='transaction[property_id]'][value=?][checked]", later.id.to_s
+    assert_select "[data-client-search-target=item][data-name*='Acacia Avenue, Leeds, LS1 1AA']"
+    assert_operator response.body.index("property_#{earlier.id}"), :<, response.body.index("property_#{later.id}")
   end
 end
