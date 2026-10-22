@@ -16,6 +16,12 @@ class Property < ApplicationRecord
     where("house_number ILIKE :q OR street ILIKE :q OR second_line_of_address ILIKE :q OR city ILIKE :q OR post_code ILIKE :q", q: "%#{sanitize_sql_like(query)}%")
   }
 
+  # Sorted like an address book: by street A–Z, then by house number as a number (2 before 10, then "10B")
+  scope :by_address, -> {
+    house_number_as_number = Arel.sql("NULLIF(substring(properties.house_number from '^[0-9]+'), '')::integer NULLS LAST")
+    order(:street, house_number_as_number, :house_number)
+  }
+
   has_one_attached :photo
 
   # Sold (sold subject to contract) once a transaction has a buyer or has moved into conveyancing;
