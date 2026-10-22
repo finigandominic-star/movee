@@ -155,7 +155,7 @@
               </div>
             <% end %>
 
-            <% if can_update %>
+            <% if can_update || policy(@transaction).remove_involved_party? %>
               <div class="mt-3 pt-3 border-top">
                 <%= button_to remove_involved_party_transaction_path(@transaction), method: :delete, data: { turbo_confirm: "Unassign #{party.full_name} from this transaction?" }, class: "btn btn-sm btn-outline-danger w-100" do %>
                   <i class="fa-solid fa-user-xmark" aria-hidden="true"></i>

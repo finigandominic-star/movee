@@ -19,8 +19,9 @@ class TransactionPolicy < ApplicationPolicy
     user.present? && (user.admin? || record.user == user || record.property&.user == user)
   end
 
+  # The agent who manages the buyer can take their own client off a transaction, not only the transaction's owner
   def remove_involved_party?
-    update?
+    update? || (user.present? && record.involved_party&.user_id == user.id)
   end
 
   def update_stage?
