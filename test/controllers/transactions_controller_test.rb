@@ -78,6 +78,10 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "searches_and_enquiries", open_tx.legal_stage
 
     other = InvolvedParty.create!(first_name: "Ann", last_name: "Lee", email: "ann@example.com", phone: "+44 7700 900556", buyer: true)
+    patch transaction_url(open_tx), params: { transaction: { involved_party_id: other.id } }
+    assert_equal "You are not authorized to perform this action.", flash[:alert]
+    assert_equal @party, open_tx.reload.involved_party
+
     post transactions_url, params: { transaction: { property_id: prop.id, involved_party_id: other.id } }
     assert_equal "You are not authorized to perform this action.", flash[:alert]
     assert_equal @party, open_tx.reload.involved_party
@@ -97,6 +101,9 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_select ".alert-warning", text: /selling a property in another chain/
     assert_select "input[name=confirm_unlinked][value='1']"
+    assert_select "input[name='transaction[involved_party_id]'][value=?][checked]", @party.id.to_s
+    assert_select "select[name='transaction[property_id]'] option[selected][value=?]", target.id.to_s
+    assert_select "select[name='transaction[chain_id]'] option[selected][value=?]", @chain.id.to_s
 
     # Linking to the buyer's chain needs no warning
     assert_difference "Transaction.count", 1 do
@@ -108,6 +115,35 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_difference "Transaction.count", 1 do
       post transactions_url, params: params.merge(confirm_unlinked: "1", transaction: params[:transaction].merge(property_id: target2.id))
     end
+  end
+
+  test "another agent can confirm the unlinked-chain warning on an existing buyerless transaction" do
+    owner = User.create!(user_name: "owner2", email: "owner2@example.com", password: "Password123")
+    prop = Property.create!(user: owner, house_number: "6", street: "Elm Way", post_code: "NW1 1AB")
+    open_tx = Transaction.create!(user: owner, property: prop, chain: @chain)
+    @party.update!(seller: true)
+    home = Property.create!(user: @user, involved_party: @party, house_number: "3", street: "Oak Row", post_code: "NW1 1AC")
+    Transaction.create!(user: @user, property: home, chain: Chain.create!(active: true))
+    params = { transaction: { involved_party_id: @party.id, chain_id: @chain.id } }
+
+    post transactions_url, params: params.deep_merge(transaction: { property_id: prop.id })
+    assert_response :unprocessable_entity
+    assert_select "form[action=?]", transaction_path(open_tx)
+
+    patch transaction_url(open_tx), params: params.merge(confirm_unlinked: "1")
+    assert_redirected_to transaction_url(open_tx)
+    assert_equal @party, open_tx.reload.involved_party
+  end
+
+  test "new from a chain pre-fills the buyer as the seller of the chain's last property" do
+    seller = InvolvedParty.create!(first_name: "Sam", last_name: "Seller", email: "sam@example.com", phone: "+44 7700 900557", seller: true, buyer: true, onward_purchase: "buying")
+    @property.update!(involved_party: seller)
+    get new_transaction_url(chain_id: @chain.id)
+    assert_select "input[name='transaction[involved_party_id]'][value=?][checked]", seller.id.to_s
+
+    seller.update!(onward_purchase: "leaving_market")
+    get new_transaction_url(chain_id: @chain.id)
+    assert_select "input[name='transaction[involved_party_id]'][value=?][checked]", seller.id.to_s, count: 0
   end
 
   test "should create transaction" do

@@ -14,6 +14,7 @@ class TransactionsController < ApplicationController
     @transaction.property_id = params[:property_id] if params[:property_id].present?
     @transaction.chain_id = params[:chain_id] if params[:chain_id].present?
     @transaction.involved_party_id = params[:involved_party_id] if params[:involved_party_id].present?
+    default_buyer_from_chain
     authorize @transaction
   end
 
@@ -40,15 +41,7 @@ class TransactionsController < ApplicationController
   end
 
   def update
-    authorize @transaction
-    @transaction.assign_attributes(transaction_params)
-    return render :edit, status: :unprocessable_entity if warn_unlinked_chains?(@transaction)
-
-    if @transaction.save
-      redirect_to @transaction, notice: "Transaction was successfully updated."
-    else
-      render :edit, status: :unprocessable_entity
-    end
+    fill_existing_transaction(@transaction, view: :edit)
   end
 
   def destroy
@@ -82,27 +75,36 @@ class TransactionsController < ApplicationController
 
   private
 
-  # Owners can change the whole transaction. Any agent can fill in a buyer where there isn't one yet
-  # (as in the new-sale flow), but only the buyer: the chain and stage stay as they are.
-  def fill_existing_transaction(existing)
+  # Adding to a chain extends it past its last property, so the buyer is whoever sells that property
+  # (unless they're leaving the market and not buying onward)
+  def default_buyer_from_chain
+    return if @transaction.involved_party_id.present? || @transaction.chain_id.blank?
+
+    seller = Chain.find_by(id: @transaction.chain_id)&.end_transaction&.property&.involved_party
+    @transaction.involved_party_id = seller.id if seller && !seller.leaving_market?
+  end
+
+  # Used by create and update. Owners can change the whole transaction. Any agent can fill in a buyer where there isn't one yet
+  # (as in the new-sale flow), but only the buyer and the chain it joins: the stage and dates stay as they are.
+  def fill_existing_transaction(existing, view: :new)
     if policy(existing).update?
       authorize existing, :update?
       attrs = transaction_params
     elsif existing.involved_party_id.blank? && transaction_params[:involved_party_id].present?
       authorize existing, :create?
-      attrs = transaction_params.slice(:involved_party_id)
+      attrs = transaction_params.slice(:involved_party_id, :chain_id)
     else
       authorize existing, :update?
     end
 
     existing.assign_attributes(attrs)
     @transaction = existing
-    return render :new, status: :unprocessable_entity if warn_unlinked_chains?(existing)
+    return render view, status: :unprocessable_entity if warn_unlinked_chains?(existing)
 
     if existing.save
       redirect_to existing, notice: "Transaction was successfully updated."
     else
-      render :new, status: :unprocessable_entity
+      render view, status: :unprocessable_entity
     end
   end
 
