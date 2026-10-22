@@ -23,7 +23,7 @@
             <%= render "sales/field", f: f, record: @new_property, attr: :street, label: "Street", required: true, placeholder: "e.g. Downing Street", col: "col-12 col-sm-7" %>
             <%= render "sales/field", f: f, record: @new_property, attr: :second_line_of_address, label: "Address line 2", placeholder: "e.g. Flat 4" %>
             <%= render "sales/field", f: f, record: @new_property, attr: :city, label: "City / town", placeholder: "e.g. London", col: "col-12 col-sm-6" %>
-            <%= render "sales/field", f: f, record: @new_property, attr: :post_code, label: "Postcode", required: true, placeholder: "e.g. SW1A 2AA", col: "col-12 col-sm-6" %>
+            <%= render "sales/field", f: f, record: @new_property, attr: :post_code, label: "Post code", required: true, placeholder: "e.g. SW1A 2AA", col: "col-12 col-sm-6" %>
             <div class="col-12">
               <%= f.label :photo, class: "form-label" do %>
                 Photo <span class="text-muted fw-normal">(optional)</span>

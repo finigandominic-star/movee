@@ -294,4 +294,16 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name='property[involved_party_id]'] option[value=?]", own_client.id.to_s
     assert_select "select[name='property[involved_party_id]'] option[value=?]", stranger.id.to_s, count: 0
   end
+
+   test "the vendor dropdown is sorted by first name, then last name" do
+    sign_in @user
+    InvolvedParty.create!(user: @user, first_name: "Zara", last_name: "Adams", email: "zara@example.com",
+                          phone: "+44 7700 900199", buyer: true)
+    InvolvedParty.create!(user: @user, first_name: "Anna", last_name: "Zimmer", email: "anna@example.com",
+                          phone: "+44 7700 900198", seller: true)
+
+    get new_property_url
+
+    assert_operator response.body.index("Anna Zimmer"), :<, response.body.index("Zara Adams")
+  end
 end

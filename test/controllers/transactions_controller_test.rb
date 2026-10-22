@@ -387,4 +387,19 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".badge.bg-danger", text: /\+7d Over/
   end
+
+  test "the buyer list only shows the agent's own clients" do
+    own_client = InvolvedParty.create!(user: @user, first_name: "Olivia", last_name: "Own", email: "olivia@example.com",
+                                       phone: "+44 7700 900501", buyer: true)
+    other_agent = User.create!(user_name: "other_agent", email: "other_agent@example.com", password: "Password123",
+                               phone: "+44 20 7946 0198")
+    stranger = InvolvedParty.create!(user: other_agent, first_name: "Sam", last_name: "Stranger",
+                                     email: "sam@example.com", phone: "+44 7700 900502", buyer: true)
+
+    get new_transaction_url
+
+    assert_select "input[name='transaction[involved_party_id]'][value=?]", own_client.id.to_s
+    assert_select "input[name='transaction[involved_party_id]'][value=?]", stranger.id.to_s, count: 0
+    assert_no_match "sam@example.com", response.body
+  end
 end
