@@ -88,7 +88,8 @@ class SalesController < ApplicationController
       # now works with the client details extracted by AI from PDF upload
       @new_party ||= InvolvedParty.new(seller: true, **client_details_from_document)
     when "property"
-      @properties = property_scope.order(:street, :house_number)
+      # order of properties: sorted by address
+      @properties = property_scope.by_address
       # now works with the client property details extracted by AI from PDF upload
       @address_from_document = address_from_document
       @new_property ||= Property.new(**@address_from_document)

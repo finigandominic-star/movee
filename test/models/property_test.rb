@@ -80,4 +80,15 @@ class PropertyTest < ActiveSupport::TestCase
     sale.destroy!
     assert_not property.reload.sold?, "no transactions left"
   end
+
+   test "by_address sorts by street, then house number as a number" do
+    ten_b = Property.create!(user: @user, house_number: "10B", street: "Acacia Avenue", post_code: "LS1 1AA")
+    ten = Property.create!(user: @user, house_number: "10", street: "Acacia Avenue", post_code: "LS1 1AA")
+    two = Property.create!(user: @user, house_number: "2", street: "Acacia Avenue", post_code: "LS1 1AA")
+    baker = Property.create!(user: @user, house_number: "1", street: "Baker Street", post_code: "NW1 6XE")
+
+    sorted = Property.where(id: [ten_b, ten, two, baker]).by_address
+
+    assert_equal [two, ten, ten_b, baker], sorted.to_a
+  end
 end

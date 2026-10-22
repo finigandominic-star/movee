@@ -36,9 +36,11 @@
       <%= f.label :property_id, class: "form-label" do %>
         Property <span class="text-danger">*</span>
       <% end %>
-      <% if Property.any? %>
+      <%# Sorted by street, then house number (see Property.by_address) %>
+      <% properties = policy_scope(Property).by_address %>
+      <% if properties.any? %>
         <%= f.collection_select :property_id,
-            Property.all,
+            properties,
             :id,
             ->(p) { "#{p.short_address}, #{p.city} (#{p.post_code})" },
             { prompt: "Select a property" },
