@@ -70,8 +70,10 @@
       Vendor (seller) <span class="text-muted fw-normal">(optional)</span>
     <% end %>
 
-    <%# Only the realtor's own clients; sellers are listed first, each with their role %>
-    <% vendors = policy_scope(InvolvedParty).order(seller: :desc, last_name: :asc, first_name: :asc) %>
+    <%# Only the realtor's own clients, sorted by first and last name; each shows their role %>
+    <% vendors = policy_scope(InvolvedParty).order(:first_name, :last_name) %>
+    <%# sort in another way %>
+    <%# <% vendors = policy_scope(InvolvedParty).order(seller: :desc, last_name: :asc, first_name: :asc) %> %>
     <% if vendors.any? %>
       <%= f.collection_select :involved_party_id,
           vendors,

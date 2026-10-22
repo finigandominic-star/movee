@@ -83,7 +83,8 @@ class SalesController < ApplicationController
   def prepare_step
     case @step
     when "vendor"
-      @clients = client_scope.order(:last_name, :first_name)
+      # order of names: now the same as elsewhere
+      @clients = client_scope.order(:first_name, :last_name)
       # now works with the client details extracted by AI from PDF upload
       @new_party ||= InvolvedParty.new(seller: true, **client_details_from_document)
     when "property"
@@ -92,7 +93,8 @@ class SalesController < ApplicationController
       @address_from_document = address_from_document
       @new_property ||= Property.new(**@address_from_document)
     when "buyer"
-      @clients = buyer_scope.order(:last_name, :first_name)
+      # order of names: now the same as elsewhere
+      @clients = buyer_scope.order(:first_name, :last_name)
       # now works with the client details extracted by AI from PDF upload
       @new_party ||= InvolvedParty.new(buyer: true, **client_details_from_document)
     when "chain"

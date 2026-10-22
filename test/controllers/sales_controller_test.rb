@@ -315,4 +315,27 @@ class SalesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='property[street]'][value=?]", "Maple Grove", count: 0
     assert_select ".alert-info", count: 0
   end
+
+  test "the vendor step lists clients by first name, then last name" do
+    InvolvedParty.create!(user: @user, first_name: "Zara", last_name: "Adams", email: "zara@example.com",
+                          phone: "+44 7700 900199", seller: true)
+
+    get new_sale_url
+
+    assert_operator response.body.index("Bob Buyer"), :<, response.body.index("Vera Vendor")
+    assert_operator response.body.index("Vera Vendor"), :<, response.body.index("Zara Adams")
+  end
+
+  test "the buyer step lists clients by first name, then last name" do
+    property = Property.create!(user: @user, involved_party: @vendor, house_number: "7", street: "Acacia Avenue",
+                                city: "Leeds", post_code: "LS1 1AA")
+    InvolvedParty.create!(user: @user, first_name: "Zara", last_name: "Adams", email: "zara.buyer@example.com",
+                          phone: "+44 7700 900197", buyer: true)
+    InvolvedParty.create!(user: @user, first_name: "Anna", last_name: "Zimmer", email: "anna.buyer@example.com",
+                          phone: "+44 7700 900196", buyer: true)
+
+    get new_sale_url(step: "buyer", vendor_id: @vendor.id, property_id: property.id)
+
+    assert_operator response.body.index("Anna Zimmer"), :<, response.body.index("Zara Adams")
+  end
 end
