@@ -66,6 +66,23 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @party, @transaction.reload.involved_party
   end
 
+  test "another agent can add a buyer to a transaction that has none, but not change a bought one" do
+    owner = User.create!(user_name: "owner", email: "owner@example.com", password: "Password123")
+    prop = Property.create!(user: owner, house_number: "5", street: "Elm Way", post_code: "NW1 1AB")
+    open_tx = Transaction.create!(user: owner, property: prop, chain: @chain, legal_stage: "searches_and_enquiries")
+
+    post transactions_url, params: { transaction: { property_id: prop.id, chain_id: @chain.id,
+                                                    involved_party_id: @party.id, legal_stage: "offer_accepted" } }
+    assert_redirected_to transaction_url(open_tx)
+    assert_equal @party, open_tx.reload.involved_party
+    assert_equal "searches_and_enquiries", open_tx.legal_stage
+
+    other = InvolvedParty.create!(first_name: "Ann", last_name: "Lee", email: "ann@example.com", phone: "+44 7700 900556", buyer: true)
+    post transactions_url, params: { transaction: { property_id: prop.id, involved_party_id: other.id } }
+    assert_equal "You are not authorized to perform this action.", flash[:alert]
+    assert_equal @party, open_tx.reload.involved_party
+  end
+
   test "should create transaction" do
     new_prop = Property.create!(
       user: @user,

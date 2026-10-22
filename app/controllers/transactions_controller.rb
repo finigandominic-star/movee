@@ -20,15 +20,7 @@ class TransactionsController < ApplicationController
   def create
     # A property only ever has one transaction, so adding a buyer to it updates that one
     existing = Transaction.find_by(property_id: transaction_params[:property_id])
-    if existing
-      authorize existing, :update?
-      if existing.update(transaction_params)
-        return redirect_to existing, notice: "Transaction was successfully updated."
-      end
-
-      @transaction = existing
-      return render :new, status: :unprocessable_entity
-    end
+    return fill_existing_transaction(existing) if existing
 
     @transaction = Transaction.new(transaction_params)
     @transaction.user = current_user if current_user.present?
@@ -84,6 +76,27 @@ class TransactionsController < ApplicationController
   end
 
   private
+
+  # Owners can change the whole transaction. Any agent can fill in a buyer where there isn't one yet
+  # (as in the new-sale flow), but only the buyer: the chain and stage stay as they are.
+  def fill_existing_transaction(existing)
+    if policy(existing).update?
+      authorize existing, :update?
+      attrs = transaction_params
+    elsif existing.involved_party_id.blank? && transaction_params[:involved_party_id].present?
+      authorize existing, :create?
+      attrs = transaction_params.slice(:involved_party_id)
+    else
+      authorize existing, :update?
+    end
+
+    if existing.update(attrs)
+      redirect_to existing, notice: "Transaction was successfully updated."
+    else
+      @transaction = existing
+      render :new, status: :unprocessable_entity
+    end
+  end
 
   def set_transaction
     @transaction = Transaction.includes(:property, :chain, :involved_party).find(params[:id])
