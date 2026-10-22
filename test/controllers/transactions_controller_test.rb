@@ -100,7 +100,8 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :unprocessable_entity
     assert_select ".alert-warning", text: /selling a property in another chain/
-    assert_select "input[name=confirm_unlinked][value='1']"
+    assert_select "button[name=merge_chains][value='1']"
+    assert_select "button[name=confirm_unlinked][value='1']"
     assert_select "input[name='transaction[involved_party_id]'][value=?][checked]", @party.id.to_s
     assert_select "select[name='transaction[property_id]'] option[selected][value=?]", target.id.to_s
     assert_select "select[name='transaction[chain_id]'] option[selected][value=?]", @chain.id.to_s
@@ -109,6 +110,18 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_difference "Transaction.count", 1 do
       post transactions_url, params: { transaction: params[:transaction].merge(chain_id: sale_chain.id) }
     end
+
+    # Choosing to link merges the buyer's chain into this one
+    target3 = Property.create!(user: @user, house_number: "7", street: "Ash Row", post_code: "NW1 1AD")
+    other_chain = Chain.create!(active: true)
+    home2 = Property.create!(user: @user, involved_party: @party, house_number: "8", street: "Oak Row", post_code: "NW1 1AC")
+    Transaction.create!(user: @user, property: home2, chain: other_chain)
+    sale_chain.transactions.destroy_all
+    assert_difference "Transaction.count", 1 do
+      post transactions_url, params: params.merge(merge_chains: "1", transaction: params[:transaction].merge(property_id: target3.id))
+    end
+    assert_equal 1, Chain.where(id: [@chain.id, other_chain.id]).count
+    assert_equal Chain.where(id: [@chain.id, other_chain.id]).first.id, Transaction.find_by(property: home2).chain_id
 
     # Confirming proceeds without linking
     target2 = Property.create!(user: @user, house_number: "5", street: "Ash Row", post_code: "NW1 1AD")
@@ -144,6 +157,53 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     seller.update!(onward_purchase: "leaving_market")
     get new_transaction_url(chain_id: @chain.id)
     assert_select "input[name='transaction[involved_party_id]'][value=?][checked]", seller.id.to_s, count: 0
+  end
+
+  test "an agent can remove their own client as buyer from someone else's transaction" do
+    owner = User.create!(user_name: "owner3", email: "owner3@example.com", password: "Password123")
+    prop = Property.create!(user: owner, house_number: "9", street: "Elm Way", post_code: "NW1 1AB")
+    tx = Transaction.create!(user: owner, property: prop, chain: @chain, involved_party: @party)
+
+    delete remove_involved_party_transaction_url(tx)
+    assert_equal "You are not authorized to perform this action.", flash[:alert]
+    assert_equal @party, tx.reload.involved_party
+
+    @party.update!(user: @user)
+    delete remove_involved_party_transaction_url(tx)
+    assert_nil tx.reload.involved_party_id
+  end
+
+  test "adding a buyerless property to a chain joins the chains instead of moving the transaction" do
+    owner = User.create!(user_name: "owner4", email: "owner4@example.com", password: "Password123")
+    prop = Property.create!(user: owner, house_number: "11", street: "Elm Way", post_code: "NW1 1AB")
+    old_chain = Chain.create!(user: owner, active: true)
+    open_tx = Transaction.create!(user: owner, property: prop, chain: old_chain)
+
+    assert_no_difference "Transaction.count" do
+      post transactions_url, params: { transaction: { property_id: prop.id, chain_id: @chain.id, involved_party_id: @party.id,
+                                                      legal_stage: "offer_accepted" } }
+    end
+    assert_redirected_to transaction_url(open_tx)
+    survivor = [old_chain.id, @chain.id].min
+    assert_equal survivor, open_tx.reload.chain_id
+    assert_equal survivor, @transaction.reload.chain_id
+    assert_equal @party, open_tx.involved_party
+    assert_equal 1, Chain.where(id: [old_chain.id, @chain.id]).count
+  end
+
+  test "a property that already has a buyer is not joined to the chain" do
+    other = InvolvedParty.create!(first_name: "Ann", last_name: "Lee", email: "ann2@example.com", phone: "+44 7700 900558", buyer: true)
+    prop = Property.create!(user: @user, house_number: "12", street: "Elm Way", post_code: "NW1 1AB")
+    old_chain = Chain.create!(user: @user, active: true)
+    bought = Transaction.create!(user: @user, property: prop, chain: old_chain, involved_party: other)
+
+    post transactions_url, params: { transaction: { property_id: prop.id, chain_id: @chain.id, involved_party_id: @party.id,
+                                                    legal_stage: "offer_accepted" } }
+    assert_response :unprocessable_entity
+    assert_select ".alert-danger", text: /already has a buyer/
+    assert_equal old_chain.id, bought.reload.chain_id
+    assert_equal other, bought.involved_party
+    assert_equal 2, Chain.where(id: [old_chain.id, @chain.id]).count
   end
 
   test "should create transaction" do

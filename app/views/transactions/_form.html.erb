@@ -15,7 +15,6 @@
   <% end %>
 
   <% if @unlinked_chains.present? %>
-    <%= hidden_field_tag :confirm_unlinked, "1" %>
     <div class="alert alert-warning" role="alert">
       <h2 class="alert-heading h6 fw-bold mb-2">
         <i class="fa-solid fa-link-slash me-1" aria-hidden="true"></i>
@@ -26,7 +25,7 @@
         <%= safe_join(@unlinked_chains.map { |c| link_to(chain_name(c), chain_path(c), class: "alert-link", target: "_blank", rel: "noopener") }, ", ") %>,
         but this transaction isn't in that chain, so the two chains will stay separate.
       </p>
-      <p class="small mb-0">To join them, pick that chain in the Chain field below. Otherwise press <strong>Proceed anyway</strong> to save as it is.</p>
+      <p class="small mb-0">Press <strong>Link the chains and save</strong> to merge them into one chain, or <strong>Proceed anyway</strong> to keep them separate.</p>
     </div>
   <% end %>
 
@@ -137,9 +136,19 @@
 
   <div class="form-actions">
     <%= link_to "Cancel", (transaction.persisted? ? transaction_path(transaction) : transactions_path), class: "btn btn-outline-secondary" %>
-    <%= f.button class: "btn btn-primary" do %>
-      <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
-      <span><%= @unlinked_chains.present? ? "Proceed anyway" : (local_assigns[:submit_label] || (transaction.persisted? ? "Update transaction" : "Save transaction")) %></span>
+    <% if @unlinked_chains.present? %>
+      <%= f.button name: "merge_chains", value: "1", class: "btn btn-primary" do %>
+        <i class="fa-solid fa-link" aria-hidden="true"></i>
+        <span>Link the chains and save</span>
+      <% end %>
+      <%= f.button name: "confirm_unlinked", value: "1", class: "btn btn-outline-secondary" do %>
+        <span>Proceed anyway</span>
+      <% end %>
+    <% else %>
+      <%= f.button class: "btn btn-primary" do %>
+        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        <span><%= local_assigns[:submit_label] || (transaction.persisted? ? "Update transaction" : "Save transaction") %></span>
+      <% end %>
     <% end %>
   </div>
 <% end %>

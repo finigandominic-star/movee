@@ -21,7 +21,7 @@ class TransactionsController < ApplicationController
   def create
     # A property only ever has one transaction, so adding a buyer to it updates that one
     existing = Transaction.find_by(property_id: transaction_params[:property_id])
-    return fill_existing_transaction(existing) if existing
+    return fill_existing_transaction(existing, join: true) if existing
 
     @transaction = Transaction.new(transaction_params)
     @transaction.user = current_user if current_user.present?
@@ -30,6 +30,8 @@ class TransactionsController < ApplicationController
     return render :new, status: :unprocessable_entity if warn_unlinked_chains?(@transaction)
 
     if @transaction.save
+      return redirect_to @transaction, notice: "Transaction was created and its chains were linked." if merge_unlinked_chains(@transaction)
+
       redirect_to @transaction, notice: "Transaction was successfully created."
     else
       render :new, status: :unprocessable_entity
@@ -51,7 +53,7 @@ class TransactionsController < ApplicationController
   end
 
   def remove_involved_party
-    authorize @transaction, :update?
+    authorize @transaction, :remove_involved_party?
     @transaction.update(involved_party_id: nil)
     redirect_back fallback_location: @transaction, notice: "Buyer was removed from this transaction."
   end
@@ -85,33 +87,66 @@ class TransactionsController < ApplicationController
   end
 
   # Used by create and update. Owners can change the whole transaction. Any agent can fill in a buyer where there isn't one yet
-  # (as in the new-sale flow), but only the buyer and the chain it joins: the stage and dates stay as they are.
-  def fill_existing_transaction(existing, view: :new)
+  # (as in the new-sale flow), but only the buyer: the chain, stage and dates stay as they are.
+  # When adding to a chain (join) a property that has no buyer yet, its chain is merged with the chosen one instead of moved.
+  def fill_existing_transaction(existing, view: :new, join: false)
+    # Adding a transaction never replaces a buyer: that's done by editing the transaction
+    if join && existing.involved_party_id.present?
+      authorize existing, :create?
+      @transaction = Transaction.new(transaction_params)
+      @transaction.errors.add(:property, "already has a buyer")
+      return render :new, status: :unprocessable_entity
+    end
+
     if policy(existing).update?
       authorize existing, :update?
       attrs = transaction_params
     elsif existing.involved_party_id.blank? && transaction_params[:involved_party_id].present?
       authorize existing, :create?
-      attrs = transaction_params.slice(:involved_party_id, :chain_id)
+      attrs = transaction_params.slice(:involved_party_id)
     else
       authorize existing, :update?
     end
 
+    chain_to_join = chain_to_join(existing) if join && existing.involved_party_id.blank?
+    attrs = attrs.except(:chain_id) if chain_to_join
     existing.assign_attributes(attrs)
     @transaction = existing
-    return render view, status: :unprocessable_entity if warn_unlinked_chains?(existing)
+    return render view, status: :unprocessable_entity if !chain_to_join && warn_unlinked_chains?(existing)
 
     if existing.save
+      if chain_to_join
+        Chain.merge!(existing.chain, chain_to_join)
+        return redirect_to existing, notice: "Transaction was updated and its chains were joined."
+      end
+      return redirect_to existing, notice: "Transaction was updated and its chains were linked." if merge_unlinked_chains(existing)
+
       redirect_to existing, notice: "Transaction was successfully updated."
     else
       render view, status: :unprocessable_entity
     end
   end
 
+  # The chosen chain, when it isn't the one the existing transaction is already in
+  def chain_to_join(existing)
+    chain = Chain.find_by(id: transaction_params[:chain_id])
+    chain unless chain.nil? || chain.id == existing.chain_id
+  end
+
+  # Joins the buyer's other chains into this transaction's chain when the warning's "Link the chains" was chosen.
+  # Returns true if any chains were merged.
+  def merge_unlinked_chains(transaction)
+    return false unless params[:merge_chains] == "1"
+
+    chains = transaction.unlinked_buyer_chains.to_a
+    chains.each { |other| Chain.merge!(transaction.reload.chain, other) }
+    chains.any?
+  end
+
   # A buyer who is selling their own home in another chain should normally be linked into that chain.
   # Sets @unlinked_chains and returns true so the form can ask for confirmation, unless it was already given.
   def warn_unlinked_chains?(transaction)
-    return false if params[:confirm_unlinked] == "1"
+    return false if params[:confirm_unlinked] == "1" || params[:merge_chains] == "1"
     return false unless transaction.new_record? || transaction.involved_party_id_changed?
 
     @unlinked_chains = transaction.unlinked_buyer_chains.to_a
