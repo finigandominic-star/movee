@@ -177,7 +177,7 @@
     </div>
   </div>
 
-  <% if can_update %>
+  <% if policy(@transaction).share_links? %>
     <%= render "transactions/share_status_modal", tx: @transaction %>
   <% end %>
 </div>

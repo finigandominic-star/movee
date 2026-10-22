@@ -2,7 +2,7 @@ class TransactionShareLinksController < ApplicationController
   before_action :set_transaction
 
   def create
-    authorize @transaction, :update?
+    authorize @transaction, :share_links?
 
     duration = params[:duration]
     if TransactionShareLink::DURATIONS.key?(duration)

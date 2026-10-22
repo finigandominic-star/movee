@@ -28,8 +28,9 @@ class TransactionPolicy < ApplicationPolicy
     update?
   end
 
+  # The agent who manages the client can share the status with them, not only the transaction's owner
   def share_links?
-    update?
+    update? || (user.present? && record.involved_party&.user_id == user.id)
   end
 
   class Scope < ApplicationPolicy::Scope

@@ -30,9 +30,9 @@ class TransactionsController < ApplicationController
     return render :new, status: :unprocessable_entity if warn_unlinked_chains?(@transaction)
 
     if @transaction.save
-      return redirect_to @transaction, notice: "Transaction was created and its chains were linked." if merge_unlinked_chains(@transaction)
+      return redirect_to buyers_sale_for(@transaction), notice: "Transaction was created and its chains were linked." if merge_unlinked_chains(@transaction)
 
-      redirect_to @transaction, notice: "Transaction was successfully created."
+      redirect_to buyers_sale_for(@transaction), notice: "Transaction was successfully created."
     else
       render :new, status: :unprocessable_entity
     end
@@ -117,7 +117,7 @@ class TransactionsController < ApplicationController
     if existing.save
       if chain_to_join
         Chain.merge!(existing.chain, chain_to_join)
-        return redirect_to existing, notice: "Transaction was updated and its chains were joined."
+        return redirect_to (join ? buyers_sale_for(existing) : existing), notice: "Transaction was updated and its chains were joined."
       end
       return redirect_to existing, notice: "Transaction was updated and its chains were linked." if merge_unlinked_chains(existing)
 
@@ -125,6 +125,18 @@ class TransactionsController < ApplicationController
     else
       render view, status: :unprocessable_entity
     end
+  end
+
+  # After adding a buyer, land on the sale of the property that buyer is selling (the next link in the chain),
+  # or on the transaction itself when they aren't selling one here
+  def buyers_sale_for(transaction)
+    buyer_id = transaction.involved_party_id
+    return transaction if buyer_id.blank?
+
+    Transaction.joins(:property)
+               .where(chain_id: transaction.reload.chain_id, properties: { involved_party_id: buyer_id })
+               .where.not(id: transaction.id)
+               .order(:id).first || transaction
   end
 
   # The chosen chain, when it isn't the one the existing transaction is already in
