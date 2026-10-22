@@ -508,6 +508,17 @@ class Transaction < ApplicationRecord
     update!(chain_id: target_id)
   end
 
+  # Other chains this transaction's buyer is selling a property in, when this transaction isn't part of them
+  def unlinked_buyer_chains
+    return Chain.none if involved_party_id.blank?
+
+    sale_chain_ids = Transaction.joins(:property)
+                                .where(properties: { involved_party_id: involved_party_id })
+                                .where.not(id: id)
+                                .select(:chain_id)
+    Chain.where(id: sale_chain_ids).where.not(id: chain_id)
+  end
+
   private
 
   def ensure_chain
