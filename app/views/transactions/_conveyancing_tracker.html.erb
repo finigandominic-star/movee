@@ -6,6 +6,7 @@
     never computed from the viewer's own session, which could belong to a
     signed-in agent/admin browsing in the same browser. %>
 <% can_update = local_assigns.fetch(:can_update, policy(@transaction).update?) %>
+<% can_share = local_assigns.fetch(:can_share, policy(@transaction).share_links?) %>
 <% overall_timing = @transaction.overall_timing_status %>
 
 <div class="card card--transaction mb-4" data-controller="tooltip">
@@ -19,7 +20,7 @@
       </p>
     </div>
     <div class="d-flex flex-wrap gap-2">
-      <% if can_update %>
+      <% if can_share %>
         <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#shareStatusModal">
           <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
           <span>Share status with client</span>
