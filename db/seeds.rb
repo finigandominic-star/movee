@@ -389,8 +389,8 @@ chain5.sync_status!
 # -------------------------------------------------------------------------------------------------
 # SCENARIOS 6 & 7: The Merger Pair (Ready to test 'Merge Chain' in UI!)
 # Chain 6: Noah (FTB) -> Harper (selling Prop 10)
-# Chain 7: Harper (buying Prop 11) -> Logan -> Finn (Exit, Prop 12)
-# Harper connects both chains. Merging them produces a unified 3-link chain under lowest ID!
+# Chain 7: (Prop 11 has no buyer yet) -> Logan -> Finn (Exit, Prop 12)
+# Harper can be added as the Sycamore Drive buyer to connect both chains, and merging gives one chain under the lowest ID.
 # -------------------------------------------------------------------------------------------------
 chain6 = Chain.create!(user: sarah, active: true)
 s_d6 = today - 42.days
@@ -413,7 +413,7 @@ s_d7_1 = today - 24.days
 Transaction.create!(
   chain: chain7,
   user: sarah,
-  involved_party: harper,
+  involved_party: nil, # No buyer yet: the demo adds one
   property: properties[10], # Sycamore Drive (seller: Logan)
   completed: false,
   legal_stage: "draft_contract_pack",

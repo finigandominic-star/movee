@@ -26,6 +26,8 @@ class TransactionsController < ApplicationController
     @transaction.user = current_user if current_user.present?
     authorize @transaction
 
+    return render :new, status: :unprocessable_entity if warn_unlinked_chains?(@transaction)
+
     if @transaction.save
       redirect_to @transaction, notice: "Transaction was successfully created."
     else
@@ -39,7 +41,10 @@ class TransactionsController < ApplicationController
 
   def update
     authorize @transaction
-    if @transaction.update(transaction_params)
+    @transaction.assign_attributes(transaction_params)
+    return render :edit, status: :unprocessable_entity if warn_unlinked_chains?(@transaction)
+
+    if @transaction.save
       redirect_to @transaction, notice: "Transaction was successfully updated."
     else
       render :edit, status: :unprocessable_entity
@@ -90,12 +95,25 @@ class TransactionsController < ApplicationController
       authorize existing, :update?
     end
 
-    if existing.update(attrs)
+    existing.assign_attributes(attrs)
+    @transaction = existing
+    return render :new, status: :unprocessable_entity if warn_unlinked_chains?(existing)
+
+    if existing.save
       redirect_to existing, notice: "Transaction was successfully updated."
     else
-      @transaction = existing
       render :new, status: :unprocessable_entity
     end
+  end
+
+  # A buyer who is selling their own home in another chain should normally be linked into that chain.
+  # Sets @unlinked_chains and returns true so the form can ask for confirmation, unless it was already given.
+  def warn_unlinked_chains?(transaction)
+    return false if params[:confirm_unlinked] == "1"
+    return false unless transaction.new_record? || transaction.involved_party_id_changed?
+
+    @unlinked_chains = transaction.unlinked_buyer_chains.to_a
+    @unlinked_chains.any?
   end
 
   def set_transaction

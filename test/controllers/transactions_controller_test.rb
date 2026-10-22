@@ -83,6 +83,33 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @party, open_tx.reload.involved_party
   end
 
+  test "warns when the buyer is selling in another chain and the transaction isn't linked to it" do
+    @party.update!(seller: true)
+    seller_home = Property.create!(user: @user, involved_party: @party, house_number: "3", street: "Oak Row", post_code: "NW1 1AC")
+    sale_chain = Chain.create!(active: true)
+    Transaction.create!(user: @user, property: seller_home, chain: sale_chain)
+    target = Property.create!(user: @user, house_number: "4", street: "Ash Row", post_code: "NW1 1AD")
+    params = { transaction: { property_id: target.id, chain_id: @chain.id, involved_party_id: @party.id, legal_stage: "offer_accepted" } }
+
+    assert_no_difference "Transaction.count" do
+      post transactions_url, params: params
+    end
+    assert_response :unprocessable_entity
+    assert_select ".alert-warning", text: /selling a property in another chain/
+    assert_select "input[name=confirm_unlinked][value='1']"
+
+    # Linking to the buyer's chain needs no warning
+    assert_difference "Transaction.count", 1 do
+      post transactions_url, params: { transaction: params[:transaction].merge(chain_id: sale_chain.id) }
+    end
+
+    # Confirming proceeds without linking
+    target2 = Property.create!(user: @user, house_number: "5", street: "Ash Row", post_code: "NW1 1AD")
+    assert_difference "Transaction.count", 1 do
+      post transactions_url, params: params.merge(confirm_unlinked: "1", transaction: params[:transaction].merge(property_id: target2.id))
+    end
+  end
+
   test "should create transaction" do
     new_prop = Property.create!(
       user: @user,
