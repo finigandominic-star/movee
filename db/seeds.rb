@@ -23,7 +23,7 @@ sophia = User.create!(user_name: "Sophia", email: "sophia@moveee.me", phone: "+4
 
 # 5 Cooperating Estate Agents from 5 distinct UK agencies
 sarah = User.create!(user_name: "Sarah Rizzoli", email: "sarah.rizzoli@harbourandheath.co.uk", phone: "+44 20 7946 0312", password: "SaRi1234", company: "Harbour & Heath Properties")
-toni = User.create!(user_name: "Toni Martine", email: "t.martine@crownstoneestates.co.uk", phone: "+44 20 7118 4407", password: "Ton1Crown", company: "Crownstone Estates")
+joao = User.create!(user_name: "Joao", email: "joao@crownstoneestates.co.uk", phone: "+44 20 7118 4407", password: "MoveeeUser123", company: "Crownstone Estates")
 mark = User.create!(user_name: "Mark McBride", email: "mcbride.mark@thistleandthatch.co.uk", phone: "+44 20 7946 0103", password: "123Bride", company: "Thistle & Thatch Residential")
 emily = User.create!(user_name: "Emily Song", email: "e.song@belgravesterling.co.uk", phone: "+44 20 7932 5580", password: "eSong789", company: "Belgrave & Sterling Estates")
 john = User.create!(user_name: "John Akachi", email: "john.akachi@oakhavenfinch.co.uk", phone: "+44 1892 447 130", password: "ImGreat1", company: "Oakhaven & Finch Estates")
@@ -33,7 +33,6 @@ puts "Attaching agent avatars..."
 # Admins are left without avatars so they can upload their own.
 {
   sarah => "https://randomuser.me/api/portraits/women/44.jpg",
-  toni => "https://randomuser.me/api/portraits/women/68.jpg",
   mark => "https://randomuser.me/api/portraits/men/32.jpg",
   emily => "https://randomuser.me/api/portraits/women/90.jpg",
   john => "https://randomuser.me/api/portraits/men/75.jpg"
@@ -43,6 +42,9 @@ puts "Attaching agent avatars..."
 rescue StandardError => e
   puts "  Skipped avatar for #{user.user_name}: #{e.message}"
 end
+
+# Joao presents the demo, so he uses his own photo.
+joao.avatar.attach(io: File.open(Rails.root.join("public/images/avatars/joao.jpg")), filename: "joao.jpg", content_type: "image/jpeg")
 
 puts "Creating Involved Parties..."
 # 1. First-Time Buyers (FTB: buyer only, no home to sell) -> Closed Bottom
@@ -78,8 +80,8 @@ theo = InvolvedParty.create!(first_name: "Theo", last_name: "Barnes", email: "th
 lily = InvolvedParty.create!(first_name: "Lily", last_name: "Cooper", email: "lily.c@icloud.co.uk", phone: "+44 1865 496 212", contact_info: "9 Ash Tree Lane, Oxford, OX2 4ST", seller: true, buyer: true, onward_purchase: "buying")
 
 # Assign FTB buyers to their managing agent
-sophie.update!(user: toni) # Sophie is deliberately left without a purchase: she closes the chain in the demo
-poppy.update!(user: toni)
+sophie.update!(user: joao) # Sophie is deliberately left without a purchase: she closes the chain in the demo
+poppy.update!(user: joao)
 harry.update!(user: sarah)
 isabella.update!(user: emily)
 liam.update!(user: mark)
@@ -91,21 +93,21 @@ puts "Creating Properties..."
 property_configs = [
   # Chain 2 properties (Unsold 1-3)
   { num: "10", street: "Maple Drive", second: "", city: "London", post_code: "SW1A 1AA", sold: false, user: sarah, seller: emma },
-  { num: "42", street: "Oak Avenue", second: "Flat 2", city: "Manchester", post_code: "M1 2AB", sold: false, user: toni, seller: james },
+  { num: "42", street: "Oak Avenue", second: "Flat 2", city: "Manchester", post_code: "M1 2AB", sold: false, user: joao, seller: james },
   { num: "8", street: "Cedar Lane", second: "", city: "Birmingham", post_code: "B1 3CD", sold: false, user: mark, seller: amelia },
   # Chain 3 properties (Stalled Leasehold: Unsold 4-5)
   { num: "15", street: "Birch Road", second: "Flat 4", city: "Leeds", post_code: "LS1 4EF", sold: false, user: emily, seller: evelyn },
   { num: "22", street: "Willow Close", second: "", city: "Bristol", post_code: "BS1 5GH", sold: false, user: john, seller: william },
   # Chain 4 properties (Open Bottom: Unsold 6-7)
   { num: "5", street: "Elm Street", second: "", city: "Liverpool", post_code: "L1 6IJ", sold: false, user: sarah, seller: george },
-  { num: "33", street: "Pine Grove", second: "Appt 1", city: "Newcastle", post_code: "NE1 7KL", sold: false, user: toni, seller: arthur },
+  { num: "33", street: "Pine Grove", second: "Appt 1", city: "Newcastle", post_code: "NE1 7KL", sold: false, user: joao, seller: arthur },
   # Chain 5 properties (Open Top: Unsold 8-9)
   { num: "77", street: "Ash Way", second: "", city: "Nottingham", post_code: "NG1 8MN", sold: false, user: mark, seller: jack },
   { num: "12", street: "Holly Path", second: "", city: "Cardiff", post_code: "CF10 9OP", sold: false, user: emily, seller: mia },
   # Merger Pair properties (Chain 6 & 7: Unsold 10-12)
   { num: "99", street: "Rowan Court", second: "House B", city: "Glasgow", post_code: "G1 1QR", sold: false, user: john, seller: harper },
   { num: "6", street: "Sycamore Drive", second: "", city: "Edinburgh", post_code: "EH1 2ST", sold: false, user: sarah, seller: logan },
-  { num: "18", street: "Poplar Road", second: "", city: "Belfast", post_code: "BT1 3UV", sold: false, user: toni, seller: finn },
+  { num: "18", street: "Poplar Road", second: "", city: "Belfast", post_code: "BT1 3UV", sold: false, user: joao, seller: finn },
   # Standalone direct deal (Unsold 13)
   { num: "45", street: "Chestnut Lane", second: "Top Floor", city: "Swansea", post_code: "SA1 4WX", sold: false, user: mark, seller: frances },
   # Additional active listings (Unsold 14-16)
@@ -113,13 +115,13 @@ property_configs = [
   { num: "64", street: "Hawthorn Way", second: "", city: "Norwich", post_code: "NR1 6AB", sold: false, user: john, seller: mason },
   { num: "27", street: "Orchard Road", second: "", city: "Bath", post_code: "BA1 3QR", sold: false, user: sarah, seller: theo },
   # Chain 1 Completed Properties (Sold 17-18)
-  { num: "13", street: "Magnolia Close", second: "", city: "Brighton", post_code: "BN1 7CD", sold: true, user: toni, seller: oliver },
+  { num: "13", street: "Magnolia Close", second: "", city: "Brighton", post_code: "BN1 7CD", sold: true, user: joao, seller: oliver },
   { num: "76", street: "Beech Road", second: "Flat 5", city: "Reading", post_code: "RG1 8EF", sold: true, user: mark, seller: frances },
   # Additional Sold Properties (Sold 19-22)
   { num: "30", street: "Fir Tree Lane", second: "", city: "Oxford", post_code: "OX1 9GH", sold: true, user: emily, seller: charlotte },
   { num: "52", street: "Cypress Drive", second: "", city: "Cambridge", post_code: "CB1 0IJ", sold: true, user: john, seller: lily },
   { num: "88", street: "Juniper Court", second: "Suite 1", city: "York", post_code: "YO1 1KL", sold: true, user: sarah, seller: emma },
-  { num: "44", street: "Primrose Hill", second: "Garden Apt", city: "London", post_code: "NW3 3AA", sold: true, user: toni, seller: james }
+  { num: "44", street: "Primrose Hill", second: "Garden Apt", city: "London", post_code: "NW3 3AA", sold: true, user: joao, seller: james }
 ]
 
 properties = []
@@ -182,7 +184,7 @@ start_d1 = today - 92.days
 comp_d1 = start_d1 + 72.days
 Transaction.create!(
   chain: chain1,
-  user: toni,
+  user: joao,
   involved_party: poppy,
   property: properties[16], # Magnolia Close (seller: Oliver)
   completed: true,
@@ -224,7 +226,7 @@ chain1.sync_status!
 # SCENARIO 2: Smooth 3-Link Suburban Chain (Closed Ends, In Progress, On Track)
 # Structure: Harry (FTB) -> Emma -> James -> Amelia (Leaving market)
 # -------------------------------------------------------------------------------------------------
-chain2 = Chain.create!(user: toni, active: true)
+chain2 = Chain.create!(user: joao, active: true)
 
 # Link 1: Harry buys Property 1 from Emma (Stage: Draft Contracts, 18d in, On Track)
 s_d2_1 = today - 18.days
@@ -245,7 +247,7 @@ Transaction.create!(
 s_d2_2 = today - 35.days
 Transaction.create!(
   chain: chain2,
-  user: toni,
+  user: joao,
   involved_party: emma,
   property: properties[1], # Oak Avenue (seller: James)
   completed: false,
@@ -336,7 +338,7 @@ Transaction.create!(
 s_d4_2 = today - 22.days
 Transaction.create!(
   chain: chain4,
-  user: toni,
+  user: joao,
   involved_party: george,
   property: properties[6], # Pine Grove (seller: Arthur, exit)
   completed: false,
@@ -426,7 +428,7 @@ Transaction.create!(
 s_d7_2 = today - 12.days
 Transaction.create!(
   chain: chain7,
-  user: toni,
+  user: joao,
   involved_party: logan,
   property: properties[11], # Poplar Road (seller: Finn, exit)
   completed: false,
@@ -473,7 +475,7 @@ sold_scenarios = [
   # Completed 4 days ahead of target (Target 84d, Actual 80d)
   { days_ago: 88, act_days: 80, party: theo, prop: properties[20], user: sarah },
   # Completed on target (Target 84d, Actual 84d)
-  { days_ago: 95, act_days: 84, party: lily, prop: properties[21], user: toni }
+  { days_ago: 95, act_days: 84, party: lily, prop: properties[21], user: joao }
 ]
 
 sold_scenarios.each do |sc|
