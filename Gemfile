@@ -78,7 +78,7 @@ end
 
 gem "devise"
 
-gem "ruby_llm", "~> 2.1.1"
+gem "ruby_llm", "~> 2.2.0"
 gem "pdf-reader"
 gem "kramdown"
 gem "rouge"
